@@ -1,0 +1,694 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Cargas · Cuenta corriente</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1c1f3b">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Cargas">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#eceef6; --bg-2:#e3e6f2; --card:#ffffff; --ink:#171a2b; --ink-2:#3b3f55;
+    --muted:#797f9b; --line:#e7e9f3; --line-2:#eef0f7;
+    --brand:#5b4bff; --brand-2:#8a7bff;
+    --pos:#08b67a; --pos-soft:#e7f8f0; --neg:#ff486a; --neg-soft:#ffe9ee; --amber:#ff9f1c;
+    --panel-1:#1c1f3b; --panel-2:#3a2a73; --panel-3:#5b4bff;
+    --shadow:0 18px 40px -26px rgba(28,31,59,.55);
+    --shadow-sm:0 8px 22px -18px rgba(28,31,59,.5);
+    --r:18px;
+    --disp:'Space Grotesk',-apple-system,BlinkMacSystemFont,sans-serif;
+    --body:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:
+    radial-gradient(1200px 500px at 80% -10%, #e9e6ff 0%, transparent 60%),
+    radial-gradient(900px 500px at -10% 0%, #e2f3ff 0%, transparent 55%), var(--bg);
+    color:var(--ink);font-family:var(--body);-webkit-font-smoothing:antialiased}
+  body{max-width:1360px;margin:0 auto;padding:0 0 110px}
+  .num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1}
+  .neg{color:var(--neg)} .pos{color:var(--pos)}
+
+  header{position:sticky;top:0;z-index:25;padding:16px 16px 8px;
+    background:linear-gradient(var(--bg),var(--bg) 78%,transparent)}
+  .brand{display:flex;align-items:center;gap:10px}
+  .logo{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,var(--brand),var(--brand-2));
+    display:grid;place-items:center;color:#fff;font-family:var(--disp);font-weight:700;font-size:15px;box-shadow:0 6px 16px -6px var(--brand)}
+  .brand h1{font-family:var(--disp);font-size:19px;font-weight:700;letter-spacing:-.02em}
+  .brand .acct{margin-left:auto;font-size:12px;color:var(--brand);font-weight:700;border:1px solid #dcd8ff;padding:4px 10px;border-radius:999px;background:#f3f1ff}
+  .acctline{font-size:12px;color:var(--muted);margin-top:5px}
+  .tabs{display:flex;gap:6px;margin-top:12px;background:#e6e8f4;padding:4px;border-radius:13px;width:fit-content}
+  .tab{font:inherit;font-weight:700;font-size:13.5px;color:var(--muted);background:transparent;border:none;padding:8px 16px;border-radius:10px;cursor:pointer;transition:.15s}
+  .tab.on{background:var(--card);color:var(--ink);box-shadow:0 4px 12px -6px rgba(28,31,59,.4)}
+  .gj{font-size:11.5px;color:var(--muted);font-weight:600}
+  @media(min-width:720px){.gboard{grid-template-columns:minmax(0,1fr) 230px}}
+  .gtable{font-size:12.5px;table-layout:auto}
+  .gtable th,.gtable td{padding:9px 8px}
+  .gtable td.r,.gtable th.r{padding-right:12px}
+  .gtable thead .grp th{background:#1c1f3b;color:#fff;text-align:center;font-size:10px;letter-spacing:.08em;padding:8px}
+  .gtable thead .grp .clih{background:#15172b}
+  .gtable thead .grp .vgrp{background:linear-gradient(180deg,#4a4bd6,#3b3bb0)}
+  .gtable thead .grp .sgrp{background:linear-gradient(180deg,#119d6a,#0e8459)}
+  .gtable thead tr:last-child th{position:sticky;top:0;background:#23274a;color:#c7c3ec;font-size:9.5px;letter-spacing:.04em;white-space:nowrap}
+  .gtable tbody td{white-space:nowrap;font-weight:600}
+  .gtable .gname{font-weight:700;font-size:13px;display:flex;align-items:center;gap:8px}
+  .gtable .gdot{width:9px;height:9px;border-radius:3px;flex:none}
+  .gtable td.mio{color:var(--neg);font-weight:700}
+  .gtable td.cli{color:var(--muted)}
+  .gtable td.gtot{font-weight:800;background:#fbf7e9}
+  .gtable td.vsep{border-left:2px solid #e3e6f4}
+  .gtable tfoot td{background:linear-gradient(180deg,#1c1f3b,#23274a);color:#fff;font-size:12.5px}
+  .gtable tfoot td.gtot{background:#2a2d52;color:#ffe08a}
+
+  .wrap{padding:0 16px}
+
+  .paybar{position:sticky;top:92px;z-index:20;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:10px;
+    box-shadow:var(--shadow);display:grid;grid-template-columns:1fr 112px auto;gap:8px;align-items:center;margin:8px 0}
+  .paybar .lbl{grid-column:1/4;font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:0}
+  .paybar input{font:inherit;font-size:16px;font-weight:600;padding:11px 12px;border:1.5px solid var(--line);border-radius:12px;background:#fbfbff;min-width:0;width:100%}
+  .paybar input:focus{outline:none;border-color:var(--brand-2)}
+  .paybar button{font:inherit;font-weight:700;font-size:14px;background:linear-gradient(135deg,var(--pos),#0aa86f);color:#fff;border:none;border-radius:12px;padding:12px 18px;cursor:pointer;white-space:nowrap;box-shadow:0 10px 20px -10px var(--pos)}
+  .paybar button:active{transform:scale(.97)}
+
+  .toolbar{display:flex;align-items:center;gap:8px;margin:14px 2px 6px}
+  .toolbar .sortbtn{font:inherit;font-size:12px;font-weight:700;color:var(--brand);background:#f3f1ff;border:1px solid #e4e0ff;border-radius:999px;padding:5px 11px;cursor:pointer}
+  .toolbar .cnt{font-size:12px;color:var(--muted);font-weight:600;margin-left:auto}
+
+  .board{display:grid;grid-template-columns:1fr;gap:14px;margin-top:2px}
+  @media(min-width:720px){.board{grid-template-columns:1fr 264px;align-items:start}}
+
+  .tablecard{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden}
+  .tscroll{overflow-x:auto}
+  table{width:100%;border-collapse:collapse;font-size:13.5px}
+  thead th{position:sticky;top:0;z-index:10;background:linear-gradient(180deg,#23274a,#1c1f3b);text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.09em;color:#b9b4e6;font-weight:700;padding:13px 14px}
+  thead th.r{text-align:right}
+  tbody td{padding:11px 14px;border-bottom:1px solid var(--line-2);white-space:nowrap;font-weight:600;vertical-align:middle}
+  tbody td.r{text-align:right}
+  tbody tr{cursor:pointer;transition:background .14s}
+  tbody tr:hover{background:#f8f7ff}
+  tbody tr.ok{background:linear-gradient(90deg,var(--pos-soft),transparent 55%)}
+  .cli{display:flex;align-items:center;gap:11px}
+  .av{width:36px;height:36px;border-radius:11px;color:#fff;font-family:var(--disp);font-weight:600;font-size:13px;display:grid;place-items:center;flex:none;box-shadow:0 6px 14px -8px rgba(28,31,59,.6)}
+  .cliinfo{min-width:0}
+  .nm{font-weight:700;font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:172px}
+  .bar{width:120px;height:5px;border-radius:999px;background:#e9ebf5;margin-top:6px;overflow:hidden}
+  .bar span{display:block;height:100%;background:linear-gradient(90deg,#08b67a,#46d6a5);border-radius:999px;transition:width .5s cubic-bezier(.2,.8,.2,1)}
+  .bar.full span{background:linear-gradient(90deg,#5b4bff,#8a7bff)}
+  .tot{color:var(--ink-2)}
+  .mut{color:var(--muted)}
+  .pill{display:inline-block;min-width:74px;text-align:right;padding:6px 12px;border-radius:999px;font-weight:800;font-size:13.5px;background:var(--neg-soft);color:var(--neg)}
+  .pill.ok{background:var(--pos-soft);color:var(--pos)}
+  tfoot td{padding:14px;font-weight:800;font-size:14px;background:linear-gradient(180deg,#1c1f3b,#23274a);color:#fff}
+  tfoot td.r{text-align:right}
+  tfoot .ft-deb{color:#ff9bb0}
+  .empty{text-align:center;color:var(--muted);padding:34px 16px;font-size:14px}
+  /* texto centrado en ambas tablas */
+  thead th,thead th.r,tbody td,tbody td.r,tfoot td,tfoot td.r{text-align:center}
+  .cli{justify-content:center}
+  .nm{max-width:none}
+  .bar{margin:6px auto}
+  .gtable .gname{justify-content:center}
+  .pill{text-align:center}
+  .paybtn{font:inherit;font-weight:700;font-size:12.5px;border:1.5px solid var(--line);background:var(--card);color:var(--muted);border-radius:999px;padding:7px 15px;cursor:pointer;transition:.15s}
+  .paybtn:active{transform:scale(.96)}
+  .paybtn.paid{background:var(--pos-soft);color:var(--pos);border-color:transparent}
+  #monthSel{font:inherit;font-weight:700;font-size:13px;border-radius:11px;border:1px solid var(--line);background:var(--card);color:var(--ink);padding:8px 12px;cursor:pointer}
+
+  .saldos{background:linear-gradient(160deg,var(--panel-1),var(--panel-2));color:#fff;border-radius:var(--r);padding:16px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+  .saldos::after{content:"";position:absolute;width:180px;height:180px;right:-60px;top:-60px;background:radial-gradient(circle,rgba(139,123,255,.5),transparent 70%)}
+  .saldos h2{font-family:var(--disp);font-size:11px;text-transform:uppercase;letter-spacing:.14em;color:#b9b4e6;font-weight:600;margin-bottom:10px;position:relative}
+  .hero{position:relative;margin-bottom:6px}
+  .hero .l{font-size:12.5px;color:#cdc9f0}
+  .hero .n{font-family:var(--disp);font-weight:700;font-size:31px;letter-spacing:-.02em;margin-top:2px}
+  .hero .n.zero{color:#7ef0bf}
+  .srow{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid rgba(255,255,255,.09);position:relative}
+  .srow:last-child{border-bottom:none}
+  .srow .l{font-size:12.5px;color:#cdc9f0;display:flex;align-items:center;gap:7px}
+  .srow .l .ico{width:6px;height:6px;border-radius:50%}
+  .srow .n{font-weight:700;font-size:15px}
+  .srow.edit{cursor:pointer;border-radius:10px;margin:2px -8px;padding:11px 8px}
+  .srow.edit:hover{background:rgba(255,255,255,.06)}
+  .srow.edit .n{display:flex;align-items:center;gap:7px}
+  .srow.edit .pencil{font-size:11px;color:#b9b4e6;font-weight:600}
+  .divlbl{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:#8d88c0;margin:10px 0 -2px;position:relative}
+  .saldos .foot{margin-top:12px;font-size:11.5px;color:#9b96cf;border-top:1px solid rgba(255,255,255,.09);padding-top:9px;position:relative}
+
+  .scrim{position:fixed;inset:0;background:rgba(18,20,38,.5);backdrop-filter:blur(3px);z-index:40;display:none;align-items:flex-end;justify-content:center}
+  .scrim.on{display:flex}
+  .sheet{background:var(--bg);width:100%;max-width:680px;border-radius:22px 22px 0 0;max-height:90vh;overflow:auto;padding:8px 16px 28px;animation:up .24s cubic-bezier(.2,.8,.2,1)}
+  @keyframes up{from{transform:translateY(34px);opacity:.5}to{transform:none;opacity:1}}
+  .grab{width:40px;height:4px;background:#cfd2e3;border-radius:999px;margin:8px auto 14px}
+  .sheet h3{font-family:var(--disp);font-size:22px;font-weight:700;letter-spacing:-.02em}
+  .tdd{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px;margin:14px 0}
+  .tdd>div{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:11px}
+  .tdd .k{font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:700}
+  .tdd .v{font-size:16px;font-weight:800;margin-top:4px}
+  .mrow{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid var(--line);gap:10px}
+  .mrow .d{font-size:13px;color:var(--ink-2);font-weight:600} .mrow .d small{display:block;color:var(--muted);font-size:11.5px;font-weight:500}
+  .xbtn{background:none;border:none;color:var(--muted);font-size:17px;cursor:pointer;padding:2px 6px;line-height:1}
+  .field{display:block;margin:13px 0 5px;font-size:12px;font-weight:700;color:var(--ink-2)}
+  input[type=text],input[type=number],textarea{width:100%;font:inherit;font-size:16px;font-weight:600;padding:12px;border:1.5px solid var(--line);border-radius:12px;background:var(--card)}
+  input:focus,textarea:focus{outline:none;border-color:var(--brand-2)}
+  .hint{color:var(--muted);font-size:13px;font-weight:500;margin:6px 0 2px;line-height:1.4}
+  .seg{display:flex;gap:8px;margin-top:8px}
+  .seg button{flex:1;padding:12px;border:1.5px solid var(--line);background:var(--card);border-radius:12px;font-weight:700;font-size:14px;cursor:pointer;color:var(--ink)}
+  .seg button.sel{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .seg button.go{background:linear-gradient(135deg,var(--pos),#0aa86f);color:#fff;border-color:transparent}
+  .menulist{list-style:none}
+  .menulist li{padding:16px 4px;border-bottom:1px solid var(--line);font-size:15.5px;font-weight:600;cursor:pointer}
+  .pasta{min-height:120px;font:13px/1.4 ui-monospace,Menlo,Consolas,monospace;font-weight:500}
+  .fab{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;z-index:30;display:flex;gap:8px}
+  .fab .btn{font:inherit;font-weight:700;font-size:14px;border-radius:14px;border:none;background:linear-gradient(135deg,var(--brand),var(--brand-2));color:#fff;padding:13px 20px;cursor:pointer;box-shadow:0 14px 28px -12px var(--brand)}
+  .fab .btn.sec{background:var(--card);color:var(--ink);border:1px solid var(--line);box-shadow:var(--shadow-sm)}
+  .toast{position:fixed;left:50%;bottom:82px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:12px 17px;border-radius:13px;font-size:13px;font-weight:600;opacity:0;transition:.25s;z-index:50;pointer-events:none;max-width:90%;text-align:center;box-shadow:var(--shadow)}
+  .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+  .filein{display:none}
+</style>
+
+<header>
+  <div class="brand"><div class="logo">$</div><h1 id="title">Cuenta corriente</h1><span class="acct" id="acct">verdi333</span></div>
+  <div class="acctline" id="acctline"></div>
+  <div class="tabs">
+    <button class="tab on" data-tab="cc">Cuenta corriente</button>
+    <button class="tab" data-tab="gan">Ganancias</button>
+    <button class="tab" data-tab="pag">Gan a pagar</button>
+  </div>
+</header>
+
+<div class="wrap">
+ <div id="viewCC">
+  <div class="paybar">
+    <span class="lbl">Registrar pago</span>
+    <input type="text" id="pbCli" placeholder="Cliente" list="clilist" autocomplete="off">
+    <input type="number" id="pbImp" inputmode="numeric" placeholder="Pagó $">
+    <button id="pbAdd">Sumar</button>
+    <datalist id="clilist"></datalist>
+  </div>
+
+  <div class="toolbar">
+    <button class="sortbtn" id="sortbtn">orden: deuda ▾</button>
+    <span class="cnt" id="cliCount"></span>
+  </div>
+
+  <div class="board">
+    <div class="tablecard">
+      <div class="tscroll">
+        <table>
+          <thead><tr><th>Cliente</th><th class="r">Total</th><th class="r">Pagado</th><th class="r">Debe</th></tr></thead>
+          <tbody id="rows"></tbody>
+          <tfoot id="foot"></tfoot>
+        </table>
+      </div>
+    </div>
+    <aside class="saldos" id="saldos"></aside>
+  </div>
+ </div>
+
+ <div id="viewGAN" style="display:none">
+  <div class="toolbar">
+    <button class="sortbtn" id="sortbtnG">orden: ganancia ▾</button>
+    <span class="cnt" id="ganDays"></span>
+  </div>
+  <div class="board gboard">
+    <div class="tablecard">
+      <div class="tscroll">
+        <table class="gtable">
+          <thead>
+            <tr class="grp"><th class="clih"></th><th class="vgrp" colspan="4">CARGA VIRTUAL</th><th class="sgrp" colspan="4">CARGA SUBE</th></tr>
+            <tr><th>Cliente</th>
+              <th class="r">Vendido</th><th class="r">Comisión</th><th class="r">Mi comisión</th><th class="r">Total</th>
+              <th class="r">Vendido</th><th class="r">Comisión</th><th class="r">Mi comisión</th><th class="r">Total</th></tr>
+          </thead>
+          <tbody id="rowsG"></tbody>
+          <tfoot id="footG"></tfoot>
+        </table>
+      </div>
+    </div>
+    <aside class="saldos" id="resumen"></aside>
+  </div>
+ </div>
+
+ <div id="viewPAG" style="display:none">
+  <div class="toolbar">
+    <select id="monthSel"></select>
+    <span class="cnt" id="pagInfo"></span>
+  </div>
+  <div class="board">
+    <div class="tablecard">
+      <div class="tscroll">
+        <table>
+          <thead><tr><th>Cliente</th><th class="r">Com. virtual</th><th class="r">Com. SUBE</th><th class="r">A pagar</th><th class="r">Estado</th></tr></thead>
+          <tbody id="rowsP"></tbody>
+          <tfoot id="footP"></tfoot>
+        </table>
+      </div>
+    </div>
+    <aside class="saldos" id="resumenP"></aside>
+  </div>
+ </div>
+</div>
+
+<div class="fab">
+  <button class="btn" id="importBtn">↑ Importar CSV</button>
+  <button class="btn sec" id="moreBtn">⋯</button>
+</div>
+<input type="file" id="file" class="filein" accept=".csv,text/csv">
+<input type="file" id="fileG" class="filein" accept=".csv,text/csv">
+
+<div class="scrim" id="scrim"><div class="sheet" id="sheet"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const STORE_KEY="pinweb_acred_v1";
+const SEED=[{"fecha":"17/06/2026 18:27:46","desc":"ok","obs":"","otorga":"verdi333","recibe":"MONTIEL1905","importe":-100000},{"fecha":"17/06/2026 17:19:11","desc":"126621-Acreditacion Deposito/Transferencia NACION (350000)","obs":"","otorga":"PinWeb","recibe":"verdi333","importe":350000},{"fecha":"17/06/2026 17:16:11","desc":"ok","obs":"","otorga":"verdi333","recibe":"25demayo641","importe":-30000},{"fecha":"17/06/2026 16:45:27","desc":"ok","obs":"","otorga":"verdi333","recibe":"Rivadavia1400","importe":-100000},{"fecha":"17/06/2026 14:08:07","desc":"Pl","obs":"app","otorga":"verdi333","recibe":"Donald2822","importe":-1000000},{"fecha":"17/06/2026 14:07:54","desc":"Ok","obs":"app","otorga":"verdi333","recibe":"Donald1066","importe":-1200000},{"fecha":"17/06/2026 13:49:31","desc":"ok","obs":"","otorga":"verdi333","recibe":"Quesada","importe":-70000},{"fecha":"17/06/2026 13:39:49","desc":"ok","obs":"","otorga":"verdi333","recibe":"Rivadavia1400","importe":-50000},{"fecha":"17/06/2026 13:39:42","desc":"ok","obs":"","otorga":"verdi333","recibe":"MONTIEL1905","importe":-50000},{"fecha":"17/06/2026 12:38:56","desc":"Ok","obs":"app","otorga":"verdi333","recibe":"Alberdi1382A","importe":-50000},{"fecha":"17/06/2026 12:09:29","desc":"126587-Acreditacion Deposito/Transferencia NACION (600000,600000)","obs":"","otorga":"PinWeb","recibe":"verdi333","importe":1200000},{"fecha":"17/06/2026 11:36:23","desc":"Ok","obs":"app","otorga":"verdi333","recibe":"encalada2332","importe":-30000},{"fecha":"17/06/2026 10:49:00","desc":"OK","obs":"","otorga":"verdi333","recibe":"HYrigoyen1400","importe":-150000},{"fecha":"17/06/2026 10:08:40","desc":"ok","obs":"","otorga":"verdi333","recibe":"Lspena121","importe":-50000},{"fecha":"17/06/2026 10:08:29","desc":"ok","obs":"","otorga":"verdi333","recibe":"MONTIEL1905","importe":-100000},{"fecha":"17/06/2026 09:26:12","desc":"Ok","obs":"app","otorga":"verdi333","recibe":"indep1673","importe":-100000},{"fecha":"17/06/2026 08:31:05","desc":"126549-Acreditacion Deposito/Transferencia NACION (1300000)","obs":"","otorga":"PinWeb","recibe":"verdi333","importe":1300000},{"fecha":"17/06/2026 08:28:21","desc":"Ok","obs":"app","otorga":"verdi333","recibe":"Rivadavia7376","importe":-250000},{"fecha":"17/06/2026 07:41:21","desc":"Ok","obs":"app","otorga":"verdi333","recibe":"Rivadavia1400","importe":-100000},{"fecha":"17/06/2026 07:32:30","desc":"Ok","obs":"app","otorga":"verdi333","recibe":"RIVADAVIA2289","importe":-340000},{"fecha":"17/06/2026 00:44:30","desc":"ok","obs":"","otorga":"verdi333","recibe":"HYrigoyen1400","importe":15000}];
+// Saldos de arranque (tu Excel, actualizado al 16/06, SIN las acreditaciones de hoy)
+const OPENING_SEED=[{"name":"25DEMAYO641","total":240000,"pagado":210000},{"name":"ALBERDI1382A","total":460000,"pagado":460000},{"name":"BOGOTA2491","total":0,"pagado":0},{"name":"DONALD1","total":3000000,"pagado":3000000},{"name":"DONALD2","total":2892000,"pagado":2892000},{"name":"ENCALADA2332","total":450000,"pagado":450000},{"name":"ERIOS286","total":2320000,"pagado":2320000},{"name":"H. YRIGOYEN 1400","total":1500000,"pagado":1452038},{"name":"INDEP1673","total":1750000,"pagado":1750000},{"name":"LACROZE2929","total":0,"pagado":-42192},{"name":"LSPENA121","total":740000,"pagado":740000},{"name":"MONTIEL1905","total":3950000,"pagado":3825966},{"name":"OLAVARRIA 3038","total":1160000,"pagado":1160000},{"name":"RIVADAVIA1400","total":3500000,"pagado":3224204},{"name":"RIVADAVIA2289","total":4376978,"pagado":4376978},{"name":"RIVADAVIA5406","total":0,"pagado":0},{"name":"RIVADAVIA7376","total":3350000,"pagado":3350000},{"name":"RIVADAVIA7376 SUBE","total":169763,"pagado":169763},{"name":"RIVADAVIA8998","total":200000,"pagado":41724},{"name":"RONALD1382","total":1092000,"pagado":1092000},{"name":"SANPEDRITO27","total":607630,"pagado":607630},{"name":"MONTEDEOCA40","total":60000,"pagado":60000}];
+// nombres del Excel que en pinweb figuran distinto
+const ALIASES={"donald1":"donald1066","donald2":"donald2822","quesada":"olavarria3038","montedeoca40":"uruguay198","montesdeoca40":"uruguay198"};
+// nombre que se muestra siempre para cada cliente unificado
+const CANON={"uruguay198":"Uruguay198","olavarria3038":"OLAVARRIA 3038"};
+// Config comisión CARGA VIRTUAL: directo del CSV (GJ), por % del vendido, o sin comisión
+const VIRT_DIRECT=new Set(["alberdi1382a","donald1066","donald2822","encalada2332","erios286","indep1673"]);
+const VIRT_PCT={hyrigoyen1400:0.02,lacroze2929:0.015,montiel1905:0.015,olavarria3038:0.01,rivadavia1400:0.02,rivadavia2289:0.02,rivadavia5406:0.01,rivadavia7376:0.03,sanpedrito27:0.02,uruguay198:0.01};
+const VIRT_ZERO=new Set(["25demayo641","bogota2491","lspena121","rivadavia8998","ronald1382"]);
+// Config comisión CARGA SUBE: solo estos llevan % ; el resto va directo del CSV (GJ)
+const SUBE_PCT={hyrigoyen1400:0.008,lacroze2929:0.008,montiel1905:0.0065,olavarria3038:0.005,rivadavia1400:0.01,rivadavia2289:0.01,rivadavia7376:0.01};
+const BASE_MONTH="2026-06"; // la base 1–16/06 pertenece a junio 2026
+let pagMonth="";
+const AVS=['linear-gradient(135deg,#5b4bff,#8a7bff)','linear-gradient(135deg,#08b67a,#3ad29f)','linear-gradient(135deg,#ff7a59,#ff486a)','linear-gradient(135deg,#f5a623,#ffce56)','linear-gradient(135deg,#2bb1ff,#5b4bff)','linear-gradient(135deg,#9b5bff,#ff7ad9)'];
+const VENTAS_SEED=[{"id":"386451064","fecha":"17/6/2026 18:53","cli":"Ronald1382","prod":"Recargas de CLARO","pvp":2000.0,"gd":107.4,"gj":0.0},{"id":"386451054","fecha":"17/6/2026 18:52","cli":"Donald2822","prod":"Recargas de Personal","pvp":10000.0,"gd":391.0,"gj":125.0},{"id":"386451041","fecha":"17/6/2026 18:51","cli":"indep1673","prod":"Recargas de CLARO","pvp":6000.0,"gd":250.2,"gj":72.0},{"id":"386450999","fecha":"17/6/2026 18:47","cli":"Ronald1382","prod":"Recargas de Movistar","pvp":1500.0,"gd":52.5,"gj":0.0},{"id":"386450963","fecha":"17/6/2026 18:44","cli":"Donald2822","prod":"Recargas de Movistar","pvp":2000.0,"gd":45.0,"gj":25.0},{"id":"386450772","fecha":"17/6/2026 18:28","cli":"Rivadavia7376","prod":"SUBE LG","pvp":48600.0,"gd":972.0,"gj":0.0},{"id":"386450717","fecha":"17/6/2026 18:23","cli":"indep1673","prod":"Recargas de Personal","pvp":5000.0,"gd":200.0,"gj":58.0},{"id":"386450713","fecha":"17/6/2026 18:23","cli":"Donald1066","prod":"SUBE LG","pvp":50000.0,"gd":1000.0,"gj":0.0},{"id":"386450547","fecha":"17/6/2026 18:11","cli":"indep1673","prod":"SUBE LG","pvp":46250.0,"gd":809.38,"gj":115.63},{"id":"386450539","fecha":"17/6/2026 18:11","cli":"MONTIEL1905","prod":"Recargas de Personal","pvp":10000.0,"gd":516.0,"gj":0.0},{"id":"386450476","fecha":"17/6/2026 18:06","cli":"HYrigoyen1400","prod":"SUBE LG","pvp":30000.0,"gd":600.0,"gj":0.0},{"id":"386450460","fecha":"17/6/2026 18:05","cli":"Donald2822","prod":"Recargas de Movistar","pvp":6000.0,"gd":135.0,"gj":75.0},{"id":"386450412","fecha":"17/6/2026 18:01","cli":"Rivadavia1400","prod":"Recargas de TUENTI","pvp":3000.0,"gd":105.0,"gj":0.0},{"id":"386450379","fecha":"17/6/2026 17:58","cli":"Ronald1382","prod":"Recargas de CLARO","pvp":2000.0,"gd":107.4,"gj":0.0},{"id":"386450348","fecha":"17/6/2026 17:55","cli":"Donald2822","prod":"Recargas DirecTV","pvp":10500.0,"gd":178.5,"gj":105.0},{"id":"386450286","fecha":"17/6/2026 17:49","cli":"MONTIEL1905","prod":"SUBE LG","pvp":50000.0,"gd":1000.0,"gj":0.0},{"id":"386450259","fecha":"17/6/2026 17:45","cli":"Alberdi1382A","prod":"Recargas de Movistar","pvp":2000.0,"gd":45.0,"gj":25.0},{"id":"386450189","fecha":"17/6/2026 17:38","cli":"sanpedrito27","prod":"Recargas de Personal","pvp":10000.0,"gd":516.0,"gj":0.0},{"id":"386450162","fecha":"17/6/2026 17:36","cli":"sanpedrito27","prod":"Recargas de Personal","pvp":10000.0,"gd":516.0,"gj":0.0},{"id":"386450137","fecha":"17/6/2026 17:34","cli":"sanpedrito27","prod":"Recargas de Movistar","pvp":3000.0,"gd":105.0,"gj":0.0},{"id":"386449901","fecha":"17/6/2026 17:08","cli":"Rivadavia7376","prod":"SUBE LG","pvp":48700.0,"gd":974.0,"gj":0.0},{"id":"386449894","fecha":"17/6/2026 17:07","cli":"25demayo641","prod":"SUBE LG","pvp":8000.0,"gd":160.0,"gj":0.0},{"id":"386449815","fecha":"17/6/2026 16:58","cli":"Rivadavia7376","prod":"Recargas DirecTV","pvp":10500.0,"gd":283.5,"gj":0.0},{"id":"386449810","fecha":"17/6/2026 16:57","cli":"RIVADAVIA2289","prod":"SUBE LG","pvp":50000.0,"gd":1000.0,"gj":0.0},{"id":"386449808","fecha":"17/6/2026 16:57","cli":"MONTIEL1905","prod":"Recargas de CLARO","pvp":8000.0,"gd":429.6,"gj":0.0},{"id":"386449664","fecha":"17/6/2026 16:36","cli":"25demayo641","prod":"Recargas de TUENTI","pvp":15000.0,"gd":525.0,"gj":0.0},{"id":"386449553","fecha":"17/6/2026 16:21","cli":"HYrigoyen1400","prod":"SUBE LG","pvp":5900.0,"gd":118.0,"gj":0.0},{"id":"386449526","fecha":"17/6/2026 16:18","cli":"Rivadavia1400","prod":"SUBE LG","pvp":30000.0,"gd":600.0,"gj":0.0},{"id":"386449468","fecha":"17/6/2026 16:08","cli":"Donald1066","prod":"SUBE LG","pvp":50000.0,"gd":1000.0,"gj":0.0},{"id":"386449422","fecha":"17/6/2026 15:59","cli":"Erios286","prod":"SUBE LG","pvp":28300.0,"gd":495.25,"gj":70.75},{"id":"386449365","fecha":"17/6/2026 15:51","cli":"Rivadavia7376","prod":"Recargas de Movistar","pvp":2000.0,"gd":70.0,"gj":0.0},{"id":"386449335","fecha":"17/6/2026 15:47","cli":"RIVADAVIA2289","prod":"Recargas de Personal","pvp":9900.0,"gd":510.84,"gj":0.0},{"id":"386449244","fecha":"17/6/2026 15:31","cli":"Donald2822","prod":"Recargas de Personal","pvp":10000.0,"gd":391.0,"gj":125.0},{"id":"386449238","fecha":"17/6/2026 15:30","cli":"Donald2822","prod":"Recargas de Personal","pvp":10000.0,"gd":391.0,"gj":125.0},{"id":"386449214","fecha":"17/6/2026 15:24","cli":"Rivadavia7376","prod":"Recargas de Movistar","pvp":4000.0,"gd":140.0,"gj":0.0},{"id":"386449201","fecha":"17/6/2026 15:21","cli":"Erios286","prod":"Recargas de Movistar","pvp":5000.0,"gd":100.0,"gj":75.0},{"id":"386449197","fecha":"17/6/2026 15:21","cli":"Erios286","prod":"SUBE Electro Presencial","pvp":15000.0,"gd":112.5,"gj":0.0},{"id":"386449189","fecha":"17/6/2026 15:20","cli":"Donald2822","prod":"Recargas de Personal","pvp":6000.0,"gd":234.6,"gj":75.0},{"id":"386449159","fecha":"17/6/2026 15:16","cli":"RIVADAVIA2289","prod":"SUBE LG","pvp":50000.0,"gd":1000.0,"gj":0.0},{"id":"386449117","fecha":"17/6/2026 15:12","cli":"encalada2332","prod":"Recargas de Personal","pvp":20000.0,"gd":800.0,"gj":232.0},{"id":"386449093","fecha":"17/6/2026 15:08","cli":"Rivadavia1400","prod":"Recargas de CLARO","pvp":3000.0,"gd":161.1,"gj":0.0},{"id":"386449060","fecha":"17/6/2026 15:00","cli":"Donald1066","prod":"SUBE LG","pvp":40000.0,"gd":800.0,"gj":0.0},{"id":"386449048","fecha":"17/6/2026 14:58","cli":"indep1673","prod":"Recargas de CLARO","pvp":5000.0,"gd":208.5,"gj":60.0},{"id":"386449007","fecha":"17/6/2026 14:53","cli":"encalada2332","prod":"Recargas de Personal","pvp":5000.0,"gd":200.0,"gj":58.0},{"id":"386449000","fecha":"17/6/2026 14:51","cli":"Rivadavia1400","prod":"SUBE LG","pvp":23500.0,"gd":470.0,"gj":0.0},{"id":"386448995","fecha":"17/6/2026 14:50","cli":"Rivadavia1400","prod":"Recargas de Personal","pvp":10000.0,"gd":516.0,"gj":0.0},{"id":"386448989","fecha":"17/6/2026 14:50","cli":"Rivadavia1400","prod":"Recargas de Personal","pvp":4000.0,"gd":206.4,"gj":0.0},{"id":"386448986","fecha":"17/6/2026 14:49","cli":"Rivadavia1400","prod":"Recargas de Personal","pvp":10000.0,"gd":516.0,"gj":0.0},{"id":"386448914","fecha":"17/6/2026 14:38","cli":"Rivadavia7376","prod":"Recargas de Personal","pvp":4000.0,"gd":206.4,"gj":0.0},{"id":"386448906","fecha":"17/6/2026 14:37","cli":"encalada2332","prod":"SUBE Electro Presencial","pvp":5000.0,"gd":37.5,"gj":0.0},{"id":"386448866","fecha":"17/6/2026 14:29","cli":"HYrigoyen1400","prod":"Recargas de Personal","pvp":4000.0,"gd":206.4,"gj":0.0},{"id":"386448799","fecha":"17/6/2026 14:17","cli":"Rivadavia1400","prod":"SUBE LG","pvp":21000.0,"gd":420.0,"gj":0.0},{"id":"386448660","fecha":"17/6/2026 13:58","cli":"Donald2822","prod":"Recargas de Movistar","pvp":2000.0,"gd":45.0,"gj":25.0},{"id":"386448659","fecha":"17/6/2026 13:58","cli":"HYrigoyen1400","prod":"SUBE LG","pvp":3700.0,"gd":74.0,"gj":0.0},{"id":"386448656","fecha":"17/6/2026 13:58","cli":"RIVADAVIA2289","prod":"Recargas de Movistar","pvp":8000.0,"gd":280.0,"gj":0.0},{"id":"386448637","fecha":"17/6/2026 13:55","cli":"HYrigoyen1400","prod":"SUBE LG","pvp":4000.0,"gd":80.0,"gj":0.0},{"id":"386448611","fecha":"17/6/2026 13:53","cli":"Quesada","prod":"SUBE LG","pvp":0.0,"gd":0.0,"gj":0.0},{"id":"386448578","fecha":"17/6/2026 13:48","cli":"Donald2822","prod":"Recargas de Movistar","pvp":6000.0,"gd":135.0,"gj":75.0},{"id":"386448574","fecha":"17/6/2026 13:48","cli":"Donald2822","prod":"Recargas de Movistar","pvp":4000.0,"gd":90.0,"gj":50.0},{"id":"386448566","fecha":"17/6/2026 13:46","cli":"indep1673","prod":"Recargas de Personal","pvp":10000.0,"gd":400.0,"gj":116.0},{"id":"386448559","fecha":"17/6/2026 13:46","cli":"RIVADAVIA2289","prod":"SUBE LG","pvp":50000.0,"gd":1000.0,"gj":0.0},{"id":"386448555","fecha":"17/6/2026 13:45","cli":"Erios286","prod":"SUBE Electro Presencial","pvp":10000.0,"gd":75.0,"gj":0.0},{"id":"386448522","fecha":"17/6/2026 13:41","cli":"Donald2822","prod":"Recargas de Movistar","pvp":2500.0,"gd":56.25,"gj":31.25},{"id":"386448412","fecha":"17/6/2026 13:29","cli":"Rivadavia8998","prod":"Recargas de TUENTI","pvp":2600.0,"gd":91.0,"gj":0.0},{"id":"386448402","fecha":"17/6/2026 13:28","cli":"Ronald1382","prod":"SUBE Electro Presencial","pvp":2000.0,"gd":15.0,"gj":0.0},{"id":"386448395","fecha":"17/6/2026 13:27","cli":"Ronald1382","prod":"SUBE Electro Presencial","pvp":4000.0,"gd":30.0,"gj":0.0},{"id":"386448334","fecha":"17/6/2026 13:19","cli":"Erios286","prod":"SUBE Electro Presencial","pvp":10000.0,"gd":75.0,"gj":0.0},{"id":"386448310","fecha":"17/6/2026 13:17","cli":"Donald2822","prod":"Recargas de Personal","pvp":2000.0,"gd":78.2,"gj":25.0},{"id":"386448214","fecha":"17/6/2026 13:06","cli":"Rivadavia7376","prod":"Recargas de Movistar","pvp":13000.0,"gd":455.0,"gj":0.0},{"id":"386448197","fecha":"17/6/2026 13:04","cli":"MONTIEL1905","prod":"Recargas de Personal","pvp":2800.0,"gd":144.48,"gj":0.0},{"id":"386448169","fecha":"17/6/2026 13:01","cli":"HYrigoyen1400","prod":"Recargas de Movistar","pvp":4000.0,"gd":140.0,"gj":0.0},{"id":"386448154","fecha":"17/6/2026 12:59","cli":"Rivadavia7376","prod":"Recargas de Personal","pvp":8000.0,"gd":412.8,"gj":0.0},{"id":"386448116","fecha":"17/6/2026 12:54","cli":"HYrigoyen1400","prod":"SUBE LG","pvp":16400.0,"gd":328.0,"gj":0.0},{"id":"386447988","fecha":"17/6/2026 12:43","cli":"MONTIEL1905","prod":"SUBE LG","pvp":46800.0,"gd":936.0,"gj":0.0},{"id":"386447975","fecha":"17/6/2026 12:42","cli":"Alberdi1382A","prod":"SUBE LG","pvp":20000.0,"gd":400.0,"gj":0.0},{"id":"386447913","fecha":"17/6/2026 12:37","cli":"Ronald1382","prod":"SUBE Electro Presencial","pvp":2000.0,"gd":15.0,"gj":0.0},{"id":"386447837","fecha":"17/6/2026 12:28","cli":"Donald2822","prod":"Recargas de Movistar","pvp":4000.0,"gd":90.0,"gj":50.0},{"id":"386447822","fecha":"17/6/2026 12:27","cli":"25demayo641","prod":"Recargas de Personal","pvp":2000.0,"gd":103.2,"gj":0.0},{"id":"386447813","fecha":"17/6/2026 12:27","cli":"Ronald1382","prod":"SUBE Electro Presencial","pvp":3000.0,"gd":22.5,"gj":0.0},{"id":"386447782","fecha":"17/6/2026 12:24","cli":"Donald2822","prod":"Recargas de Personal","pvp":10000.0,"gd":391.0,"gj":125.0},{"id":"386447753","fecha":"17/6/2026 12:22","cli":"Ronald1382","prod":"Recargas de Movistar","pvp":3000.0,"gd":105.0,"gj":0.0},{"id":"386447595","fecha":"17/6/2026 12:08","cli":"Rivadavia1400","prod":"SUBE LG","pvp":6000.0,"gd":120.0,"gj":0.0},{"id":"386447552","fecha":"17/6/2026 12:04","cli":"Lspena121","prod":"Recargas de Movistar","pvp":5000.0,"gd":175.0,"gj":0.0},{"id":"386447532","fecha":"17/6/2026 12:02","cli":"indep1673","prod":"Recargas de Movistar","pvp":5000.0,"gd":100.0,"gj":75.0},{"id":"386447526","fecha":"17/6/2026 12:01","cli":"Donald2822","prod":"Recargas de Movistar","pvp":4000.0,"gd":90.0,"gj":50.0},{"id":"386447514","fecha":"17/6/2026 12:00","cli":"Donald2822","prod":"Recargas de Movistar","pvp":4000.0,"gd":90.0,"gj":50.0},{"id":"386447478","fecha":"17/6/2026 11:57","cli":"Rivadavia7376","prod":"SUBE LG","pvp":48500.0,"gd":970.0,"gj":0.0},{"id":"386447422","fecha":"17/6/2026 11:52","cli":"Rivadavia1400","prod":"Recargas de Movistar","pvp":5000.0,"gd":175.0,"gj":0.0},{"id":"386447234","fecha":"17/6/2026 11:37","cli":"25demayo641","prod":"Recargas de CLARO","pvp":2000.0,"gd":107.4,"gj":0.0},{"id":"386447233","fecha":"17/6/2026 11:37","cli":"25demayo641","prod":"Recargas de Movistar","pvp":5000.0,"gd":175.0,"gj":0.0},{"id":"386447217","fecha":"17/6/2026 11:35","cli":"Ronald1382","prod":"Recargas de Movistar","pvp":5000.0,"gd":175.0,"gj":0.0},{"id":"386447197","fecha":"17/6/2026 11:33","cli":"MONTIEL1905","prod":"Recargas de Movistar","pvp":2000.0,"gd":70.0,"gj":0.0},{"id":"386447021","fecha":"17/6/2026 11:19","cli":"Ronald1382","prod":"SUBE Electro Presencial","pvp":4000.0,"gd":30.0,"gj":0.0},{"id":"386446929","fecha":"17/6/2026 11:12","cli":"Rivadavia7376","prod":"Recargas de Personal","pvp":2000.0,"gd":103.2,"gj":0.0},{"id":"386446864","fecha":"17/6/2026 11:07","cli":"Alberdi1382A","prod":"SUBE LG","pvp":13900.0,"gd":278.0,"gj":0.0},{"id":"386446856","fecha":"17/6/2026 11:06","cli":"Lspena121","prod":"Recargas de Movistar","pvp":4000.0,"gd":140.0,"gj":0.0},{"id":"386446748","fecha":"17/6/2026 10:59","cli":"HYrigoyen1400","prod":"Recargas de Personal","pvp":10000.0,"gd":516.0,"gj":0.0},{"id":"386446650","fecha":"17/6/2026 10:51","cli":"Quesada","prod":"Recargas de Movistar","pvp":10000.0,"gd":350.0,"gj":0.0},{"id":"386446635","fecha":"17/6/2026 10:50","cli":"Rivadavia7376","prod":"Recargas de Personal","pvp":10000.0,"gd":516.0,"gj":0.0},{"id":"386446541","fecha":"17/6/2026 10:42","cli":"Rivadavia1400","prod":"SUBE LG","pvp":29000.0,"gd":580.0,"gj":0.0},{"id":"386446537","fecha":"17/6/2026 10:42","cli":"HYrigoyen1400","prod":"SUBE LG","pvp":7000.0,"gd":140.0,"gj":0.0},{"id":"386446520","fecha":"17/6/2026 10:41","cli":"Rivadavia7376","prod":"Recargas de Movistar","pvp":2000.0,"gd":70.0,"gj":0.0},{"id":"386446309","fecha":"17/6/2026 10:22","cli":"Donald2822","prod":"SUBE Electro Presencial","pvp":5000.0,"gd":37.5,"gj":0.0},{"id":"386446287","fecha":"17/6/2026 10:19","cli":"Rivadavia7376","prod":"Recargas de Movistar","pvp":3000.0,"gd":105.0,"gj":0.0},{"id":"386446188","fecha":"17/6/2026 10:12","cli":"Donald2822","prod":"SUBE Electro Presencial","pvp":8000.0,"gd":60.0,"gj":0.0},{"id":"386446186","fecha":"17/6/2026 10:12","cli":"Donald2822","prod":"SUBE Electro Presencial","pvp":10000.0,"gd":75.0,"gj":0.0},{"id":"386446180","fecha":"17/6/2026 10:11","cli":"Donald2822","prod":"SUBE LG","pvp":4000.0,"gd":80.0,"gj":0.0},{"id":"386446086","fecha":"17/6/2026 10:01","cli":"MONTIEL1905","prod":"SUBE LG","pvp":45600.0,"gd":912.0,"gj":0.0},{"id":"386446082","fecha":"17/6/2026 10:01","cli":"Donald2822","prod":"SUBE LG","pvp":47000.0,"gd":940.0,"gj":0.0},{"id":"386446078","fecha":"17/6/2026 10:00","cli":"MONTIEL1905","prod":"Recargas de CLARO","pvp":4000.0,"gd":214.8,"gj":0.0},{"id":"386445983","fecha":"17/6/2026 09:52","cli":"encalada2332","prod":"SUBE Electro Presencial","pvp":2000.0,"gd":15.0,"gj":0.0},{"id":"386445844","fecha":"17/6/2026 09:39","cli":"Rivadavia5406","prod":"Recargas de Movistar","pvp":3000.0,"gd":105.0,"gj":0.0},{"id":"386445709","fecha":"17/6/2026 09:24","cli":"Erios286","prod":"SUBE Electro Presencial","pvp":8000.0,"gd":60.0,"gj":0.0},{"id":"386445553","fecha":"17/6/2026 09:04","cli":"Ronald1382","prod":"Recargas de Personal","pvp":7000.0,"gd":361.2,"gj":0.0},{"id":"386445532","fecha":"17/6/2026 09:01","cli":"Rivadavia1400","prod":"Recargas de Movistar","pvp":5000.0,"gd":175.0,"gj":0.0},{"id":"386445531","fecha":"17/6/2026 09:01","cli":"HYrigoyen1400","prod":"SUBE LG","pvp":21000.0,"gd":420.0,"gj":0.0},{"id":"386445527","fecha":"17/6/2026 09:00","cli":"RIVADAVIA2289","prod":"SUBE LG","pvp":50000.0,"gd":1000.0,"gj":0.0},{"id":"386445521","fecha":"17/6/2026 08:59","cli":"Erios286","prod":"SUBE Electro Presencial","pvp":8000.0,"gd":60.0,"gj":0.0},{"id":"386445472","fecha":"17/6/2026 08:50","cli":"Ronald1382","prod":"SUBE Electro Presencial","pvp":3000.0,"gd":22.5,"gj":0.0},{"id":"386445471","fecha":"17/6/2026 08:50","cli":"Erios286","prod":"Recargas de Personal","pvp":8000.0,"gd":320.0,"gj":92.8},{"id":"386445361","fecha":"17/6/2026 08:32","cli":"Rivadavia7376","prod":"Recargas de Movistar","pvp":3000.0,"gd":105.0,"gj":0.0},{"id":"386445337","fecha":"17/6/2026 08:28","cli":"MONTIEL1905","prod":"Recargas de Movistar","pvp":3000.0,"gd":105.0,"gj":0.0},{"id":"386445326","fecha":"17/6/2026 08:26","cli":"Rivadavia1400","prod":"Recargas de Movistar","pvp":3000.0,"gd":105.0,"gj":0.0},{"id":"386445321","fecha":"17/6/2026 08:25","cli":"Lspena121","prod":"SUBE LG","pvp":4000.0,"gd":80.0,"gj":0.0},{"id":"386445264","fecha":"17/6/2026 08:11","cli":"indep1673","prod":"SUBE LG","pvp":3150.0,"gd":55.13,"gj":7.88},{"id":"386445260","fecha":"17/6/2026 08:11","cli":"Rivadavia1400","prod":"SUBE LG","pvp":20900.0,"gd":418.0,"gj":0.0},{"id":"386445243","fecha":"17/6/2026 08:08","cli":"Ronald1382","prod":"SUBE Electro Presencial","pvp":2000.0,"gd":15.0,"gj":0.0},{"id":"386445235","fecha":"17/6/2026 08:06","cli":"RIVADAVIA2289","prod":"SUBE LG","pvp":15000.0,"gd":300.0,"gj":0.0},{"id":"386445231","fecha":"17/6/2026 08:06","cli":"Erios286","prod":"Recargas de Movistar","pvp":4000.0,"gd":80.0,"gj":60.0},{"id":"386445220","fecha":"17/6/2026 08:02","cli":"Rivadavia7376","prod":"Recargas de Movistar","pvp":7000.0,"gd":245.0,"gj":0.0},{"id":"386445208","fecha":"17/6/2026 07:58","cli":"Erios286","prod":"SUBE LG","pvp":9300.0,"gd":162.75,"gj":23.25},{"id":"386445135","fecha":"17/6/2026 07:39","cli":"Rivadavia7376","prod":"SUBE LG","pvp":47850.0,"gd":957.0,"gj":0.0},{"id":"386445077","fecha":"17/6/2026 07:23","cli":"Rivadavia7376","prod":"Recargas de CLARO","pvp":9000.0,"gd":483.3,"gj":0.0},{"id":"386444998","fecha":"17/6/2026 06:46","cli":"Ronald1382","prod":"Recargas de Movistar","pvp":2000.0,"gd":70.0,"gj":0.0},{"id":"386444961","fecha":"17/6/2026 06:13","cli":"Rivadavia7376","prod":"Recargas de Personal","pvp":4000.0,"gd":206.4,"gj":0.0},{"id":"386444941","fecha":"17/6/2026 05:42","cli":"indep1673","prod":"Recargas de Personal","pvp":5000.0,"gd":200.0,"gj":58.0},{"id":"386444929","fecha":"17/6/2026 05:09","cli":"Rivadavia1400","prod":"Recargas de Movistar","pvp":1250.0,"gd":43.75,"gj":0.0},{"id":"386444912","fecha":"17/6/2026 03:25","cli":"Lspena121","prod":"SUBE LG","pvp":16000.0,"gd":320.0,"gj":0.0},{"id":"386444906","fecha":"17/6/2026 02:58","cli":"Erios286","prod":"Recargas de Movistar","pvp":1000.0,"gd":20.0,"gj":15.0},{"id":"386444894","fecha":"17/6/2026 02:26","cli":"HYrigoyen1400","prod":"Recargas de Movistar","pvp":2000.0,"gd":70.0,"gj":0.0},{"id":"386444869","fecha":"17/6/2026 00:53","cli":"Rivadavia7376","prod":"Recargas de Personal","pvp":5000.0,"gd":258.0,"gj":0.0},{"id":"386444868","fecha":"17/6/2026 00:50","cli":"Rivadavia1400","prod":"Recargas de Movistar","pvp":4000.0,"gd":140.0,"gj":0.0},{"id":"386444837","fecha":"17/6/2026 00:11","cli":"HYrigoyen1400","prod":"Recargas de Movistar","pvp":2000.0,"gd":70.0,"gj":0.0},{"id":"386444831","fecha":"17/6/2026 00:09","cli":"indep1673","prod":"SUBE LG","pvp":0.0,"gd":0.0,"gj":0.0},{"id":"386444823","fecha":"17/6/2026 00:05","cli":"HYrigoyen1400","prod":"Recargas de TUENTI","pvp":3000.0,"gd":105.0,"gj":0.0}];
+const GAN_OPENING=[{"name":"Rivadavia7376","vV":1666800.0,"gdV":75575.16,"gjV":0.0,"vS":1998950.0,"gdS":39979.0,"gjS":0.0},{"name":"MONTIEL1905","vV":1173800.0,"gdV":53605.44,"gjV":0.0,"vS":2793400.0,"gdS":55868.0,"gjS":0.0},{"name":"RIVADAVIA2289","vV":628000.0,"gdV":27812.86,"gjV":0.0,"vS":3750300.0,"gdS":75006.0,"gjS":0.0},{"name":"Rivadavia1400","vV":750300.0,"gdV":34346.84,"gjV":0.0,"vS":2750430.0,"gdS":55008.6,"gjS":0.0},{"name":"Donald1066","vV":1571300.0,"gdV":50751.78,"gjV":20015.0,"vS":1498900.0,"gdS":26553.0,"gjS":0.0},{"name":"Donald2822","vV":1623700.0,"gdV":51307.79,"gjV":20908.75,"vS":1145200.0,"gdS":19341.5,"gjS":0.0},{"name":"indep1673","vV":664420.0,"gdV":21629.0,"gjV":8465.7,"vS":1119460.0,"gdS":17980.58,"gjS":2396.17},{"name":"Erios286","vV":498400.0,"gdV":16286.1,"gjV":6270.32,"vS":1931700.0,"gdS":20504.77,"gjS":1504.27},{"name":"HYrigoyen1400","vV":426000.0,"gdV":19035.85,"gjV":0.0,"vS":854650.0,"gdS":17093.0,"gjS":0.0},{"name":"Quesada","vV":394300.0,"gdV":17283.32,"gjV":0.0,"vS":839900.0,"gdS":16623.0,"gjS":0.0},{"name":"Ronald1382","vV":667100.0,"gdV":26720.95,"gjV":0.0,"vS":427000.0,"gdS":3202.5,"gjS":0.0},{"name":"Lspena121","vV":187000.0,"gdV":8228.3,"gjV":0.0,"vS":487900.0,"gdS":9758.0,"gjS":0.0},{"name":"sanpedrito27","vV":228000.0,"gdV":10026.8,"gjV":0.0,"vS":327500.0,"gdS":6550.0,"gjS":0.0},{"name":"Alberdi1382A","vV":129900.0,"gdV":3609.99,"gjV":1623.75,"vS":338800.0,"gdS":6776.0,"gjS":0.0},{"name":"encalada2332","vV":153500.0,"gdV":5311.2,"gjV":1946.3,"vS":299000.0,"gdS":2912.5,"gjS":167.5},{"name":"25demayo641","vV":134500.0,"gdV":6327.7,"gjV":0.0,"vS":83000.0,"gdS":1660.0,"gjS":0.0},{"name":"Rivadavia8998","vV":78400.0,"gdV":3076.0,"gjV":0.0,"vS":140400.0,"gdS":2808.0,"gjS":0.0},{"name":"Uruguay198","vV":58000.0,"gdV":2596.7,"gjV":0.0,"vS":0,"gdS":0,"gjS":0},{"name":"Rivadavia5406","vV":43600.0,"gdV":1871.55,"gjV":0.0,"vS":0,"gdS":0,"gjS":0}];
+
+let state={movs:[],pagos:[],opening:{},ventas:[],saldoSistema:0,prestamo:0,seeded:false,openingSeeded:false};
+let seller="verdi333";
+let sortMode="debe";
+let sortG="gan";
+let tab="cc";
+// Guardado: usa el de Claude si existe (preview), si no localStorage (subido a internet)
+const store=(typeof window!=="undefined"&&window.storage&&window.storage.get)
+  ? {get:k=>window.storage.get(k), set:(k,v)=>window.storage.set(k,v)}
+  : {get:async k=>{try{const v=localStorage.getItem(k);return v==null?null:{value:v};}catch(e){return null;}},
+     set:async(k,v)=>{try{localStorage.setItem(k,v);}catch(e){}return {value:v};}};
+
+const $=s=>document.querySelector(s);
+const moneyFmt=new Intl.NumberFormat('es-AR',{style:'currency',currency:'ARS',minimumFractionDigits:0,maximumFractionDigits:0});
+const numFmt=new Intl.NumberFormat('es-AR',{maximumFractionDigits:0});
+const money=n=>moneyFmt.format(Math.round(n||0));
+const numf=n=>numFmt.format(Math.round(n||0));
+const norm=s=>(s||"").trim().toLowerCase().replace(/[^a-z0-9]/g,"");
+const key=s=>{const n=norm(s);return ALIASES[n]||n;};
+const initials=s=>{const a=(s||"").replace(/[^a-zA-Z0-9]/g,"").slice(0,2);return (a||"?").toUpperCase();};
+const avatarBg=s=>{let h=0;const t=(s||"");for(let i=0;i<t.length;i++)h=(h*31+t.charCodeAt(i))>>>0;return AVS[h%AVS.length];};
+function toast(t){const e=$("#toast");e.textContent=t;e.classList.add("on");clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove("on"),2400);}
+function movId(m){return m.fecha+"|"+m.otorga+"|"+m.recibe+"|"+m.importe;}
+function parseTs(f){const m=/(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?)?/.exec(f||"");if(!m)return 0;return new Date(+m[3],+m[2]-1,+m[1],+(m[4]||0),+(m[5]||0),+(m[6]||0)).getTime();}
+function dayOf(f){const m=/(\d{1,2})\/(\d{1,2})\/(\d{4})/.exec(f||"");if(!m)return"";const p=n=>String(n).padStart(2,'0');return p(m[1])+"/"+p(m[2])+"/"+m[3];}
+function tipoOf(m){const o=norm(m.otorga),r=norm(m.recibe);
+  if(o===seller&&r!==seller)return m.importe<0?"acreditacion":"devolucion";
+  if(r===seller&&o!==seller)return m.importe>=0?"recarga":"ajuste";return "otro";}
+function detectSeller(ms){for(const m of ms){if(norm(m.otorga)==="pinweb"&&m.recibe)return norm(m.recibe);}return "verdi333";}
+function nowStr(){const d=new Date();const p=n=>String(n).padStart(2,'0');return `${p(d.getDate())}/${p(d.getMonth()+1)}/${d.getFullYear()} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;}
+function parseMoney(s){s=(s||"").toString().trim().replace(/^"|"$/g,"");if(!s)return 0;s=s.replace(/\./g,"").replace(/,/g,".");const n=parseFloat(s);return isNaN(n)?0:n;}
+
+async function load(){
+  try{const r=await store.get(STORE_KEY);if(r&&r.value)state=JSON.parse(r.value);}catch(e){}
+  state.movs=state.movs||[];state.pagos=state.pagos||[];state.opening=state.opening||{};state.ventas=state.ventas||[];state.ganOpening=state.ganOpening||{};state.paid=state.paid||{};
+  state.saldoSistema=state.saldoSistema||0;state.prestamo=state.prestamo||0;
+  if(!state.cleanV3){state.movs=[];state.cleanV3=true;}
+  if(!state.ventasCleanV2){state.ventas=[];state.ventasCleanV2=true;}
+  if(!state.ganOpeningSeeded){state.ganOpening={};for(const o of GAN_OPENING){const k=key(o.name);if(!state.ganOpening[k])state.ganOpening[k]={name:o.name,vV:0,gdV:0,gjV:0,vS:0,gdS:0,gjS:0};const g=state.ganOpening[k];g.vV+=o.vV;g.gdV+=o.gdV;g.gjV+=o.gjV;g.vS+=o.vS;g.gdS+=o.gdS;g.gjS+=o.gjS;}state.ganOpeningSeeded=true;}
+  if(!state.openingSeededV2){state.opening={};for(const o of OPENING_SEED){state.opening[key(o.name)]={name:o.name,total:o.total,pagado:o.pagado};}state.openingSeededV2=true;}
+  seller=state.seller||"verdi333";
+  await save();
+}
+async function save(){state.seller=seller;try{await store.set(STORE_KEY,JSON.stringify(state));}catch(e){toast("No se pudo guardar");}}
+function mergeMovs(arr){const have=new Set(state.movs.map(movId));let n=0;for(const m of arr){const id=movId(m);if(!have.has(id)){state.movs.push(m);have.add(id);n++;}}return n;}
+function mergeVentas(arr){const have=new Set(state.ventas.map(v=>v.id));let n=0;for(const v of arr){if(v.id&&!have.has(v.id)){state.ventas.push(v);have.add(v.id);n++;}}return n;}
+function catVenta(prod){const p=(prod||"").trim().toUpperCase();if(p.startsWith("SUBE"))return "sube";if(p.startsWith("RECARGAS"))return "virtual";return "otro";}
+function parseVentas(text){
+  const lines=text.split(/\r?\n/).filter(l=>l.trim().length);if(!lines.length)return[];
+  // separador: ; (export pinweb)
+  const sep=lines[0].includes(";")?";":",";
+  const split=l=>sep===";"?l.split(";"):splitCSVLine(l);
+  let hi=lines.findIndex(l=>/jpdv/i.test(l)&&/pvp/i.test(l));if(hi<0)hi=0;
+  const head=split(lines[hi]).map(h=>h.trim().toUpperCase());
+  const ci=n=>head.findIndex(h=>h===n||h.startsWith(n));
+  const cId=ci("ID"),cF=ci("FECHA"),cJ=ci("JPDV"),cP=ci("PRODUCTO"),cV=ci("PVP"),cGD=ci("GD"),cGJ=ci("GJ");
+  const out=[];for(let i=hi+1;i<lines.length;i++){const r=split(lines[i]);if(r.length<Math.max(cV,cGD,cGJ)+1)continue;
+    const id=(r[cId]||"").trim();const cli=(r[cJ]||"").trim();if(!cli)continue;
+    out.push({id,fecha:(r[cF]||"").trim(),cli,prod:(r[cP]||"").trim(),pvp:parseMoney(r[cV]),gd:parseMoney(r[cGD]),gj:parseMoney(r[cGJ])});}
+  return out;
+}
+function ventasAgg(){
+  const map=new Map();
+  const get=(name)=>{const k=key(name);if(!map.has(k))map.set(k,{key:k,name:(state.opening[k]&&state.opening[k].name)||name,vV:0,gdV:0,gjV:0,vS:0,gdS:0,gjS:0,items:[]});return map.get(k);};
+  for(const k in state.ganOpening){const o=state.ganOpening[k];const a=get(o.name);a.vV+=o.vV;a.gdV+=o.gdV;a.gjV+=o.gjV;a.vS+=o.vS;a.gdS+=o.gdS;a.gjS+=o.gjS;}
+  for(const v of state.ventas){const a=get(v.cli);const c=catVenta(v.prod);
+    if(c==="virtual"){a.vV+=v.pvp;a.gdV+=v.gd;a.gjV+=v.gj;}
+    else if(c==="sube"){a.vS+=v.pvp;a.gdS+=v.gd;a.gjS+=v.gj;}
+    a.items.push(v);}
+  const arr=[...map.values()];arr.forEach(a=>{
+    a.totV=a.gdV+a.gjV;a.totS=a.gdS+a.gjS;a.tot=a.totV+a.totS;a.venta=a.vV+a.vS;
+    // comisión cliente VIRTUAL según config
+    const k=a.key;
+    if(VIRT_DIRECT.has(k))a.comV=a.gjV;
+    else if(k in VIRT_PCT)a.comV=a.vV*VIRT_PCT[k];
+    else if(VIRT_ZERO.has(k))a.comV=0;
+    else a.comV=a.gjV; // sin config: directo del CSV
+    a.miV=a.totV-a.comV;
+    // SUBE: estos 7 llevan % ; el resto directo del CSV
+    if(a.key in SUBE_PCT)a.comS=a.vS*SUBE_PCT[a.key];
+    else a.comS=a.gjS;
+    a.miS=a.totS-a.comS;
+    a.gd=a.miV+a.miS;a.gj=a.comV+a.comS;
+    if(CANON[a.key])a.name=CANON[a.key];
+  });
+  return arr;
+}
+function ventaDays(){const set=new Set();for(const v of state.ventas){const d=dayOf(v.fecha);if(d)set.add(d);}return [...set].sort((a,b)=>parseTs(b+" 00:00:00")-parseTs(a+" 00:00:00"));}
+
+function splitCSVLine(line){const out=[];let cur="",q=false;for(let i=0;i<line.length;i++){const c=line[i];
+  if(c==='"'){if(q&&line[i+1]==='"'){cur+='"';i++;}else q=!q;}else if(c===','&&!q){out.push(cur);cur="";}else cur+=c;}out.push(cur);return out;}
+function parseCSV(text){const lines=text.split(/\r?\n/).filter(l=>l.trim().length);if(!lines.length)return[];
+  let hi=lines.findIndex(l=>/fecha/i.test(l)&&/importe/i.test(l));if(hi<0)hi=0;
+  const head=splitCSVLine(lines[hi]).map(h=>h.trim().toLowerCase());const col=n=>head.findIndex(h=>h===n);
+  const cF=col("fecha"),cD=head.findIndex(h=>h.startsWith("descrip")),cO=col("observaciones"),cOt=col("otorga"),cR=col("recibe"),cI=col("importe");
+  const out=[];for(let i=hi+1;i<lines.length;i++){const r=splitCSVLine(lines[i]);const fecha=(r[cF]||"").trim();
+    if(!/\d{2}\/\d{2}\/\d{4}/.test(fecha))continue;
+    out.push({fecha,desc:(r[cD]||"").trim(),obs:cO>=0?(r[cO]||"").trim():"",otorga:(r[cOt]||"").trim(),recibe:(r[cR]||"").trim(),importe:parseMoney(r[cI])});}
+  return out;}
+
+function clientsAgg(){
+  const map=new Map();
+  const get=(name)=>{const k=key(name);if(!map.has(k))map.set(k,{key:k,name,acred:0,pagado:0,opening:0,accItems:[],payItems:[],last:0});return map.get(k);};
+  for(const k in state.opening){const o=state.opening[k];const c=get(o.name);c.acred+=(o.total||0);c.pagado+=(o.pagado||0);c.opening=(o.total||0)-(o.pagado||0);}
+  for(const m of state.movs){const t=tipoOf(m);if(t!=="acreditacion"&&t!=="devolucion")continue;
+    const o=get(m.recibe);o.acred+=-m.importe;o.accItems.push(m);const ts=parseTs(m.fecha);if(ts>=o.last){o.last=ts;o.name=m.recibe;}}
+  for(const p of state.pagos){const o=get(p.name);o.pagado+=p.importe;o.payItems.push(p);const ts=parseTs(p.fecha);if(ts>o.last)o.last=ts;}
+  const arr=[...map.values()];arr.forEach(c=>{c.debe=c.acred-c.pagado;if(CANON[c.key])c.name=CANON[c.key];});return arr;
+}
+function totals(cs){return cs.reduce((a,c)=>{a.acred+=c.acred;a.pagado+=c.pagado;a.debe+=c.debe;return a;},{acred:0,pagado:0,debe:0});}
+function sortClients(cs){const m=sortMode;
+  if(m==="debe")return cs.sort((a,b)=>b.debe-a.debe||b.acred-a.acred);
+  if(m==="nombre")return cs.sort((a,b)=>a.name.localeCompare(b.name,'es'));
+  return cs.sort((a,b)=>b.last-a.last);}
+
+function render(){
+  $("#acct").textContent=seller;
+  const ds=[...new Set(state.movs.map(m=>dayOf(m.fecha)).filter(Boolean))].sort((a,b)=>parseTs(b+" 00:00:00")-parseTs(a+" 00:00:00"));
+  const cs=clientsAgg();const t=totals(cs);
+
+  $("#acctline").textContent=`${cs.length} clientes · ${ds.length?(ds.length===1?ds[0]:ds[ds.length-1]+"–"+ds[0]):"base al 16/06"}`;
+
+  const sorted=sortClients(cs.slice());
+  const conDeuda=cs.filter(c=>Math.round(c.debe)>0).length;
+  $("#cliCount").textContent=`${conDeuda} deben`;
+  $("#sortbtn").textContent="orden: "+(sortMode==="debe"?"deuda":sortMode==="nombre"?"nombre":"reciente")+" ▾";
+
+  $("#rows").innerHTML=sorted.length?sorted.map(c=>{
+    const ok=Math.round(c.debe)<=0;
+    const pct=c.acred>0?Math.max(0,Math.min(100,Math.round(c.pagado/c.acred*100))):0;
+    const full=pct>=100;
+    const pagCls=c.pagado>0?'pos':c.pagado<0?'neg':'mut';
+    return `<tr data-k="${c.key}" class="${ok?'ok':''}">
+      <td><div class="cli"><div class="av" style="background:${avatarBg(c.name)}">${initials(c.name)}</div>
+        <div class="cliinfo"><div class="nm">${c.name}</div>
+        ${c.acred>0?`<div class="bar ${full?'full':''}"><span style="width:${pct}%"></span></div>`:``}</div></div></td>
+      <td class="r num tot">${money(c.acred)}</td>
+      <td class="r num ${pagCls}">${money(c.pagado)}</td>
+      <td class="r"><span class="pill ${ok?'ok':''} num">${money(c.debe)}</span></td>
+    </tr>`;}).join(""):`<tr><td colspan="4"><div class="empty">Sin clientes. Importá un CSV de pinweb.</div></td></tr>`;
+  $("#foot").innerHTML=sorted.length?`<tr><td>TOTAL</td><td class="r num">${money(t.acred)}</td><td class="r num">${money(t.pagado)}</td><td class="r num ft-deb">${money(t.debe)}</td></tr>`:"";
+  [...document.querySelectorAll("#rows tr[data-k]")].forEach(tr=>tr.onclick=()=>openClient(tr.dataset.k));
+
+  $("#saldos").innerHTML=`<h2>Saldos</h2>
+    <div class="hero"><div class="l">Te deben</div><div class="n num ${t.debe<=0?'zero':''}">${money(t.debe)}</div></div>
+    <div class="divlbl">Mi cuenta</div>
+    <div class="srow edit" data-edit="saldoSistema"><span class="l"><span class="ico" style="background:var(--brand-2)"></span>Saldo en el sistema</span><span class="n num">${money(state.saldoSistema)} <span class="pencil">editar</span></span></div>
+    <div class="srow edit" data-edit="prestamo"><span class="l"><span class="ico" style="background:var(--amber)"></span>Préstamo empresa</span><span class="n num">${money(state.prestamo)} <span class="pencil">editar</span></span></div>
+    <div class="divlbl">Clientes</div>
+    <div class="srow"><span class="l">Total acreditado</span><span class="n num">${money(t.acred)}</span></div>
+    <div class="srow"><span class="l">Total pagado</span><span class="n num">${money(t.pagado)}</span></div>
+    <div class="foot">Cuenta pinweb · <b>${seller}</b></div>`;
+  [...document.querySelectorAll('#saldos .srow.edit')].forEach(r=>r.onclick=()=>editField(r.dataset.edit));
+
+  $("#clilist").innerHTML=cs.map(c=>`<option value="${c.name}">`).join("");
+}
+
+function sortGan(arr){if(sortG==="gan")return arr.sort((a,b)=>b.gd-a.gd);if(sortG==="venta")return arr.sort((a,b)=>b.venta-a.venta);return arr.sort((a,b)=>a.name.localeCompare(b.name,'es'));}
+function renderGAN(){
+  const gs=ventasAgg();
+  const T={vV:0,gdV:0,gjV:0,vS:0,gdS:0,gjS:0};
+  gs.forEach(a=>{for(const k in T)T[k]+=a[k];});
+  const totV=T.gdV+T.gjV, totS=T.gdS+T.gjS, gdTot=T.gdV+T.gdS, gjTot=T.gjV+T.gjS, fact=T.vV+T.vS;
+  const ds=ventaDays();
+  $("#ganDays").textContent=`${gs.length} clientes · base 1–16/06${ds.length?(" + "+(ds.length===1?ds[0]:ds.length+" días")):""}`;
+  $("#sortbtnG").textContent="orden: "+(sortG==="gan"?"ganancia":sortG==="venta"?"venta":"nombre")+" ▾";
+  const sorted=sortGan(gs.slice());
+  $("#rowsG").innerHTML=sorted.length?sorted.map(c=>`
+    <tr data-k="${c.key}">
+      <td><span class="gname"><span class="gdot" style="background:${avatarBg(c.name)}"></span>${c.name}</span></td>
+      <td class="r num">${money(c.vV)}</td><td class="r num cli">${money(c.comV)}</td><td class="r num mio">${money(c.miV)}</td><td class="r num gtot">${money(c.totV)}</td>
+      <td class="r num vsep">${money(c.vS)}</td><td class="r num cli">${money(c.comS)}</td><td class="r num mio">${money(c.miS)}</td><td class="r num gtot">${money(c.totS)}</td>
+    </tr>`).join(""):`<tr><td colspan="9"><div class="empty">Sin ventas. Importá el CSV de ventas de pinweb.</div></td></tr>`;
+  const Tcv=gs.reduce((s,c)=>s+c.comV,0),Tmv=gs.reduce((s,c)=>s+c.miV,0),Tcs=gs.reduce((s,c)=>s+c.comS,0),Tms=gs.reduce((s,c)=>s+c.miS,0);
+  $("#footG").innerHTML=sorted.length?`<tr><td>TOTALES</td>
+    <td class="r num">${money(T.vV)}</td><td class="r num">${money(Tcv)}</td><td class="r num">${money(Tmv)}</td><td class="r num gtot">${money(T.gdV+T.gjV)}</td>
+    <td class="r num vsep">${money(T.vS)}</td><td class="r num">${money(Tcs)}</td><td class="r num">${money(Tms)}</td><td class="r num gtot">${money(T.gdS+T.gjS)}</td></tr>`:"";
+  [...document.querySelectorAll("#rowsG tr[data-k]")].forEach(tr=>tr.onclick=()=>openClientGAN(tr.dataset.k));
+
+  $("#resumen").innerHTML=`<h2>Resumen de ganancias</h2>
+    <div class="hero"><div class="l">Total ganancia (mía)</div><div class="n num zero">${money(Tmv+Tms)}</div></div>
+    <div class="divlbl">Mi ganancia</div>
+    <div class="srow"><span class="l"><span class="ico" style="background:#5b6bff"></span>Virtual</span><span class="n num">${money(Tmv)}</span></div>
+    <div class="srow"><span class="l"><span class="ico" style="background:#2bd29f"></span>SUBE</span><span class="n num">${money(Tms)}</span></div>
+    <div class="divlbl">Facturación</div>
+    <div class="srow"><span class="l">Total facturación</span><span class="n num">${money(T.vV+T.vS)}</span></div>
+    <div class="srow"><span class="l">Total comisiones</span><span class="n num">${money(T.gdV+T.gjV+T.gdS+T.gjS)}</span></div>
+    <div class="srow"><span class="l">Total clientes</span><span class="n num">${money(Tcv+Tcs)}</span></div>
+    <div class="foot">Vendido virtual ${money(T.vV)} · SUBE ${money(T.vS)}</div>`;
+}
+function openClientGAN(k){
+  const c=ventasAgg().find(x=>x.key===k);if(!c)return;
+  const pctMargen=c.venta>0?(c.gd/c.venta*100):0;
+  const items=[...c.items].sort((a,b)=>parseTs(b.fecha)-parseTs(a.fecha));
+  openSheet(`<h3>${c.name}</h3>
+    <div class="hint">Margen tuyo: <b>${pctMargen.toFixed(2)}%</b> sobre lo vendido · ganancia total <b>${money(c.gd)}</b></div>
+    <div class="tdd">
+      <div><div class="k">Mi ganancia</div><div class="v num pos">${money(c.gd)}</div></div>
+      <div><div class="k">Gan. cliente</div><div class="v num">${money(c.gj)}</div></div>
+      <div><div class="k">Vendido</div><div class="v num">${money(c.venta)}</div></div>
+    </div>
+    <label class="field">Carga virtual</label>
+    <div class="tdd"><div><div class="k">Vendido</div><div class="v num">${money(c.vV)}</div></div>
+      <div><div class="k">Mi com.</div><div class="v num pos">${money(c.miV)}</div></div>
+      <div><div class="k">Cliente</div><div class="v num">${money(c.comV)}</div></div></div>
+    <label class="field">Carga SUBE</label>
+    <div class="tdd"><div><div class="k">Vendido</div><div class="v num">${money(c.vS)}</div></div>
+      <div><div class="k">Mi com.</div><div class="v num pos">${money(c.miS)}</div></div>
+      <div><div class="k">Cliente</div><div class="v num">${money(c.comS)}</div></div></div>
+    <label class="field" style="margin-top:14px">Ventas ${items.length?("("+items.length+")"):""}</label>
+    ${items.length?items.map(v=>{const sube=catVenta(v.prod)==="sube";return `<div class="mrow"><div class="d">${v.prod}<small>${v.fecha} · ${sube?"SUBE":"virtual"}</small></div>
+      <div style="text-align:right"><div class="num" style="font-weight:700">${money(v.pvp)}</div><div class="num pos" style="font-size:12px">gan ${money(v.gd)}</div></div></div>`}).join(""):`<div class="hint" style="padding:6px 0">Estos números son el acumulado del 1 al 16/06. El detalle venta por venta aparece cuando importás los CSV diarios.</div>`}`);
+}
+
+function monthOf(f){const m=/(\d{1,2})\/(\d{1,2})\/(\d{4})/.exec(f||"");return m?m[3]+"-"+String(m[2]).padStart(2,'0'):"";}
+function monthLabel(mk){const n=["","enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];const[y,m]=mk.split("-");return n[+m]+" "+y;}
+function nextMonth5(mk){let[y,m]=mk.split("-").map(Number);m++;if(m>12){m=1;y++;}return "5/"+String(m).padStart(2,'0')+"/"+y;}
+function availableMonths(){const s=new Set([BASE_MONTH]);for(const v of state.ventas){const mk=monthOf(v.fecha);if(mk)s.add(mk);}return [...s].sort().reverse();}
+function ganAPagarMonth(mk){
+  const map=new Map();
+  const get=(name)=>{const k=key(name);if(!map.has(k))map.set(k,{key:k,name:CANON[k]||name,vV:0,vS:0});return map.get(k);};
+  if(mk===BASE_MONTH){for(const kk in state.ganOpening){const o=state.ganOpening[kk];const a=get(o.name);a.vV+=o.vV;a.vS+=o.vS;}}
+  for(const v of state.ventas){if(monthOf(v.fecha)!==mk)continue;const a=get(v.cli);const c=catVenta(v.prod);if(c==="virtual")a.vV+=v.pvp;else if(c==="sube")a.vS+=v.pvp;}
+  const rows=[];
+  for(const a of map.values()){const inV=a.key in VIRT_PCT,inS=a.key in SUBE_PCT;if(!inV&&!inS)continue;
+    const comV=inV?a.vV*VIRT_PCT[a.key]:0, comS=inS?a.vS*SUBE_PCT[a.key]:0;
+    rows.push({key:a.key,name:a.name,comV,comS,total:comV+comS,inV,inS});}
+  return rows.sort((a,b)=>b.total-a.total);
+}
+function renderPAG(){
+  const months=availableMonths();
+  if(!pagMonth||!months.includes(pagMonth))pagMonth=months[0];
+  const sel=$("#monthSel");sel.innerHTML=months.map(m=>`<option value="${m}">${monthLabel(m)}</option>`).join("");sel.value=pagMonth;
+  const rows=ganAPagarMonth(pagMonth);
+  const paidMap=state.paid[pagMonth]||{};
+  let tA=0,tPag=0;
+  $("#rowsP").innerHTML=rows.length?rows.map(c=>{const paid=!!paidMap[c.key];tA+=c.total;if(paid)tPag+=c.total;
+    return `<tr data-k="${c.key}" class="${paid?'ok':''}">
+      <td><span class="gname"><span class="gdot" style="background:${avatarBg(c.name)}"></span>${c.name}</span></td>
+      <td class="r num">${c.inV?money(c.comV):"—"}</td>
+      <td class="r num">${c.inS?money(c.comS):"—"}</td>
+      <td class="r num" style="font-weight:800">${money(c.total)}</td>
+      <td class="r"><button class="paybtn ${paid?'paid':''}" data-k="${c.key}">${paid?'✓ Pagado':'Pendiente'}</button></td>
+    </tr>`;}).join(""):`<tr><td colspan="5"><div class="empty">No hay comisiones a pagar en este mes.</div></td></tr>`;
+  $("#footP").innerHTML=rows.length?`<tr><td>TOTAL</td><td></td><td></td><td class="r num">${money(tA)}</td><td></td></tr>`:"";
+  [...document.querySelectorAll("#rowsP .paybtn")].forEach(b=>b.onclick=()=>togglePaid(pagMonth,b.dataset.k));
+  $("#pagInfo").textContent=`${rows.length} clientes · pagar el ${nextMonth5(pagMonth)}`;
+  const pend=tA-tPag;
+  $("#resumenP").innerHTML=`<h2>A pagar · ${monthLabel(pagMonth)}</h2>
+    <div class="hero"><div class="l">Total a pagar</div><div class="n num">${money(tA)}</div></div>
+    <div class="divlbl">Estado</div>
+    <div class="srow"><span class="l"><span class="ico" style="background:var(--pos)"></span>Pagado</span><span class="n num">${money(tPag)}</span></div>
+    <div class="srow"><span class="l"><span class="ico" style="background:var(--amber)"></span>Pendiente</span><span class="n num">${money(pend)}</span></div>
+    <div class="foot">Se paga el <b>${nextMonth5(pagMonth)}</b> · solo clientes con %</div>`;
+}
+async function togglePaid(mk,k){state.paid[mk]=state.paid[mk]||{};state.paid[mk][k]=!state.paid[mk][k];await save();renderPAG();}
+
+function openSheet(html){$("#sheet").innerHTML='<div class="grab"></div>'+html;$("#scrim").classList.add("on");}
+function closeSheet(){$("#scrim").classList.remove("on");}
+$("#scrim").onclick=e=>{if(e.target===$("#scrim"))closeSheet();};
+
+function editField(which){
+  const isS=which==="saldoSistema";
+  openSheet(`<h3>${isS?"Saldo en el sistema":"Préstamo de la empresa"}</h3>
+    <p class="hint">${isS?"Cuánto saldo tenés ahora en tu cuenta de la empresa para acreditar a los clientes.":"Plata que te presta la empresa (por ejemplo los fines de semana). Ponela acá para tenerla a la vista."}</p>
+    <label class="field">Monto</label>
+    <input type="number" id="fv" inputmode="numeric" value="${state[which]||""}" placeholder="0">
+    <div class="seg" style="margin-top:14px"><button class="sel" id="fSave">Guardar</button><button id="fCancel">Cancelar</button></div>`);
+  $("#fCancel").onclick=closeSheet;
+  $("#fSave").onclick=async()=>{state[which]=parseMoney($("#fv").value);await save();closeSheet();render();toast("Guardado");};
+}
+
+function openClient(key){
+  const c=clientsAgg().find(x=>x.key===key);if(!c)return;
+  const op=state.opening[key];
+  const acc=[...c.accItems].sort((a,b)=>parseTs(b.fecha)-parseTs(a.fecha));
+  const pays=[...c.payItems].sort((a,b)=>parseTs(b.fecha)-parseTs(a.fecha));
+  openSheet(`<h3>${c.name}</h3>
+    <div class="tdd">
+      <div><div class="k">Total</div><div class="v num">${money(c.acred)}</div></div>
+      <div><div class="k">Pagado</div><div class="v num pos">${money(c.pagado)}</div></div>
+      <div><div class="k">Debe</div><div class="v num ${Math.round(c.debe)<=0?'pos':'neg'}">${money(c.debe)}</div></div>
+    </div>
+    <label class="field">Registrar un pago de ${c.name}</label>
+    <div class="seg"><input type="number" id="cPay" inputmode="numeric" placeholder="Pagó $" style="flex:2">
+      <button class="go" id="cPayBtn" style="flex:1">Sumar pago</button></div>
+    ${op?`<div class="hint" style="margin-top:14px">Saldo de arranque (de tu Excel): <b>${money(op.total)}</b> · <button class="pencil" id="editOpen" style="background:none;border:none;color:var(--brand);font-weight:700;cursor:pointer;text-decoration:underline">ajustar</button></div>`:`<div class="hint" style="margin-top:14px"><button class="pencil" id="editOpen" style="background:none;border:none;color:var(--brand);font-weight:700;cursor:pointer;text-decoration:underline">+ Cargar saldo de arranque</button></div>`}
+    <label class="field" style="margin-top:14px">Pagos</label>
+    ${pays.length?pays.map(p=>`<div class="mrow"><div class="d">Pago<small>${p.fecha}</small></div>
+      <div style="display:flex;align-items:center;gap:6px"><span class="num pos" style="font-weight:700">${money(p.importe)}</span>
+      <button class="xbtn" data-pid="${p.id}">✕</button></div></div>`).join(""):`<div class="hint" style="padding:6px 0">Sin pagos registrados.</div>`}
+    <label class="field" style="margin-top:14px">Acreditaciones</label>
+    ${op?`<div class="mrow"><div class="d">Saldo anterior<small>de tu Excel</small></div><div class="num neg" style="font-weight:700">${money(op.total)}</div></div>`:""}
+    ${acc.map(m=>{const dv=m.importe>0;return `<div class="mrow"><div class="d">${dv?"Devolución":"Acreditación"}<small>${m.fecha}</small></div>
+      <div class="num ${dv?'pos':'neg'}" style="font-weight:700">${money(Math.abs(m.importe))}</div></div>`}).join("")}`);
+  $("#cPayBtn").onclick=async()=>{const v=parseMoney($("#cPay").value);if(!v){toast("Poné el importe");return;}
+    await addPago(c.name,v);openClient(key);render();toast(`Sumado ${money(v)} a ${c.name}`);};
+  const eo=$("#editOpen");if(eo)eo.onclick=()=>editOpening(key,c.name);
+  [...document.querySelectorAll("#sheet .xbtn")].forEach(b=>b.onclick=async()=>{
+    state.pagos=state.pagos.filter(p=>p.id!==b.dataset.pid);await save();openClient(key);render();toast("Pago eliminado");});
+}
+
+function editOpening(key,name){
+  const op=state.opening[key]||{name,total:0,pagado:0};
+  openSheet(`<h3>Saldo de arranque</h3>
+    <p class="hint">Lo que ${name} ya debía antes de empezar a usar la app (tu Excel). Se suma al Total y al Debe.</p>
+    <label class="field">Saldo anterior que debe</label>
+    <input type="number" id="opT" inputmode="numeric" value="${op.total||""}" placeholder="0">
+    <div class="seg" style="margin-top:14px"><button class="sel" id="opSave">Guardar</button>
+      <button id="opDel">Borrar</button><button id="opCancel">Cancelar</button></div>`);
+  $("#opCancel").onclick=()=>openClient(key);
+  $("#opDel").onclick=async()=>{delete state.opening[key];await save();openClient(key);render();toast("Borrado");};
+  $("#opSave").onclick=async()=>{const v=parseMoney($("#opT").value);
+    if(v<=0){delete state.opening[key];}else{state.opening[key]={name,total:v,pagado:0};}
+    await save();openClient(key);render();toast("Guardado");};
+}
+
+async function addPago(name,importe,fecha){
+  state.pagos.push({id:"p"+Date.now()+Math.random().toString(36).slice(2,6),name,importe,fecha:fecha||nowStr()});await save();}
+
+$("#pbAdd").onclick=async()=>{
+  const name=$("#pbCli").value.trim();const v=parseMoney($("#pbImp").value);
+  if(!name){toast("Elegí el cliente");return;}if(!v){toast("Poné cuánto pagó");return;}
+  const ex=clientsAgg().find(c=>c.key===key(name));const finalName=ex?ex.name:name;
+  await addPago(finalName,v);render();
+  const after=clientsAgg().find(c=>c.key===key(name));
+  $("#pbCli").value="";$("#pbImp").value="";$("#pbCli").focus();
+  toast(`${finalName} pagó ${money(v)} · debe ${money(after?after.debe:0)}`);
+};
+
+function moreMenu(){
+  openSheet(`<h3>Más</h3><ul class="menulist">
+    <li id="mAcc">Acreditar saldo a un cliente (a mano)</li>
+    <li id="mRec">Cargar recarga a mi cuenta</li>
+  </ul>`);
+  $("#mAcc").onclick=()=>addMovSheet("acreditacion");
+  $("#mRec").onclick=()=>addMovSheet("recarga");
+}
+function addMovSheet(tipo){
+  openSheet(`<h3>${tipo==="recarga"?"Recarga a mi cuenta":"Acreditar a cliente"}</h3>
+    ${tipo!=="recarga"?`<label class="field">Cliente</label><input type="text" id="mCli" placeholder="Ej: Rivadavia1400" list="clilist2">
+      <datalist id="clilist2">${clientsAgg().map(c=>`<option value="${c.name}">`).join("")}</datalist>`:""}
+    <label class="field">Importe</label><input type="number" id="mImp" inputmode="numeric" placeholder="50000">
+    <label class="field">Fecha y hora</label><input type="text" id="mFecha" value="${nowStr()}">
+    <div class="seg" style="margin-top:16px"><button class="sel" id="mSave">Guardar</button><button id="mCancel">Cancelar</button></div>`);
+  $("#mCancel").onclick=closeSheet;
+  $("#mSave").onclick=async()=>{const imp=Math.abs(parseMoney($("#mImp").value));if(!imp){toast("Poné un importe");return;}
+    const fecha=$("#mFecha").value.trim()||nowStr();let mov;
+    if(tipo==="recarga")mov={fecha,desc:"manual",obs:"app",otorga:"PinWeb",recibe:seller,importe:imp};
+    else{const cli=$("#mCli").value.trim();if(!cli){toast("Poné el cliente");return;}mov={fecha,desc:"manual",obs:"app",otorga:seller,recibe:cli,importe:-imp};}
+    mergeMovs([mov]);await save();closeSheet();render();toast("Cargado");};
+}
+
+function importSheet(){
+  openSheet(`<h3>Importar acreditaciones</h3>
+    <p class="hint">Subí el CSV de movimientos de pinweb o pegá el texto. Suma los nuevos y no duplica.</p>
+    <button class="sel seg" id="pickFile" style="width:100%;display:block;margin-bottom:12px">Elegir archivo CSV</button>
+    <label class="field">…o pegá el contenido</label>
+    <textarea class="pasta" id="paste" placeholder="FECHA,DESCRIPCION,..."></textarea>
+    <div class="seg" style="margin-top:14px"><button class="sel" id="pSave">Importar pegado</button><button id="pCancel">Cerrar</button></div>`);
+  $("#pickFile").onclick=()=>$("#file").click();
+  $("#pCancel").onclick=closeSheet;
+  $("#pSave").onclick=async()=>{const txt=$("#paste").value;if(!txt.trim()){toast("Pegá el CSV primero");return;}await ingestAuto(txt);};
+}
+async function ingest(text){const rows=parseCSV(text);if(!rows.length){toast("No encontré movimientos");return;}
+  const d=detectSeller(rows);if(d)seller=d;const added=mergeMovs(rows);await save();closeSheet();render();renderPAG();
+  toast(added?`Importadas ${added} acreditaciones nuevas`:"Ya las tenías todas");}
+function looksVentas(t){return /jpdv/i.test(t)&&/(pvp|producto)/i.test(t);}
+async function ingestAuto(text){if(looksVentas(text))return ingestVentas(text);return ingest(text);}
+$("#file").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>ingestAuto(r.result);r.readAsText(f,"utf-8");e.target.value="";};
+
+function importVentasSheet(){
+  openSheet(`<h3>Importar ventas</h3>
+    <p class="hint">Subí el CSV de ventas/ganancias de pinweb (el de columnas JPDV, PRODUCTO, PVP, GD, GJ). Suma las nuevas y no duplica (por ID).</p>
+    <button class="sel seg" id="pickFileG" style="width:100%;display:block;margin-bottom:12px">Elegir archivo CSV</button>
+    <label class="field">…o pegá el contenido</label>
+    <textarea class="pasta" id="pasteG" placeholder="ID;FECHA;REP.;JPDV;..."></textarea>
+    <div class="seg" style="margin-top:14px"><button class="sel" id="pSaveG">Importar pegado</button><button id="pCancelG">Cerrar</button></div>`);
+  $("#pickFileG").onclick=()=>$("#fileG").click();
+  $("#pCancelG").onclick=closeSheet;
+  $("#pSaveG").onclick=async()=>{const txt=$("#pasteG").value;if(!txt.trim()){toast("Pegá el CSV primero");return;}await ingestAuto(txt);};
+}
+async function ingestVentas(text){const rows=parseVentas(text);if(!rows.length){toast("No encontré ventas en ese CSV");return;}
+  const added=mergeVentas(rows);await save();closeSheet();renderGAN();renderPAG();
+  toast(added?`Importadas ${added} ventas nuevas`:"Ya las tenías todas");}
+$("#fileG").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>ingestAuto(r.result);r.readAsText(f,"utf-8");e.target.value="";};
+
+function switchTab(t){
+  tab=t;
+  document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('on',b.dataset.tab===t));
+  $("#viewCC").style.display=t==="cc"?"block":"none";
+  $("#viewGAN").style.display=t==="gan"?"block":"none";
+  $("#viewPAG").style.display=t==="pag"?"block":"none";
+  $("#title").textContent=t==="cc"?"Cuenta corriente":t==="gan"?"Ganancias":"Gan a pagar";
+  $("#importBtn").textContent=t==="cc"?"↑ Importar CSV":"↑ Importar ventas";
+  $("#importBtn").style.display=t==="pag"?"none":"block";
+  $("#moreBtn").style.display=t==="cc"?"block":"none";
+  if(t==="gan")renderGAN();else if(t==="pag")renderPAG();else render();
+}
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>switchTab(b.dataset.tab));
+$("#monthSel").onchange=e=>{pagMonth=e.target.value;renderPAG();};
+
+$("#sortbtn").onclick=()=>{sortMode=sortMode==="debe"?"nombre":sortMode==="nombre"?"reciente":"debe";render();};
+$("#sortbtnG").onclick=()=>{sortG=sortG==="gan"?"venta":sortG==="venta"?"nombre":"gan";renderGAN();};
+$("#importBtn").onclick=()=>tab==="cc"?importSheet():importVentasSheet();
+$("#moreBtn").onclick=moreMenu;
+$("#pbImp").addEventListener("keydown",e=>{if(e.key==="Enter")$("#pbAdd").click();});
+
+(async()=>{await load();render();renderGAN();renderPAG();})();
+if("serviceWorker" in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));}
+</script>
