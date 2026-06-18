@@ -116,6 +116,61 @@
   .paybtn:active{transform:scale(.96)}
   .paybtn.paid{background:var(--pos-soft);color:var(--pos);border-color:transparent}
   #monthSel{font:inherit;font-weight:700;font-size:13px;border-radius:11px;border:1px solid var(--line);background:var(--card);color:var(--ink);padding:8px 12px;cursor:pointer}
+  .tabs{max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .tab{flex:0 0 auto;white-space:nowrap}
+  .search{width:100%;font-size:15px;padding:11px 14px;border:1.5px solid var(--line);border-radius:13px;background:var(--card);font-weight:600;margin:2px 0 10px}
+  .search:focus{outline:none;border-color:var(--brand-2)}
+  .cobcard{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);overflow:hidden}
+  .cobrow{display:flex;align-items:center;gap:11px;padding:12px 13px;border-top:1px solid var(--line-2)}
+  .cobrow:first-child{border-top:none}
+  .cobrow .who{flex:1;min-width:0;cursor:pointer}
+  .cobrow .who .nm{font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .cobrow .who .db{font-weight:800;font-size:18px;color:var(--neg);margin-top:1px}
+  .cobrow .acts{display:flex;gap:7px;flex:none}
+  .cobrow .wa,.cobrow .pay{font:inherit;font-weight:700;font-size:13px;border:none;border-radius:11px;padding:10px 12px;cursor:pointer}
+  .cobrow .wa{background:#e7f8f0;color:#0a8f5b}
+  .cobrow .pay{background:linear-gradient(135deg,var(--pos),#0aa86f);color:#fff}
+  .cobrow .wa:active,.cobrow .pay:active{transform:scale(.95)}
+  .bigpay{width:100%;font:inherit;font-weight:800;font-size:16px;background:linear-gradient(135deg,var(--pos),#0aa86f);color:#fff;border:none;border-radius:13px;padding:14px;cursor:pointer;margin-top:6px}
+  .wabtn{width:100%;font:inherit;font-weight:700;font-size:15px;background:#e7f8f0;color:#0a8f5b;border:none;border-radius:13px;padding:13px;cursor:pointer;margin-top:8px}
+  .cajawrap{max-width:560px;margin:0 auto}
+  .daynav{display:flex;align-items:center;justify-content:space-between;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:7px 9px;margin-bottom:12px;box-shadow:var(--shadow)}
+  .daynav button{background:#f3f1ff;border:none;border-radius:10px;width:40px;height:40px;font-size:22px;line-height:1;cursor:pointer;color:var(--brand);font-weight:700}
+  .daynav .dl{font-weight:700;font-size:15px;text-transform:capitalize}
+  .cajagrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+  .minicard{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:11px 13px;box-shadow:var(--shadow)}
+  .minicard .k{font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.03em}
+  .minicard .v{font-weight:800;font-size:18px;margin-top:3px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:15px;box-shadow:var(--shadow);margin-bottom:12px}
+  .card h3{font-family:var(--disp);font-size:16px;margin-bottom:8px}
+  .arow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 0;border-top:1px solid var(--line-2)}
+  .arow:first-of-type{border-top:none}
+  .arow.edit{cursor:pointer}
+  .arow .l{font-size:14px;color:var(--ink);font-weight:600}
+  .arow .l small{display:block;color:var(--muted);font-weight:500;font-size:11.5px;margin-top:1px}
+  .arow .v{font-weight:700;font-size:15px;text-align:right}
+  .arow input.ci{width:118px;text-align:right;font:inherit;font-weight:700;font-size:15px;border:1.5px solid var(--line);border-radius:10px;padding:8px 10px;background:#fbfbff}
+  .arow input.ci:focus{outline:none;border-color:var(--brand-2)}
+  .totrow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 0 2px;border-top:2px solid var(--ink);margin-top:6px}
+  .totrow .l{font-weight:800;font-size:15px}
+  .totrow .v{font-weight:800;font-size:24px;font-family:var(--disp)}
+  .difbox{border-radius:12px;padding:11px 13px;margin-top:10px;font-weight:700;display:flex;justify-content:space-between;align-items:center}
+  .difbox.ok{background:var(--pos-soft);color:var(--pos)}
+  .difbox.bad{background:#fdecec;color:var(--neg)}
+  .difbox.warn{background:#fff6e6;color:#b5760a}
+  .movrow{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 0;border-top:1px solid var(--line-2);font-size:13.5px}
+  .movrow:first-child{border-top:none}
+  .movrow .mc{font-weight:600}
+  .movrow .mc small{color:var(--muted);font-weight:500}
+  .addbtn{width:100%;font:inherit;font-weight:700;font-size:13.5px;background:#f3f1ff;color:var(--brand);border:none;border-radius:11px;padding:11px;cursor:pointer;margin-top:8px}
+  .billgrid{display:grid;grid-template-columns:1fr 70px 1fr;gap:8px 10px;align-items:center}
+  .billgrid .bd{font-weight:700}
+  .billgrid input{width:100%;text-align:center;font:inherit;font-weight:700;border:1.5px solid var(--line);border-radius:9px;padding:7px;background:#fbfbff}
+  .billgrid input:focus{outline:none;border-color:var(--brand-2)}
+  .billgrid .bs{text-align:right;color:var(--muted);font-weight:600;font-size:13px}
+  .segctl{display:flex;gap:6px}
+  .segctl button{flex:1;font:inherit;font-weight:700;font-size:13px;border:1.5px solid var(--line);background:var(--card);color:var(--muted);border-radius:10px;padding:9px 6px;cursor:pointer}
+  .segctl button.on{background:var(--brand);color:#fff;border-color:transparent}
 
   .saldos{background:linear-gradient(160deg,var(--panel-1),var(--panel-2));color:#fff;border-radius:var(--r);padding:16px;box-shadow:var(--shadow);position:relative;overflow:hidden}
   .saldos::after{content:"";position:absolute;width:180px;height:180px;right:-60px;top:-60px;background:radial-gradient(circle,rgba(139,123,255,.5),transparent 70%)}
@@ -193,9 +248,11 @@
   <div class="brand"><div class="logo">$</div><h1 id="title">Cuenta corriente</h1><span class="acct" id="acct">verdi333</span></div>
   <div class="acctline" id="acctline"></div>
   <div class="tabs">
-    <button class="tab on" data-tab="cc">Cuenta corriente</button>
+    <button class="tab on" data-tab="cc">Cuenta</button>
+    <button class="tab" data-tab="cob">Cobrar</button>
+    <button class="tab" data-tab="caja">Caja</button>
     <button class="tab" data-tab="gan">Ganancias</button>
-    <button class="tab" data-tab="pag">Gan a pagar</button>
+    <button class="tab" data-tab="pag">A pagar</button>
   </div>
 </header>
 
@@ -209,6 +266,7 @@
     <datalist id="clilist"></datalist>
   </div>
 
+  <input type="text" id="ccSearch" class="search" placeholder="Buscar cliente…" autocomplete="off">
   <div class="toolbar">
     <button class="sortbtn" id="sortbtn">orden: deuda ▾</button>
     <span class="cnt" id="cliCount"></span>
@@ -270,6 +328,18 @@
     <aside class="saldos" id="resumenP"></aside>
   </div>
  </div>
+
+ <div id="viewCOB" style="display:none">
+  <input type="text" id="cobSearch" class="search" placeholder="Buscar cliente…" autocomplete="off">
+  <div class="toolbar">
+    <span class="cnt" id="cobInfo"></span>
+  </div>
+  <div class="cobcard" id="cobList"></div>
+ </div>
+
+ <div id="viewCAJA" style="display:none">
+  <div class="cajawrap" id="cajaBody"></div>
+ </div>
 </div>
 
 <div class="fab">
@@ -324,6 +394,10 @@ const VIRT_ZERO=new Set(["25demayo641","bogota2491","lspena121","rivadavia8998",
 const SUBE_PCT={hyrigoyen1400:0.008,lacroze2929:0.008,montiel1905:0.0065,olavarria3038:0.005,rivadavia1400:0.01,rivadavia2289:0.01,rivadavia7376:0.01};
 const BASE_MONTH="2026-06"; // la base 1–16/06 pertenece a junio 2026
 let pagMonth="";
+let ccSearch="",cobSearch="";
+const DEFAULT_WA="Hola! Te recuerdo que tenés un saldo pendiente de {deuda}. Cuando puedas me avisás, ¡gracias!";
+function waMsg(c){const ct=state.contacts[c.key]||{};return (ct.msg||DEFAULT_WA).replace(/{nombre}/g,c.name).replace(/{deuda}/g,money(c.debe));}
+function waLink(c){const ct=state.contacts[c.key]||{};const ph=(ct.phone||"").replace(/\D/g,"");return (ph?`https://wa.me/${ph}`:`https://wa.me/`)+`?text=${encodeURIComponent(waMsg(c))}`;}
 const AVS=['linear-gradient(135deg,#5b4bff,#8a7bff)','linear-gradient(135deg,#08b67a,#3ad29f)','linear-gradient(135deg,#ff7a59,#ff486a)','linear-gradient(135deg,#f5a623,#ffce56)','linear-gradient(135deg,#2bb1ff,#5b4bff)','linear-gradient(135deg,#9b5bff,#ff7ad9)'];
 const VENTAS_SEED=[{"id":"386451064","fecha":"17/6/2026 18:53","cli":"Ronald1382","prod":"Recargas de CLARO","pvp":2000.0,"gd":107.4,"gj":0.0},{"id":"386451054","fecha":"17/6/2026 18:52","cli":"Donald2822","prod":"Recargas de Personal","pvp":10000.0,"gd":391.0,"gj":125.0},{"id":"386451041","fecha":"17/6/2026 18:51","cli":"indep1673","prod":"Recargas de CLARO","pvp":6000.0,"gd":250.2,"gj":72.0},{"id":"386450999","fecha":"17/6/2026 18:47","cli":"Ronald1382","prod":"Recargas de Movistar","pvp":1500.0,"gd":52.5,"gj":0.0},{"id":"386450963","fecha":"17/6/2026 18:44","cli":"Donald2822","prod":"Recargas de Movistar","pvp":2000.0,"gd":45.0,"gj":25.0},{"id":"386450772","fecha":"17/6/2026 18:28","cli":"Rivadavia7376","prod":"SUBE LG","pvp":48600.0,"gd":972.0,"gj":0.0},{"id":"386450717","fecha":"17/6/2026 18:23","cli":"indep1673","prod":"Recargas de Personal","pvp":5000.0,"gd":200.0,"gj":58.0},{"id":"386450713","fecha":"17/6/2026 18:23","cli":"Donald1066","prod":"SUBE LG","pvp":50000.0,"gd":1000.0,"gj":0.0},{"id":"386450547","fecha":"17/6/2026 18:11","cli":"indep1673","prod":"SUBE LG","pvp":46250.0,"gd":809.38,"gj":115.63},{"id":"386450539","fecha":"17/6/2026 18:11","cli":"MONTIEL1905","prod":"Recargas de Personal","pvp":10000.0,"gd":516.0,"gj":0.0},{"id":"386450476","fecha":"17/6/2026 18:06","cli":"HYrigoyen1400","prod":"SUBE LG","pvp":30000.0,"gd":600.0,"gj":0.0},{"id":"386450460","fecha":"17/6/2026 18:05","cli":"Donald2822","prod":"Recargas de Movistar","pvp":6000.0,"gd":135.0,"gj":75.0},{"id":"386450412","fecha":"17/6/2026 18:01","cli":"Rivadavia1400","prod":"Recargas de TUENTI","pvp":3000.0,"gd":105.0,"gj":0.0},{"id":"386450379","fecha":"17/6/2026 17:58","cli":"Ronald1382","prod":"Recargas de CLARO","pvp":2000.0,"gd":107.4,"gj":0.0},{"id":"386450348","fecha":"17/6/2026 17:55","cli":"Donald2822","prod":"Recargas DirecTV","pvp":10500.0,"gd":178.5,"gj":105.0},{"id":"386450286","fecha":"17/6/2026 17:49","cli":"MONTIEL1905","prod":"SUBE LG","pvp":50000.0,"gd":1000.0,"gj":0.0},{"id":"386450259","fecha":"17/6/2026 17:45","cli":"Alberdi1382A","prod":"Recargas de Movistar","pvp":2000.0,"gd":45.0,"gj":25.0},{"id":"386450189","fecha":"17/6/2026 17:38","cli":"sanpedrito27","prod":"Recargas de Personal","pvp":10000.0,"gd":516.0,"gj":0.0},{"id":"386450162","fecha":"17/6/2026 17:36","cli":"sanpedrito27","prod":"Recargas de Personal","pvp":10000.0,"gd":516.0,"gj":0.0},{"id":"386450137","fecha":"17/6/2026 17:34","cli":"sanpedrito27","prod":"Recargas de Movistar","pvp":3000.0,"gd":105.0,"gj":0.0},{"id":"386449901","fecha":"17/6/2026 17:08","cli":"Rivadavia7376","prod":"SUBE LG","pvp":48700.0,"gd":974.0,"gj":0.0},{"id":"386449894","fecha":"17/6/2026 17:07","cli":"25demayo641","prod":"SUBE LG","pvp":8000.0,"gd":160.0,"gj":0.0},{"id":"386449815","fecha":"17/6/2026 16:58","cli":"Rivadavia7376","prod":"Recargas DirecTV","pvp":10500.0,"gd":283.5,"gj":0.0},{"id":"386449810","fecha":"17/6/2026 16:57","cli":"RIVADAVIA2289","prod":"SUBE LG","pvp":50000.0,"gd":1000.0,"gj":0.0},{"id":"386449808","fecha":"17/6/2026 16:57","cli":"MONTIEL1905","prod":"Recargas de CLARO","pvp":8000.0,"gd":429.6,"gj":0.0},{"id":"386449664","fecha":"17/6/2026 16:36","cli":"25demayo641","prod":"Recargas de TUENTI","pvp":15000.0,"gd":525.0,"gj":0.0},{"id":"386449553","fecha":"17/6/2026 16:21","cli":"HYrigoyen1400","prod":"SUBE LG","pvp":5900.0,"gd":118.0,"gj":0.0},{"id":"386449526","fecha":"17/6/2026 16:18","cli":"Rivadavia1400","prod":"SUBE LG","pvp":30000.0,"gd":600.0,"gj":0.0},{"id":"386449468","fecha":"17/6/2026 16:08","cli":"Donald1066","prod":"SUBE LG","pvp":50000.0,"gd":1000.0,"gj":0.0},{"id":"386449422","fecha":"17/6/2026 15:59","cli":"Erios286","prod":"SUBE LG","pvp":28300.0,"gd":495.25,"gj":70.75},{"id":"386449365","fecha":"17/6/2026 15:51","cli":"Rivadavia7376","prod":"Recargas de Movistar","pvp":2000.0,"gd":70.0,"gj":0.0},{"id":"386449335","fecha":"17/6/2026 15:47","cli":"RIVADAVIA2289","prod":"Recargas de Personal","pvp":9900.0,"gd":510.84,"gj":0.0},{"id":"386449244","fecha":"17/6/2026 15:31","cli":"Donald2822","prod":"Recargas de Personal","pvp":10000.0,"gd":391.0,"gj":125.0},{"id":"386449238","fecha":"17/6/2026 15:30","cli":"Donald2822","prod":"Recargas de Personal","pvp":10000.0,"gd":391.0,"gj":125.0},{"id":"386449214","fecha":"17/6/2026 15:24","cli":"Rivadavia7376","prod":"Recargas de Movistar","pvp":4000.0,"gd":140.0,"gj":0.0},{"id":"386449201","fecha":"17/6/2026 15:21","cli":"Erios286","prod":"Recargas de Movistar","pvp":5000.0,"gd":100.0,"gj":75.0},{"id":"386449197","fecha":"17/6/2026 15:21","cli":"Erios286","prod":"SUBE Electro Presencial","pvp":15000.0,"gd":112.5,"gj":0.0},{"id":"386449189","fecha":"17/6/2026 15:20","cli":"Donald2822","prod":"Recargas de Personal","pvp":6000.0,"gd":234.6,"gj":75.0},{"id":"386449159","fecha":"17/6/2026 15:16","cli":"RIVADAVIA2289","prod":"SUBE LG","pvp":50000.0,"gd":1000.0,"gj":0.0},{"id":"386449117","fecha":"17/6/2026 15:12","cli":"encalada2332","prod":"Recargas de Personal","pvp":20000.0,"gd":800.0,"gj":232.0},{"id":"386449093","fecha":"17/6/2026 15:08","cli":"Rivadavia1400","prod":"Recargas de CLARO","pvp":3000.0,"gd":161.1,"gj":0.0},{"id":"386449060","fecha":"17/6/2026 15:00","cli":"Donald1066","prod":"SUBE LG","pvp":40000.0,"gd":800.0,"gj":0.0},{"id":"386449048","fecha":"17/6/2026 14:58","cli":"indep1673","prod":"Recargas de CLARO","pvp":5000.0,"gd":208.5,"gj":60.0},{"id":"386449007","fecha":"17/6/2026 14:53","cli":"encalada2332","prod":"Recargas de Personal","pvp":5000.0,"gd":200.0,"gj":58.0},{"id":"386449000","fecha":"17/6/2026 14:51","cli":"Rivadavia1400","prod":"SUBE LG","pvp":23500.0,"gd":470.0,"gj":0.0},{"id":"386448995","fecha":"17/6/2026 14:50","cli":"Rivadavia1400","prod":"Recargas de Personal","pvp":10000.0,"gd":516.0,"gj":0.0},{"id":"386448989","fecha":"17/6/2026 14:50","cli":"Rivadavia1400","prod":"Recargas de Personal","pvp":4000.0,"gd":206.4,"gj":0.0},{"id":"386448986","fecha":"17/6/2026 14:49","cli":"Rivadavia1400","prod":"Recargas de Personal","pvp":10000.0,"gd":516.0,"gj":0.0},{"id":"386448914","fecha":"17/6/2026 14:38","cli":"Rivadavia7376","prod":"Recargas de Personal","pvp":4000.0,"gd":206.4,"gj":0.0},{"id":"386448906","fecha":"17/6/2026 14:37","cli":"encalada2332","prod":"SUBE Electro Presencial","pvp":5000.0,"gd":37.5,"gj":0.0},{"id":"386448866","fecha":"17/6/2026 14:29","cli":"HYrigoyen1400","prod":"Recargas de Personal","pvp":4000.0,"gd":206.4,"gj":0.0},{"id":"386448799","fecha":"17/6/2026 14:17","cli":"Rivadavia1400","prod":"SUBE LG","pvp":21000.0,"gd":420.0,"gj":0.0},{"id":"386448660","fecha":"17/6/2026 13:58","cli":"Donald2822","prod":"Recargas de Movistar","pvp":2000.0,"gd":45.0,"gj":25.0},{"id":"386448659","fecha":"17/6/2026 13:58","cli":"HYrigoyen1400","prod":"SUBE LG","pvp":3700.0,"gd":74.0,"gj":0.0},{"id":"386448656","fecha":"17/6/2026 13:58","cli":"RIVADAVIA2289","prod":"Recargas de Movistar","pvp":8000.0,"gd":280.0,"gj":0.0},{"id":"386448637","fecha":"17/6/2026 13:55","cli":"HYrigoyen1400","prod":"SUBE LG","pvp":4000.0,"gd":80.0,"gj":0.0},{"id":"386448611","fecha":"17/6/2026 13:53","cli":"Quesada","prod":"SUBE LG","pvp":0.0,"gd":0.0,"gj":0.0},{"id":"386448578","fecha":"17/6/2026 13:48","cli":"Donald2822","prod":"Recargas de Movistar","pvp":6000.0,"gd":135.0,"gj":75.0},{"id":"386448574","fecha":"17/6/2026 13:48","cli":"Donald2822","prod":"Recargas de Movistar","pvp":4000.0,"gd":90.0,"gj":50.0},{"id":"386448566","fecha":"17/6/2026 13:46","cli":"indep1673","prod":"Recargas de Personal","pvp":10000.0,"gd":400.0,"gj":116.0},{"id":"386448559","fecha":"17/6/2026 13:46","cli":"RIVADAVIA2289","prod":"SUBE LG","pvp":50000.0,"gd":1000.0,"gj":0.0},{"id":"386448555","fecha":"17/6/2026 13:45","cli":"Erios286","prod":"SUBE Electro Presencial","pvp":10000.0,"gd":75.0,"gj":0.0},{"id":"386448522","fecha":"17/6/2026 13:41","cli":"Donald2822","prod":"Recargas de Movistar","pvp":2500.0,"gd":56.25,"gj":31.25},{"id":"386448412","fecha":"17/6/2026 13:29","cli":"Rivadavia8998","prod":"Recargas de TUENTI","pvp":2600.0,"gd":91.0,"gj":0.0},{"id":"386448402","fecha":"17/6/2026 13:28","cli":"Ronald1382","prod":"SUBE Electro Presencial","pvp":2000.0,"gd":15.0,"gj":0.0},{"id":"386448395","fecha":"17/6/2026 13:27","cli":"Ronald1382","prod":"SUBE Electro Presencial","pvp":4000.0,"gd":30.0,"gj":0.0},{"id":"386448334","fecha":"17/6/2026 13:19","cli":"Erios286","prod":"SUBE Electro Presencial","pvp":10000.0,"gd":75.0,"gj":0.0},{"id":"386448310","fecha":"17/6/2026 13:17","cli":"Donald2822","prod":"Recargas de Personal","pvp":2000.0,"gd":78.2,"gj":25.0},{"id":"386448214","fecha":"17/6/2026 13:06","cli":"Rivadavia7376","prod":"Recargas de Movistar","pvp":13000.0,"gd":455.0,"gj":0.0},{"id":"386448197","fecha":"17/6/2026 13:04","cli":"MONTIEL1905","prod":"Recargas de Personal","pvp":2800.0,"gd":144.48,"gj":0.0},{"id":"386448169","fecha":"17/6/2026 13:01","cli":"HYrigoyen1400","prod":"Recargas de Movistar","pvp":4000.0,"gd":140.0,"gj":0.0},{"id":"386448154","fecha":"17/6/2026 12:59","cli":"Rivadavia7376","prod":"Recargas de Personal","pvp":8000.0,"gd":412.8,"gj":0.0},{"id":"386448116","fecha":"17/6/2026 12:54","cli":"HYrigoyen1400","prod":"SUBE LG","pvp":16400.0,"gd":328.0,"gj":0.0},{"id":"386447988","fecha":"17/6/2026 12:43","cli":"MONTIEL1905","prod":"SUBE LG","pvp":46800.0,"gd":936.0,"gj":0.0},{"id":"386447975","fecha":"17/6/2026 12:42","cli":"Alberdi1382A","prod":"SUBE LG","pvp":20000.0,"gd":400.0,"gj":0.0},{"id":"386447913","fecha":"17/6/2026 12:37","cli":"Ronald1382","prod":"SUBE Electro Presencial","pvp":2000.0,"gd":15.0,"gj":0.0},{"id":"386447837","fecha":"17/6/2026 12:28","cli":"Donald2822","prod":"Recargas de Movistar","pvp":4000.0,"gd":90.0,"gj":50.0},{"id":"386447822","fecha":"17/6/2026 12:27","cli":"25demayo641","prod":"Recargas de Personal","pvp":2000.0,"gd":103.2,"gj":0.0},{"id":"386447813","fecha":"17/6/2026 12:27","cli":"Ronald1382","prod":"SUBE Electro Presencial","pvp":3000.0,"gd":22.5,"gj":0.0},{"id":"386447782","fecha":"17/6/2026 12:24","cli":"Donald2822","prod":"Recargas de Personal","pvp":10000.0,"gd":391.0,"gj":125.0},{"id":"386447753","fecha":"17/6/2026 12:22","cli":"Ronald1382","prod":"Recargas de Movistar","pvp":3000.0,"gd":105.0,"gj":0.0},{"id":"386447595","fecha":"17/6/2026 12:08","cli":"Rivadavia1400","prod":"SUBE LG","pvp":6000.0,"gd":120.0,"gj":0.0},{"id":"386447552","fecha":"17/6/2026 12:04","cli":"Lspena121","prod":"Recargas de Movistar","pvp":5000.0,"gd":175.0,"gj":0.0},{"id":"386447532","fecha":"17/6/2026 12:02","cli":"indep1673","prod":"Recargas de Movistar","pvp":5000.0,"gd":100.0,"gj":75.0},{"id":"386447526","fecha":"17/6/2026 12:01","cli":"Donald2822","prod":"Recargas de Movistar","pvp":4000.0,"gd":90.0,"gj":50.0},{"id":"386447514","fecha":"17/6/2026 12:00","cli":"Donald2822","prod":"Recargas de Movistar","pvp":4000.0,"gd":90.0,"gj":50.0},{"id":"386447478","fecha":"17/6/2026 11:57","cli":"Rivadavia7376","prod":"SUBE LG","pvp":48500.0,"gd":970.0,"gj":0.0},{"id":"386447422","fecha":"17/6/2026 11:52","cli":"Rivadavia1400","prod":"Recargas de Movistar","pvp":5000.0,"gd":175.0,"gj":0.0},{"id":"386447234","fecha":"17/6/2026 11:37","cli":"25demayo641","prod":"Recargas de CLARO","pvp":2000.0,"gd":107.4,"gj":0.0},{"id":"386447233","fecha":"17/6/2026 11:37","cli":"25demayo641","prod":"Recargas de Movistar","pvp":5000.0,"gd":175.0,"gj":0.0},{"id":"386447217","fecha":"17/6/2026 11:35","cli":"Ronald1382","prod":"Recargas de Movistar","pvp":5000.0,"gd":175.0,"gj":0.0},{"id":"386447197","fecha":"17/6/2026 11:33","cli":"MONTIEL1905","prod":"Recargas de Movistar","pvp":2000.0,"gd":70.0,"gj":0.0},{"id":"386447021","fecha":"17/6/2026 11:19","cli":"Ronald1382","prod":"SUBE Electro Presencial","pvp":4000.0,"gd":30.0,"gj":0.0},{"id":"386446929","fecha":"17/6/2026 11:12","cli":"Rivadavia7376","prod":"Recargas de Personal","pvp":2000.0,"gd":103.2,"gj":0.0},{"id":"386446864","fecha":"17/6/2026 11:07","cli":"Alberdi1382A","prod":"SUBE LG","pvp":13900.0,"gd":278.0,"gj":0.0},{"id":"386446856","fecha":"17/6/2026 11:06","cli":"Lspena121","prod":"Recargas de Movistar","pvp":4000.0,"gd":140.0,"gj":0.0},{"id":"386446748","fecha":"17/6/2026 10:59","cli":"HYrigoyen1400","prod":"Recargas de Personal","pvp":10000.0,"gd":516.0,"gj":0.0},{"id":"386446650","fecha":"17/6/2026 10:51","cli":"Quesada","prod":"Recargas de Movistar","pvp":10000.0,"gd":350.0,"gj":0.0},{"id":"386446635","fecha":"17/6/2026 10:50","cli":"Rivadavia7376","prod":"Recargas de Personal","pvp":10000.0,"gd":516.0,"gj":0.0},{"id":"386446541","fecha":"17/6/2026 10:42","cli":"Rivadavia1400","prod":"SUBE LG","pvp":29000.0,"gd":580.0,"gj":0.0},{"id":"386446537","fecha":"17/6/2026 10:42","cli":"HYrigoyen1400","prod":"SUBE LG","pvp":7000.0,"gd":140.0,"gj":0.0},{"id":"386446520","fecha":"17/6/2026 10:41","cli":"Rivadavia7376","prod":"Recargas de Movistar","pvp":2000.0,"gd":70.0,"gj":0.0},{"id":"386446309","fecha":"17/6/2026 10:22","cli":"Donald2822","prod":"SUBE Electro Presencial","pvp":5000.0,"gd":37.5,"gj":0.0},{"id":"386446287","fecha":"17/6/2026 10:19","cli":"Rivadavia7376","prod":"Recargas de Movistar","pvp":3000.0,"gd":105.0,"gj":0.0},{"id":"386446188","fecha":"17/6/2026 10:12","cli":"Donald2822","prod":"SUBE Electro Presencial","pvp":8000.0,"gd":60.0,"gj":0.0},{"id":"386446186","fecha":"17/6/2026 10:12","cli":"Donald2822","prod":"SUBE Electro Presencial","pvp":10000.0,"gd":75.0,"gj":0.0},{"id":"386446180","fecha":"17/6/2026 10:11","cli":"Donald2822","prod":"SUBE LG","pvp":4000.0,"gd":80.0,"gj":0.0},{"id":"386446086","fecha":"17/6/2026 10:01","cli":"MONTIEL1905","prod":"SUBE LG","pvp":45600.0,"gd":912.0,"gj":0.0},{"id":"386446082","fecha":"17/6/2026 10:01","cli":"Donald2822","prod":"SUBE LG","pvp":47000.0,"gd":940.0,"gj":0.0},{"id":"386446078","fecha":"17/6/2026 10:00","cli":"MONTIEL1905","prod":"Recargas de CLARO","pvp":4000.0,"gd":214.8,"gj":0.0},{"id":"386445983","fecha":"17/6/2026 09:52","cli":"encalada2332","prod":"SUBE Electro Presencial","pvp":2000.0,"gd":15.0,"gj":0.0},{"id":"386445844","fecha":"17/6/2026 09:39","cli":"Rivadavia5406","prod":"Recargas de Movistar","pvp":3000.0,"gd":105.0,"gj":0.0},{"id":"386445709","fecha":"17/6/2026 09:24","cli":"Erios286","prod":"SUBE Electro Presencial","pvp":8000.0,"gd":60.0,"gj":0.0},{"id":"386445553","fecha":"17/6/2026 09:04","cli":"Ronald1382","prod":"Recargas de Personal","pvp":7000.0,"gd":361.2,"gj":0.0},{"id":"386445532","fecha":"17/6/2026 09:01","cli":"Rivadavia1400","prod":"Recargas de Movistar","pvp":5000.0,"gd":175.0,"gj":0.0},{"id":"386445531","fecha":"17/6/2026 09:01","cli":"HYrigoyen1400","prod":"SUBE LG","pvp":21000.0,"gd":420.0,"gj":0.0},{"id":"386445527","fecha":"17/6/2026 09:00","cli":"RIVADAVIA2289","prod":"SUBE LG","pvp":50000.0,"gd":1000.0,"gj":0.0},{"id":"386445521","fecha":"17/6/2026 08:59","cli":"Erios286","prod":"SUBE Electro Presencial","pvp":8000.0,"gd":60.0,"gj":0.0},{"id":"386445472","fecha":"17/6/2026 08:50","cli":"Ronald1382","prod":"SUBE Electro Presencial","pvp":3000.0,"gd":22.5,"gj":0.0},{"id":"386445471","fecha":"17/6/2026 08:50","cli":"Erios286","prod":"Recargas de Personal","pvp":8000.0,"gd":320.0,"gj":92.8},{"id":"386445361","fecha":"17/6/2026 08:32","cli":"Rivadavia7376","prod":"Recargas de Movistar","pvp":3000.0,"gd":105.0,"gj":0.0},{"id":"386445337","fecha":"17/6/2026 08:28","cli":"MONTIEL1905","prod":"Recargas de Movistar","pvp":3000.0,"gd":105.0,"gj":0.0},{"id":"386445326","fecha":"17/6/2026 08:26","cli":"Rivadavia1400","prod":"Recargas de Movistar","pvp":3000.0,"gd":105.0,"gj":0.0},{"id":"386445321","fecha":"17/6/2026 08:25","cli":"Lspena121","prod":"SUBE LG","pvp":4000.0,"gd":80.0,"gj":0.0},{"id":"386445264","fecha":"17/6/2026 08:11","cli":"indep1673","prod":"SUBE LG","pvp":3150.0,"gd":55.13,"gj":7.88},{"id":"386445260","fecha":"17/6/2026 08:11","cli":"Rivadavia1400","prod":"SUBE LG","pvp":20900.0,"gd":418.0,"gj":0.0},{"id":"386445243","fecha":"17/6/2026 08:08","cli":"Ronald1382","prod":"SUBE Electro Presencial","pvp":2000.0,"gd":15.0,"gj":0.0},{"id":"386445235","fecha":"17/6/2026 08:06","cli":"RIVADAVIA2289","prod":"SUBE LG","pvp":15000.0,"gd":300.0,"gj":0.0},{"id":"386445231","fecha":"17/6/2026 08:06","cli":"Erios286","prod":"Recargas de Movistar","pvp":4000.0,"gd":80.0,"gj":60.0},{"id":"386445220","fecha":"17/6/2026 08:02","cli":"Rivadavia7376","prod":"Recargas de Movistar","pvp":7000.0,"gd":245.0,"gj":0.0},{"id":"386445208","fecha":"17/6/2026 07:58","cli":"Erios286","prod":"SUBE LG","pvp":9300.0,"gd":162.75,"gj":23.25},{"id":"386445135","fecha":"17/6/2026 07:39","cli":"Rivadavia7376","prod":"SUBE LG","pvp":47850.0,"gd":957.0,"gj":0.0},{"id":"386445077","fecha":"17/6/2026 07:23","cli":"Rivadavia7376","prod":"Recargas de CLARO","pvp":9000.0,"gd":483.3,"gj":0.0},{"id":"386444998","fecha":"17/6/2026 06:46","cli":"Ronald1382","prod":"Recargas de Movistar","pvp":2000.0,"gd":70.0,"gj":0.0},{"id":"386444961","fecha":"17/6/2026 06:13","cli":"Rivadavia7376","prod":"Recargas de Personal","pvp":4000.0,"gd":206.4,"gj":0.0},{"id":"386444941","fecha":"17/6/2026 05:42","cli":"indep1673","prod":"Recargas de Personal","pvp":5000.0,"gd":200.0,"gj":58.0},{"id":"386444929","fecha":"17/6/2026 05:09","cli":"Rivadavia1400","prod":"Recargas de Movistar","pvp":1250.0,"gd":43.75,"gj":0.0},{"id":"386444912","fecha":"17/6/2026 03:25","cli":"Lspena121","prod":"SUBE LG","pvp":16000.0,"gd":320.0,"gj":0.0},{"id":"386444906","fecha":"17/6/2026 02:58","cli":"Erios286","prod":"Recargas de Movistar","pvp":1000.0,"gd":20.0,"gj":15.0},{"id":"386444894","fecha":"17/6/2026 02:26","cli":"HYrigoyen1400","prod":"Recargas de Movistar","pvp":2000.0,"gd":70.0,"gj":0.0},{"id":"386444869","fecha":"17/6/2026 00:53","cli":"Rivadavia7376","prod":"Recargas de Personal","pvp":5000.0,"gd":258.0,"gj":0.0},{"id":"386444868","fecha":"17/6/2026 00:50","cli":"Rivadavia1400","prod":"Recargas de Movistar","pvp":4000.0,"gd":140.0,"gj":0.0},{"id":"386444837","fecha":"17/6/2026 00:11","cli":"HYrigoyen1400","prod":"Recargas de Movistar","pvp":2000.0,"gd":70.0,"gj":0.0},{"id":"386444831","fecha":"17/6/2026 00:09","cli":"indep1673","prod":"SUBE LG","pvp":0.0,"gd":0.0,"gj":0.0},{"id":"386444823","fecha":"17/6/2026 00:05","cli":"HYrigoyen1400","prod":"Recargas de TUENTI","pvp":3000.0,"gd":105.0,"gj":0.0}];
 const GAN_OPENING=[{"name":"Rivadavia7376","vV":1666800.0,"gdV":75575.16,"gjV":0.0,"vS":1998950.0,"gdS":39979.0,"gjS":0.0},{"name":"MONTIEL1905","vV":1173800.0,"gdV":53605.44,"gjV":0.0,"vS":2793400.0,"gdS":55868.0,"gjS":0.0},{"name":"RIVADAVIA2289","vV":628000.0,"gdV":27812.86,"gjV":0.0,"vS":3750300.0,"gdS":75006.0,"gjS":0.0},{"name":"Rivadavia1400","vV":750300.0,"gdV":34346.84,"gjV":0.0,"vS":2750430.0,"gdS":55008.6,"gjS":0.0},{"name":"Donald1066","vV":1571300.0,"gdV":50751.78,"gjV":20015.0,"vS":1498900.0,"gdS":26553.0,"gjS":0.0},{"name":"Donald2822","vV":1623700.0,"gdV":51307.79,"gjV":20908.75,"vS":1145200.0,"gdS":19341.5,"gjS":0.0},{"name":"indep1673","vV":664420.0,"gdV":21629.0,"gjV":8465.7,"vS":1119460.0,"gdS":17980.58,"gjS":2396.17},{"name":"Erios286","vV":498400.0,"gdV":16286.1,"gjV":6270.32,"vS":1931700.0,"gdS":20504.77,"gjS":1504.27},{"name":"HYrigoyen1400","vV":426000.0,"gdV":19035.85,"gjV":0.0,"vS":854650.0,"gdS":17093.0,"gjS":0.0},{"name":"Quesada","vV":394300.0,"gdV":17283.32,"gjV":0.0,"vS":839900.0,"gdS":16623.0,"gjS":0.0},{"name":"Ronald1382","vV":667100.0,"gdV":26720.95,"gjV":0.0,"vS":427000.0,"gdS":3202.5,"gjS":0.0},{"name":"Lspena121","vV":187000.0,"gdV":8228.3,"gjV":0.0,"vS":487900.0,"gdS":9758.0,"gjS":0.0},{"name":"sanpedrito27","vV":228000.0,"gdV":10026.8,"gjV":0.0,"vS":327500.0,"gdS":6550.0,"gjS":0.0},{"name":"Alberdi1382A","vV":129900.0,"gdV":3609.99,"gjV":1623.75,"vS":338800.0,"gdS":6776.0,"gjS":0.0},{"name":"encalada2332","vV":153500.0,"gdV":5311.2,"gjV":1946.3,"vS":299000.0,"gdS":2912.5,"gjS":167.5},{"name":"25demayo641","vV":134500.0,"gdV":6327.7,"gjV":0.0,"vS":83000.0,"gdS":1660.0,"gjS":0.0},{"name":"Rivadavia8998","vV":78400.0,"gdV":3076.0,"gjV":0.0,"vS":140400.0,"gdS":2808.0,"gjS":0.0},{"name":"Uruguay198","vV":58000.0,"gdV":2596.7,"gjV":0.0,"vS":0,"gdS":0,"gjS":0},{"name":"Rivadavia5406","vV":43600.0,"gdV":1871.55,"gjV":0.0,"vS":0,"gdS":0,"gjS":0}];
@@ -345,7 +419,28 @@ const numFmt=new Intl.NumberFormat('es-AR',{maximumFractionDigits:0});
 const money=n=>moneyFmt.format(Math.round(n||0));
 const numf=n=>numFmt.format(Math.round(n||0));
 const norm=s=>(s||"").trim().toLowerCase().replace(/[^a-z0-9]/g,"");
-const key=s=>{const n=norm(s);return ALIASES[n]||n;};
+let ALIAS_MAP={...ALIASES};
+const key=s=>{const n=norm(s);return ALIAS_MAP[n]||n;};
+// Config de comisión de cada cliente (editable desde la app). Default = directo del CSV.
+function clientConf(k){
+  const c=state.clientes&&state.clientes[k];
+  if(c)return c;
+  return {name:CANON[k]||null,
+    virtMode:(k in VIRT_PCT)?"pct":VIRT_ZERO.has(k)?"cero":"directo",virtPct:VIRT_PCT[k]||0,
+    subeMode:(k in SUBE_PCT)?"pct":"directo",subePct:SUBE_PCT[k]||0,aliases:[]};
+}
+function dispName(k){return (state.clientes&&state.clientes[k]&&state.clientes[k].name)||CANON[k]||null;}
+function seedClientes(){
+  state.clientes=state.clientes||{};
+  const ensure=k=>{if(!state.clientes[k])state.clientes[k]={name:null,virtMode:"directo",virtPct:0,subeMode:"directo",subePct:0,aliases:[]};return state.clientes[k];};
+  for(const k of VIRT_DIRECT)ensure(k);
+  for(const k in VIRT_PCT){const c=ensure(k);c.virtMode="pct";c.virtPct=VIRT_PCT[k];}
+  for(const k of VIRT_ZERO){const c=ensure(k);c.virtMode="cero";}
+  for(const k in SUBE_PCT){const c=ensure(k);c.subeMode="pct";c.subePct=SUBE_PCT[k];}
+  for(const k in CANON){const c=ensure(k);c.name=CANON[k];}
+  for(const al in ALIASES){const c=ensure(ALIASES[al]);c.aliases=c.aliases||[];if(!c.aliases.includes(al))c.aliases.push(al);}
+}
+function rebuildAlias(){const m={};if(!state.clientesSeededV1)Object.assign(m,ALIASES);for(const k in (state.clientes||{}))for(const a of (state.clientes[k].aliases||[]))m[norm(a)]=k;ALIAS_MAP=m;}
 const initials=s=>{const a=(s||"").replace(/[^a-zA-Z0-9]/g,"").slice(0,2);return (a||"?").toUpperCase();};
 const avatarBg=s=>{let h=0;const t=(s||"");for(let i=0;i<t.length;i++)h=(h*31+t.charCodeAt(i))>>>0;return AVS[h%AVS.length];};
 function toast(t){const e=$("#toast");e.textContent=t;e.classList.add("on");clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove("on"),2400);}
@@ -361,8 +456,12 @@ function parseMoney(s){s=(s||"").toString().trim().replace(/^"|"$/g,"");if(!s)re
 
 async function load(){
   try{const r=await store.get(STORE_KEY);if(r&&r.value)state=JSON.parse(r.value);}catch(e){}
-  state.movs=state.movs||[];state.pagos=state.pagos||[];state.opening=state.opening||{};state.ventas=state.ventas||[];state.ganOpening=state.ganOpening||{};state.paid=state.paid||{};
+  state.movs=state.movs||[];state.pagos=state.pagos||[];state.opening=state.opening||{};state.ventas=state.ventas||[];state.ganOpening=state.ganOpening||{};state.paid=state.paid||{};state.contacts=state.contacts||{};
   state.saldoSistema=state.saldoSistema||0;state.prestamo=state.prestamo||0;
+  state.caja=state.caja||{base:0,cierres:{}};state.caja.cierres=state.caja.cierres||{};state.cajaMovs=state.cajaMovs||[];
+  state.clientes=state.clientes||{};
+  if(!state.clientesSeededV1){seedClientes();state.clientesSeededV1=true;}
+  rebuildAlias();
   if(!state.cleanV3){state.movs=[];state.cleanV3=true;}
   if(!state.ventasCleanV2){state.ventas=[];state.ventasCleanV2=true;}
   if(!state.ganOpeningSeeded){state.ganOpening={};for(const o of GAN_OPENING){const k=key(o.name);if(!state.ganOpening[k])state.ganOpening[k]={name:o.name,vV:0,gdV:0,gjV:0,vS:0,gdS:0,gjS:0};const g=state.ganOpening[k];g.vV+=o.vV;g.gdV+=o.gdV;g.gjV+=o.gjV;g.vS+=o.vS;g.gdS+=o.gdS;g.gjS+=o.gjS;}state.ganOpeningSeeded=true;}
@@ -398,19 +497,16 @@ function ventasAgg(){
     a.items.push(v);}
   const arr=[...map.values()];arr.forEach(a=>{
     a.totV=a.gdV+a.gjV;a.totS=a.gdS+a.gjS;a.tot=a.totV+a.totS;a.venta=a.vV+a.vS;
-    // comisión cliente VIRTUAL según config
-    const k=a.key;
-    if(VIRT_DIRECT.has(k))a.comV=a.gjV;
-    else if(k in VIRT_PCT)a.comV=a.vV*VIRT_PCT[k];
-    else if(VIRT_ZERO.has(k))a.comV=0;
-    else a.comV=a.gjV; // sin config: directo del CSV
+    const cf=clientConf(a.key);
+    if(cf.virtMode==="pct")a.comV=a.vV*(cf.virtPct||0);
+    else if(cf.virtMode==="cero")a.comV=0;
+    else a.comV=a.gjV;
     a.miV=a.totV-a.comV;
-    // SUBE: estos 7 llevan % ; el resto directo del CSV
-    if(a.key in SUBE_PCT)a.comS=a.vS*SUBE_PCT[a.key];
+    if(cf.subeMode==="pct")a.comS=a.vS*(cf.subePct||0);
     else a.comS=a.gjS;
     a.miS=a.totS-a.comS;
     a.gd=a.miV+a.miS;a.gj=a.comV+a.comS;
-    if(CANON[a.key])a.name=CANON[a.key];
+    const dn=dispName(a.key);if(dn)a.name=dn;
   });
   return arr;
 }
@@ -434,7 +530,7 @@ function clientsAgg(){
   for(const m of state.movs){const t=tipoOf(m);if(t!=="acreditacion"&&t!=="devolucion")continue;
     const o=get(m.recibe);o.acred+=-m.importe;o.accItems.push(m);const ts=parseTs(m.fecha);if(ts>=o.last){o.last=ts;o.name=m.recibe;}}
   for(const p of state.pagos){const o=get(p.name);o.pagado+=p.importe;o.payItems.push(p);const ts=parseTs(p.fecha);if(ts>o.last)o.last=ts;}
-  const arr=[...map.values()];arr.forEach(c=>{c.debe=c.acred-c.pagado;if(CANON[c.key])c.name=CANON[c.key];});return arr;
+  const arr=[...map.values()];arr.forEach(c=>{c.debe=c.acred-c.pagado;const dn=dispName(c.key);if(dn)c.name=dn;});return arr;
 }
 function totals(cs){return cs.reduce((a,c)=>{a.acred+=c.acred;a.pagado+=c.pagado;a.debe+=c.debe;return a;},{acred:0,pagado:0,debe:0});}
 function sortClients(cs){const m=sortMode;
@@ -449,7 +545,8 @@ function render(){
 
   $("#acctline").textContent=`${cs.length} clientes · ${ds.length?(ds.length===1?ds[0]:ds[ds.length-1]+"–"+ds[0]):"base al 16/06"}`;
 
-  const sorted=sortClients(cs.slice());
+  let sorted=sortClients(cs.slice());
+  if(ccSearch)sorted=sorted.filter(c=>c.name.toLowerCase().includes(ccSearch));
   const conDeuda=cs.filter(c=>Math.round(c.debe)>0).length;
   $("#cliCount").textContent=`${conDeuda} deben`;
   $("#sortbtn").textContent="orden: "+(sortMode==="debe"?"deuda":sortMode==="nombre"?"nombre":"reciente")+" ▾";
@@ -547,12 +644,12 @@ function nextMonth5(mk){let[y,m]=mk.split("-").map(Number);m++;if(m>12){m=1;y++;
 function availableMonths(){const s=new Set([BASE_MONTH]);for(const v of state.ventas){const mk=monthOf(v.fecha);if(mk)s.add(mk);}return [...s].sort().reverse();}
 function ganAPagarMonth(mk){
   const map=new Map();
-  const get=(name)=>{const k=key(name);if(!map.has(k))map.set(k,{key:k,name:CANON[k]||name,vV:0,vS:0});return map.get(k);};
+  const get=(name)=>{const k=key(name);if(!map.has(k))map.set(k,{key:k,name:dispName(k)||name,vV:0,vS:0});return map.get(k);};
   if(mk===BASE_MONTH){for(const kk in state.ganOpening){const o=state.ganOpening[kk];const a=get(o.name);a.vV+=o.vV;a.vS+=o.vS;}}
   for(const v of state.ventas){if(monthOf(v.fecha)!==mk)continue;const a=get(v.cli);const c=catVenta(v.prod);if(c==="virtual")a.vV+=v.pvp;else if(c==="sube")a.vS+=v.pvp;}
   const rows=[];
-  for(const a of map.values()){const inV=a.key in VIRT_PCT,inS=a.key in SUBE_PCT;if(!inV&&!inS)continue;
-    const comV=inV?a.vV*VIRT_PCT[a.key]:0, comS=inS?a.vS*SUBE_PCT[a.key]:0;
+  for(const a of map.values()){const cf=clientConf(a.key);const inV=cf.virtMode==="pct",inS=cf.subeMode==="pct";if(!inV&&!inS)continue;
+    const comV=inV?a.vV*(cf.virtPct||0):0, comS=inS?a.vS*(cf.subePct||0):0;
     rows.push({key:a.key,name:a.name,comV,comS,total:comV+comS,inV,inS});}
   return rows.sort((a,b)=>b.total-a.total);
 }
@@ -584,6 +681,257 @@ function renderPAG(){
 }
 async function togglePaid(mk,k){state.paid[mk]=state.paid[mk]||{};state.paid[mk][k]=!state.paid[mk][k];await save();renderPAG();}
 
+function renderCobrar(){
+  const all=clientsAgg().filter(c=>Math.round(c.debe)>0).sort((a,b)=>b.debe-a.debe);
+  let list=all;if(cobSearch)list=all.filter(c=>c.name.toLowerCase().includes(cobSearch));
+  const tot=all.reduce((s,c)=>s+c.debe,0);
+  $("#cobInfo").textContent=`${all.length} te deben · ${money(tot)}`;
+  $("#cobList").innerHTML=list.length?list.map(c=>`
+    <div class="cobrow">
+      <div class="av" style="background:${avatarBg(c.name)}">${initials(c.name)}</div>
+      <div class="who" data-open="${c.key}"><div class="nm">${c.name}</div><div class="db num">${money(c.debe)}</div></div>
+      <div class="acts"><button class="wa" data-wa="${c.key}">WhatsApp</button><button class="pay" data-pay="${c.key}">Pagó</button></div>
+    </div>`).join(""):`<div class="empty">${all.length?"Sin resultados.":"¡Nadie te debe! 🎉"}</div>`;
+  [...document.querySelectorAll('#cobList .who')].forEach(e=>e.onclick=()=>openClient(e.dataset.open));
+  [...document.querySelectorAll('#cobList .wa')].forEach(b=>b.onclick=()=>{const c=clientsAgg().find(x=>x.key===b.dataset.wa);if(c)window.open(waLink(c),"_blank");});
+  [...document.querySelectorAll('#cobList .pay')].forEach(b=>b.onclick=()=>quickPay(b.dataset.pay));
+}
+function quickPay(k){
+  const c=clientsAgg().find(x=>x.key===k);if(!c)return;
+  openSheet(`<h3>${c.name}</h3>
+    <div class="hint">Debe <b class="neg">${money(c.debe)}</b></div>
+    <button class="bigpay" id="qpFull">Saldó todo · ${money(c.debe)}</button>
+    <label class="field" style="margin-top:14px">…o pago parcial</label>
+    <div class="seg"><input type="number" id="qpAmt" inputmode="numeric" placeholder="Pagó $" style="flex:2"><button class="go" id="qpPart" style="flex:1">Sumar</button></div>
+    <button class="wabtn" id="qpWa">Mandar WhatsApp</button>`);
+  $("#qpFull").onclick=async()=>{await addPago(c.name,c.debe);closeSheet();render();renderCobrar();toast(`${c.name} saldó todo`);};
+  $("#qpPart").onclick=async()=>{const v=parseMoney($("#qpAmt").value);if(!v){toast("Poné el importe");return;}await addPago(c.name,v);closeSheet();render();renderCobrar();const a=clientsAgg().find(x=>x.key===k);toast(`${c.name} pagó ${money(v)} · debe ${money(a?a.debe:0)}`);};
+  $("#qpWa").onclick=()=>window.open(waLink(c),"_blank");
+}
+function setContactSheet(k,name){
+  const ct=state.contacts[k]||{};
+  openSheet(`<h3>Contacto · ${name}</h3>
+    <label class="field">Teléfono (con código de país)</label>
+    <input type="text" id="ctPhone" inputmode="tel" value="${ct.phone||''}" placeholder="Ej: 5491122334455">
+    <p class="hint">Para el botón de WhatsApp. Sin espacios ni el +. (Argentina: 54 9 + área + número.)</p>
+    <label class="field">Mensaje (opcional)</label>
+    <textarea id="ctMsg" class="pasta" style="min-height:90px" placeholder="${DEFAULT_WA}">${ct.msg||''}</textarea>
+    <p class="hint">Podés usar <b>{nombre}</b> y <b>{deuda}</b>, se reemplazan solos.</p>
+    <div class="seg" style="margin-top:12px"><button class="sel" id="ctSave">Guardar</button><button id="ctCancel">Cancelar</button></div>`);
+  $("#ctCancel").onclick=()=>openClient(k);
+  $("#ctSave").onclick=async()=>{state.contacts[k]={phone:$("#ctPhone").value.trim(),msg:$("#ctMsg").value.trim()};await save();openClient(k);renderCobrar();toast("Contacto guardado");};
+}
+
+// ---- CAJA / arqueo ----
+let cajaDay="";
+const DENOMS=[20000,10000,2000,1000,500,200,100,50,20,10];
+const round0=n=>Math.round(n||0);
+function todayKey(){return dayOf(nowStr());}
+function dkToDate(d){const m=/(\d{1,2})\/(\d{1,2})\/(\d{4})/.exec(d||"");return m?new Date(+m[3],+m[2]-1,+m[1]):new Date();}
+function dateToDk(dt){const p=n=>String(n).padStart(2,'0');return p(dt.getDate())+"/"+p(dt.getMonth()+1)+"/"+dt.getFullYear();}
+function shiftDay(d,n){const dt=dkToDate(d);dt.setDate(dt.getDate()+n);return dateToDk(dt);}
+function dkLabel(d){const dt=dkToDate(d);const dias=["domingo","lunes","martes","miércoles","jueves","viernes","sábado"];const mes=["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];return `${dias[dt.getDay()]} ${dt.getDate()} ${mes[dt.getMonth()]}`;}
+function pagosDia(d){return state.pagos.filter(p=>dayOf(p.fecha)===d).reduce((s,p)=>s+p.importe,0);}
+function acredDia(d){return state.movs.filter(m=>dayOf(m.fecha)===d&&tipoOf(m)==="acreditacion").reduce((s,m)=>s+Math.abs(m.importe),0);}
+function recargaDia(d){return state.movs.filter(m=>dayOf(m.fecha)===d&&tipoOf(m)==="recarga").reduce((s,m)=>s+Math.abs(m.importe),0);}
+function cajaMovsDia(d){return state.cajaMovs.filter(m=>m.dia===d);}
+function cajaSalidas(d){return cajaMovsDia(d).filter(m=>m.tipo!=="ingreso").reduce((s,m)=>s+m.importe,0);}
+function cajaIngresos(d){return cajaMovsDia(d).filter(m=>m.tipo==="ingreso").reduce((s,m)=>s+m.importe,0);}
+function inicialDefault(d){const prev=shiftDay(d,-1);const c=state.caja.cierres[prev];if(c&&c.real!=null)return c.real;return state.caja.base||0;}
+function ganDelDia(d){
+  const map=new Map();const get=name=>{const k=key(name);if(!map.has(k))map.set(k,{key:k,vV:0,gdV:0,gjV:0,vS:0,gdS:0,gjS:0});return map.get(k);};
+  for(const v of state.ventas){if(dayOf(v.fecha)!==d)continue;const a=get(v.cli);const c=catVenta(v.prod);
+    if(c==="virtual"){a.vV+=v.pvp;a.gdV+=v.gd;a.gjV+=v.gj;}else if(c==="sube"){a.vS+=v.pvp;a.gdS+=v.gd;a.gjS+=v.gj;}}
+  let mi=0,venta=0;
+  for(const a of map.values()){const cf=clientConf(a.key);let comV;
+    if(cf.virtMode==="pct")comV=a.vV*(cf.virtPct||0);else if(cf.virtMode==="cero")comV=0;else comV=a.gjV;
+    const comS=cf.subeMode==="pct"?a.vS*(cf.subePct||0):a.gjS;
+    mi+=(a.gdV+a.gjV-comV)+(a.gdS+a.gjS-comS);venta+=a.vV+a.vS;}
+  return {mi,venta};
+}
+async function setCierre(d,f,v){state.caja.cierres[d]=state.caja.cierres[d]||{};state.caja.cierres[d][f]=v;await save();renderCaja();}
+function histHtml(){
+  const days=Object.keys(state.caja.cierres).filter(d=>state.caja.cierres[d].cerrado).sort((a,b)=>parseTs(b+" 00:00:00")-parseTs(a+" 00:00:00")).slice(0,7);
+  if(!days.length)return "";
+  return `<div class="card"><h3>Cierres anteriores</h3>${days.map(d=>{const c=state.caja.cierres[d];const dif=(c.real!=null&&c.esperado!=null)?c.real-c.esperado:0;
+    return `<div class="arow"><div class="l">${dkLabel(d)}</div><div style="text-align:right"><div class="v num">${money(c.real!=null?c.real:0)}</div>${Math.abs(dif)>=1?`<small class="${dif>0?'pos':'neg'}" style="font-weight:700">${dif>0?'sobró ':'faltó '}${money(Math.abs(dif))}</small>`:`<small class="pos" style="font-weight:700">cuadró ✓</small>`}</div></div>`;}).join("")}</div>`;
+}
+function renderCaja(){
+  if(!cajaDay)cajaDay=todayKey();
+  const d=cajaDay;
+  const cob=pagosDia(d),acr=acredDia(d),rec=recargaDia(d),gan=ganDelDia(d).mi;
+  const c=state.caja.cierres[d]||{};
+  const inicial=c.inicial!=null?c.inicial:inicialDefault(d);
+  const cobEf=c.cobrEf!=null?c.cobrEf:cob;
+  const sal=cajaSalidas(d),ing=cajaIngresos(d);
+  const esperado=inicial+cobEf-sal+ing;
+  const real=c.real!=null?c.real:null;
+  const dif=real!=null?real-esperado:null;
+  const cs=clientsAgg();const deben=cs.reduce((s,x)=>s+Math.max(0,x.debe),0);
+  const libre=(state.saldoSistema||0)-(state.prestamo||0);
+  const patrim=esperado+(state.saldoSistema||0)+deben-(state.prestamo||0);
+  const movs=cajaMovsDia(d);
+  const tl={gasto:"Gasto",retiro:"Retiro",comision:"Pago comisión",ingreso:"Ingreso"};
+  $("#cajaBody").innerHTML=`
+    <div class="daynav"><button id="dPrev">‹</button><div class="dl">${dkLabel(d)}${d===todayKey()?" · hoy":""}</div><button id="dNext">›</button></div>
+    <div class="cajagrid">
+      <div class="minicard"><div class="k">Cobrado</div><div class="v num pos">${money(cob)}</div></div>
+      <div class="minicard"><div class="k">Acreditado</div><div class="v num">${money(acr)}</div></div>
+      <div class="minicard"><div class="k">Recargas</div><div class="v num">${money(rec)}</div></div>
+      <div class="minicard"><div class="k">Ganancia</div><div class="v num" style="color:var(--brand)">${money(gan)}</div></div>
+    </div>
+    <div class="card">
+      <h3>Arqueo de caja</h3>
+      <div class="arow"><div class="l">Efectivo inicial<small>lo que quedó del día anterior</small></div><input class="ci" id="aIni" type="number" inputmode="numeric" value="${round0(inicial)}"></div>
+      <div class="arow"><div class="l">+ Cobranzas en efectivo<small>cobranzas del día (editable)</small></div><input class="ci" id="aCob" type="number" inputmode="numeric" value="${round0(cobEf)}"></div>
+      <div class="arow"><div class="l">− Salidas de caja<small>${movs.length?movs.length+" movimiento(s)":"sin movimientos"}</small></div><div class="v neg">${money(sal)}${ing?` <small style="color:var(--pos);font-weight:700">+${money(ing)}</small>`:""}</div></div>
+      ${movs.length?`<div>${movs.map(m=>`<div class="movrow"><div class="mc">${tl[m.tipo]||m.tipo}${m.concepto?` <small>· ${m.concepto}</small>`:""}</div><div style="display:flex;gap:8px;align-items:center"><span class="num ${m.tipo==="ingreso"?"pos":"neg"}" style="font-weight:700">${m.tipo==="ingreso"?"+":"−"}${money(m.importe)}</span><button class="xbtn" data-cm="${m.id}">✕</button></div></div>`).join("")}</div>`:""}
+      <button class="addbtn" id="aAddMov">+ Agregar gasto / retiro / ingreso</button>
+      <div class="totrow"><div class="l">Efectivo esperado</div><div class="v num">${money(esperado)}</div></div>
+      <div class="arow" style="margin-top:4px"><div class="l">Efectivo real (contado)</div><input class="ci" id="aReal" type="number" inputmode="numeric" value="${real!=null?round0(real):""}" placeholder="contar"></div>
+      <button class="addbtn" id="aBill">🧮 Contar billetes</button>
+      ${dif!=null?`<div class="difbox ${Math.abs(dif)<1?"ok":dif>0?"warn":"bad"}"><span>${Math.abs(dif)<1?"Caja cuadrada ✓":dif>0?"Sobra en caja":"Falta en caja"}</span><span class="num">${money(Math.abs(dif))}</span></div>`:""}
+      <button class="bigpay" id="aClose" style="background:linear-gradient(135deg,var(--brand),var(--brand-2))">Cerrar caja del día</button>
+    </div>
+    <div class="card">
+      <h3>Situación</h3>
+      <div class="arow"><div class="l">Te deben (total)</div><div class="v num neg">${money(deben)}</div></div>
+      <div class="arow edit" id="eSaldo"><div class="l">Saldo en el sistema</div><div class="v num">${money(state.saldoSistema||0)} <span class="pencil">editar</span></div></div>
+      <div class="arow edit" id="ePrest"><div class="l">Préstamo empresa</div><div class="v num">${money(state.prestamo||0)} <span class="pencil">editar</span></div></div>
+      <div class="arow"><div class="l">Plata libre<small>saldo − préstamo</small></div><div class="v num ${libre<0?"neg":"pos"}">${money(libre)}</div></div>
+      <div class="totrow"><div class="l">Patrimonio<small style="font-weight:500;color:var(--muted);display:block;margin-top:2px">efectivo + saldo + te deben − préstamo</small></div><div class="v num">${money(patrim)}</div></div>
+    </div>
+    ${histHtml()}`;
+  $("#dPrev").onclick=()=>{cajaDay=shiftDay(d,-1);renderCaja();};
+  $("#dNext").onclick=()=>{cajaDay=shiftDay(d,1);renderCaja();};
+  $("#aIni").onchange=e=>setCierre(d,"inicial",parseMoney(e.target.value));
+  $("#aCob").onchange=e=>setCierre(d,"cobrEf",parseMoney(e.target.value));
+  $("#aReal").onchange=e=>setCierre(d,"real",e.target.value===""?null:parseMoney(e.target.value));
+  $("#aAddMov").onclick=()=>addCajaMovSheet(d);
+  $("#aBill").onclick=()=>billeteSheet(d);
+  $("#aClose").onclick=()=>cerrarCaja(d,esperado);
+  $("#eSaldo").onclick=()=>editField("saldoSistema");
+  $("#ePrest").onclick=()=>editField("prestamo");
+  [...document.querySelectorAll("#cajaBody .xbtn[data-cm]")].forEach(b=>b.onclick=async()=>{state.cajaMovs=state.cajaMovs.filter(m=>m.id!==b.dataset.cm);await save();renderCaja();});
+}
+function addCajaMovSheet(d){
+  openSheet(`<h3>Movimiento de caja</h3>
+    <label class="field">Tipo</label>
+    <select id="cmTipo" class="search" style="margin-bottom:6px">
+      <option value="gasto">Gasto (sale plata)</option>
+      <option value="retiro">Retiro (me llevo)</option>
+      <option value="comision">Pago de comisión</option>
+      <option value="ingreso">Ingreso extra (entra plata)</option></select>
+    <label class="field">Concepto (opcional)</label>
+    <input type="text" id="cmConc" placeholder="Ej: nafta, retiro, etc.">
+    <label class="field" style="margin-top:10px">Importe</label>
+    <input type="number" id="cmImp" inputmode="numeric" placeholder="$">
+    <div class="seg" style="margin-top:14px"><button class="sel" id="cmSave">Agregar</button><button id="cmCancel">Cancelar</button></div>`);
+  $("#cmCancel").onclick=closeSheet;
+  $("#cmSave").onclick=async()=>{const imp=parseMoney($("#cmImp").value);if(!imp){toast("Poné el importe");return;}
+    state.cajaMovs.push({id:"cm"+Date.now()+Math.random().toString(36).slice(2,5),dia:d,tipo:$("#cmTipo").value,concepto:$("#cmConc").value.trim(),importe:imp});await save();closeSheet();renderCaja();toast("Movimiento agregado");};
+}
+function billeteSheet(d){
+  const rows=DENOMS.map(v=>`<div class="bd">${money(v)}</div><input class="bq" data-v="${v}" type="number" inputmode="numeric" min="0" placeholder="0"><div class="bs" id="bs${v}">$0</div>`).join("");
+  openSheet(`<h3>Contar billetes</h3>
+    <p class="hint">Poné cuántos tenés de cada uno y te sumo el total.</p>
+    <div class="billgrid"><div class="bd" style="color:var(--muted);font-size:12px">Billete</div><div class="bs" style="text-align:center;color:var(--muted);font-size:12px">Cant.</div><div class="bs" style="color:var(--muted);font-size:12px">Subtotal</div>${rows}</div>
+    <div class="totrow"><div class="l">Total contado</div><div class="v num" id="bTot">$0</div></div>
+    <div class="seg" style="margin-top:12px"><button class="sel" id="bSave">Usar este total</button><button id="bCancel">Cancelar</button></div>`);
+  const recalc=()=>{let t=0;[...document.querySelectorAll(".bq")].forEach(i=>{const v=+i.dataset.v,q=parseInt(i.value)||0;const st=v*q;t+=st;$("#bs"+v).textContent=money(st);});$("#bTot").textContent=money(t);return t;};
+  [...document.querySelectorAll(".bq")].forEach(i=>i.oninput=recalc);
+  $("#bCancel").onclick=closeSheet;
+  $("#bSave").onclick=async()=>{const t=recalc();closeSheet();await setCierre(d,"real",t);toast("Total contado: "+money(t));};
+}
+function cerrarCaja(d,esp){
+  const cc=state.caja.cierres[d]=state.caja.cierres[d]||{};
+  if(cc.real==null)cc.real=esp;
+  cc.cerrado=true;cc.esperado=esp;
+  save();renderCaja();toast("Caja cerrada ✓");
+}
+
+// ---- Config de clientes ----
+function nameFor(k){
+  if(state.clientes[k]&&state.clientes[k].name)return state.clientes[k].name;
+  if(CANON[k])return CANON[k];
+  if(state.opening[k]&&state.opening[k].name)return state.opening[k].name;
+  if(state.ganOpening[k]&&state.ganOpening[k].name)return state.ganOpening[k].name;
+  const v=state.ventas.find(x=>key(x.cli)===k);if(v)return v.cli;
+  const m=state.movs.find(x=>key(x.recibe)===k);if(m)return m.recibe;
+  return k;
+}
+function allClientKeys(){
+  const set=new Set();
+  for(const k in state.opening)set.add(k);
+  for(const k in state.ganOpening)set.add(k);
+  for(const v of state.ventas){const k=key(v.cli);if(k)set.add(k);}
+  for(const m of state.movs){const t=tipoOf(m);if(t==="acreditacion"||t==="devolucion"){const k=key(m.recibe);if(k)set.add(k);}}
+  for(const k in state.clientes)set.add(k);
+  return [...set].filter(k=>k&&k!==seller);
+}
+function pctTxt(p){return (+(p*100).toFixed(4)).toString();}
+function confLabel(cf){
+  const v=cf.virtMode==="pct"?`Virtual ${pctTxt(cf.virtPct)}%`:cf.virtMode==="cero"?"Virtual 0":"Virtual directo";
+  const s=cf.subeMode==="pct"?`SUBE ${pctTxt(cf.subePct)}%`:"SUBE directo";
+  return v+" · "+s;
+}
+let cliCfgSearch="";
+function clientesConfigSheet(){
+  openSheet(`<h3>Clientes y comisiones</h3>
+    <p class="hint">Tocá un cliente para cambiar su % o cómo cobra. Se recalcula solo en todos lados.</p>
+    <input type="text" id="cfgSearch" class="search" placeholder="Buscar cliente…">
+    <button class="addbtn" id="cfgAdd" style="margin:0 0 8px">+ Agregar cliente nuevo</button>
+    <div id="cfgList"></div>`);
+  $("#cfgSearch").value=cliCfgSearch;
+  $("#cfgSearch").oninput=e=>{cliCfgSearch=e.target.value.trim().toLowerCase();renderCfgList();};
+  $("#cfgAdd").onclick=()=>editClienteSheet(null);
+  renderCfgList();
+}
+function renderCfgList(){
+  const keys=allClientKeys().map(k=>({k,name:nameFor(k),cf:clientConf(k)})).sort((a,b)=>a.name.localeCompare(b.name,'es'));
+  const list=cliCfgSearch?keys.filter(x=>x.name.toLowerCase().includes(cliCfgSearch)):keys;
+  $("#cfgList").innerHTML=list.length?list.map(x=>`<div class="movrow" data-cfg="${x.k}" style="cursor:pointer;padding:11px 2px">
+    <div class="mc">${x.name}<small style="display:block;margin-top:1px">${confLabel(x.cf)}</small></div>
+    <div style="color:var(--muted);font-size:18px">›</div></div>`).join(""):'<div class="hint">Sin resultados.</div>';
+  [...document.querySelectorAll('#cfgList [data-cfg]')].forEach(r=>r.onclick=()=>editClienteSheet(r.dataset.cfg));
+}
+function editClienteSheet(k){
+  const isNew=!k;
+  const cf=isNew?{name:"",virtMode:"directo",virtPct:0,subeMode:"directo",subePct:0,aliases:[]}:clientConf(k);
+  const nm=isNew?"":nameFor(k);
+  const seg=(id,opts,cur)=>`<div class="segctl" id="${id}">${opts.map(o=>`<button data-v="${o.v}" class="${o.v===cur?'on':''}">${o.t}</button>`).join("")}</div>`;
+  openSheet(`<h3>${isNew?"Nuevo cliente":nm}</h3>
+    ${isNew?`<label class="field">Nombre (como aparece en pinweb)</label><input type="text" id="edName" placeholder="Ej: Rivadavia 1234">`:`<label class="field">Nombre que se muestra</label><input type="text" id="edName" value="${nm}">`}
+    <label class="field" style="margin-top:12px">Comisión CARGA VIRTUAL</label>
+    ${seg("edVirt",[{v:"directo",t:"Directo CSV"},{v:"pct",t:"Porcentaje"},{v:"cero",t:"Cero"}],cf.virtMode)}
+    <div id="edVirtPctWrap" style="margin-top:8px;${cf.virtMode==="pct"?"":"display:none"}"><label class="field">% sobre lo vendido (virtual)</label><div class="seg"><input type="number" id="edVirtPct" step="0.01" inputmode="decimal" value="${cf.virtMode==="pct"?pctTxt(cf.virtPct):""}" placeholder="Ej: 2" style="flex:2"><span style="align-self:center;font-weight:800;color:var(--muted);padding:0 8px">%</span></div></div>
+    <label class="field" style="margin-top:14px">Comisión CARGA SUBE</label>
+    ${seg("edSube",[{v:"directo",t:"Directo CSV"},{v:"pct",t:"Porcentaje"}],cf.subeMode)}
+    <div id="edSubePctWrap" style="margin-top:8px;${cf.subeMode==="pct"?"":"display:none"}"><label class="field">% sobre lo vendido (SUBE)</label><div class="seg"><input type="number" id="edSubePct" step="0.01" inputmode="decimal" value="${cf.subeMode==="pct"?pctTxt(cf.subePct):""}" placeholder="Ej: 0.8" style="flex:2"><span style="align-self:center;font-weight:800;color:var(--muted);padding:0 8px">%</span></div></div>
+    <label class="field" style="margin-top:14px">Otros nombres (alias, opcional)</label>
+    <input type="text" id="edAlias" value="${(cf.aliases||[]).join(", ")}" placeholder="separados por coma">
+    <p class="hint">Si el mismo cliente aparece con otro nombre en el CSV, ponelo acá para unificarlo.</p>
+    <div class="seg" style="margin-top:14px"><button class="sel" id="edSave">Guardar</button><button id="edCancel">Cancelar</button></div>
+    ${!isNew&&state.clientes[k]?`<button id="edReset" style="width:100%;background:none;border:none;color:var(--neg);font-weight:700;font-size:13px;cursor:pointer;margin-top:10px;padding:6px">↺ Volver a default</button>`:""}`);
+  let virtMode=cf.virtMode,subeMode=cf.subeMode;
+  const wire=(id,fn)=>{[...document.querySelectorAll("#"+id+" button")].forEach(b=>b.onclick=()=>{[...document.querySelectorAll("#"+id+" button")].forEach(x=>x.classList.remove("on"));b.classList.add("on");fn(b.dataset.v);});};
+  wire("edVirt",v=>{virtMode=v;$("#edVirtPctWrap").style.display=v==="pct"?"block":"none";});
+  wire("edSube",v=>{subeMode=v;$("#edSubePctWrap").style.display=v==="pct"?"block":"none";});
+  $("#edCancel").onclick=()=>clientesConfigSheet();
+  const re=$("#edReset");if(re)re.onclick=async()=>{delete state.clientes[k];rebuildAlias();await save();renderAll();clientesConfigSheet();toast("Volvió a default");};
+  $("#edSave").onclick=async()=>{
+    const name=$("#edName").value.trim();
+    if(isNew&&!name){toast("Poné el nombre del cliente");return;}
+    const tk=isNew?key(name):k;
+    if(isNew&&allClientKeys().includes(tk)){toast("Ese cliente ya existe");return;}
+    const aliases=$("#edAlias").value.split(",").map(s=>norm(s)).filter(Boolean);
+    const vp=virtMode==="pct"?(parseFloat($("#edVirtPct").value)||0)/100:0;
+    const sp=subeMode==="pct"?(parseFloat($("#edSubePct").value)||0)/100:0;
+    state.clientes[tk]={name:name||nameFor(tk),virtMode,virtPct:vp,subeMode,subePct:sp,aliases};
+    rebuildAlias();await save();renderAll();clientesConfigSheet();toast("Cliente guardado");
+  };
+}
+
 function openSheet(html){$("#sheet").innerHTML='<div class="grab"></div>'+html;$("#scrim").classList.add("on");}
 function closeSheet(){$("#scrim").classList.remove("on");}
 $("#scrim").onclick=e=>{if(e.target===$("#scrim"))closeSheet();};
@@ -596,7 +944,7 @@ function editField(which){
     <input type="number" id="fv" inputmode="numeric" value="${state[which]||""}" placeholder="0">
     <div class="seg" style="margin-top:14px"><button class="sel" id="fSave">Guardar</button><button id="fCancel">Cancelar</button></div>`);
   $("#fCancel").onclick=closeSheet;
-  $("#fSave").onclick=async()=>{state[which]=parseMoney($("#fv").value);await save();closeSheet();render();toast("Guardado");};
+  $("#fSave").onclick=async()=>{state[which]=parseMoney($("#fv").value);await save();closeSheet();renderAll();toast("Guardado");};
 }
 
 function openClient(key){
@@ -613,6 +961,8 @@ function openClient(key){
     <label class="field">Registrar un pago de ${c.name}</label>
     <div class="seg"><input type="number" id="cPay" inputmode="numeric" placeholder="Pagó $" style="flex:2">
       <button class="go" id="cPayBtn" style="flex:1">Sumar pago</button></div>
+    ${Math.round(c.debe)>0?`<button class="bigpay" id="cFull">Saldó todo · ${money(c.debe)}</button>`:""}
+    <div class="seg" style="margin-top:8px"><button class="go" id="oWa" style="flex:2;background:#e7f8f0;color:#0a8f5b">WhatsApp</button><button id="oContact" style="flex:1">✎ Contacto</button></div>
     ${op?`<div class="hint" style="margin-top:14px">Saldo de arranque (de tu Excel): <b>${money(op.total)}</b> · <button class="pencil" id="editOpen" style="background:none;border:none;color:var(--brand);font-weight:700;cursor:pointer;text-decoration:underline">ajustar</button></div>`:`<div class="hint" style="margin-top:14px"><button class="pencil" id="editOpen" style="background:none;border:none;color:var(--brand);font-weight:700;cursor:pointer;text-decoration:underline">+ Cargar saldo de arranque</button></div>`}
     <label class="field" style="margin-top:14px">Pagos</label>
     ${pays.length?pays.map(p=>`<div class="mrow"><div class="d">Pago<small>${p.fecha}</small></div>
@@ -623,7 +973,10 @@ function openClient(key){
     ${acc.map(m=>{const dv=m.importe>0;return `<div class="mrow"><div class="d">${dv?"Devolución":"Acreditación"}<small>${m.fecha}</small></div>
       <div class="num ${dv?'pos':'neg'}" style="font-weight:700">${money(Math.abs(m.importe))}</div></div>`}).join("")}`);
   $("#cPayBtn").onclick=async()=>{const v=parseMoney($("#cPay").value);if(!v){toast("Poné el importe");return;}
-    await addPago(c.name,v);openClient(key);render();toast(`Sumado ${money(v)} a ${c.name}`);};
+    await addPago(c.name,v);openClient(key);render();renderCobrar();toast(`Sumado ${money(v)} a ${c.name}`);};
+  const cf=$("#cFull");if(cf)cf.onclick=async()=>{await addPago(c.name,c.debe);closeSheet();render();renderCobrar();toast(`${c.name} saldó todo`);};
+  $("#oWa").onclick=()=>window.open(waLink(c),"_blank");
+  $("#oContact").onclick=()=>setContactSheet(key,c.name);
   const eo=$("#editOpen");if(eo)eo.onclick=()=>editOpening(key,c.name);
   [...document.querySelectorAll("#sheet .xbtn")].forEach(b=>b.onclick=async()=>{
     state.pagos=state.pagos.filter(p=>p.id!==b.dataset.pid);await save();openClient(key);render();toast("Pago eliminado");});
@@ -659,10 +1012,12 @@ $("#pbAdd").onclick=async()=>{
 
 function moreMenu(){
   openSheet(`<h3>Más</h3><ul class="menulist">
+    <li id="mCli">⚙️ Clientes y comisiones</li>
     <li id="mAcc">Acreditar saldo a un cliente (a mano)</li>
     <li id="mRec">Cargar recarga a mi cuenta</li>
     ${useCloud?'<li id="mOut" style="color:var(--neg)">Cerrar sesión</li>':''}
   </ul>`);
+  $("#mCli").onclick=()=>clientesConfigSheet();
   $("#mAcc").onclick=()=>addMovSheet("acreditacion");
   $("#mRec").onclick=()=>addMovSheet("recarga");
   const o=$("#mOut");if(o)o.onclick=async()=>{closeSheet();try{await fauth.signOut();}catch(e){}};
@@ -720,16 +1075,20 @@ function switchTab(t){
   tab=t;
   document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('on',b.dataset.tab===t));
   $("#viewCC").style.display=t==="cc"?"block":"none";
+  $("#viewCOB").style.display=t==="cob"?"block":"none";
+  $("#viewCAJA").style.display=t==="caja"?"block":"none";
   $("#viewGAN").style.display=t==="gan"?"block":"none";
   $("#viewPAG").style.display=t==="pag"?"block":"none";
-  $("#title").textContent=t==="cc"?"Cuenta corriente":t==="gan"?"Ganancias":"Gan a pagar";
+  $("#title").textContent=t==="cc"?"Cuenta corriente":t==="cob"?"Cobranza":t==="caja"?"Caja":t==="gan"?"Ganancias":"Gan a pagar";
   $("#importBtn").textContent=t==="cc"?"↑ Importar CSV":"↑ Importar ventas";
-  $("#importBtn").style.display=t==="pag"?"none":"block";
+  $("#importBtn").style.display=(t==="pag"||t==="cob"||t==="caja")?"none":"block";
   $("#moreBtn").style.display=t==="cc"?"block":"none";
-  if(t==="gan")renderGAN();else if(t==="pag")renderPAG();else render();
+  if(t==="gan")renderGAN();else if(t==="pag")renderPAG();else if(t==="cob")renderCobrar();else if(t==="caja")renderCaja();else render();
 }
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>switchTab(b.dataset.tab));
 $("#monthSel").onchange=e=>{pagMonth=e.target.value;renderPAG();};
+$("#ccSearch").oninput=e=>{ccSearch=e.target.value.trim().toLowerCase();render();};
+$("#cobSearch").oninput=e=>{cobSearch=e.target.value.trim().toLowerCase();renderCobrar();};
 
 $("#sortbtn").onclick=()=>{sortMode=sortMode==="debe"?"nombre":sortMode==="nombre"?"reciente":"debe";render();};
 $("#sortbtnG").onclick=()=>{sortG=sortG==="gan"?"venta":sortG==="venta"?"nombre":"gan";renderGAN();};
@@ -737,7 +1096,7 @@ $("#importBtn").onclick=()=>tab==="cc"?importSheet():importVentasSheet();
 $("#moreBtn").onclick=moreMenu;
 $("#pbImp").addEventListener("keydown",e=>{if(e.key==="Enter")$("#pbAdd").click();});
 
-function renderAll(){render();renderGAN();renderPAG();}
+function renderAll(){render();renderCobrar();renderCaja();renderGAN();renderPAG();}
 let booted=false;
 
 // ---- Firebase (nube + login) ----
