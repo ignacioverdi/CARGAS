@@ -389,7 +389,7 @@ const OPENING_SEED=[{"name":"25DEMAYO641","total":240000,"pagado":210000},{"name
 // nombres del Excel que en pinweb figuran distinto
 const ALIASES={"donald1":"donald1066","donald2":"donald2822","quesada":"olavarria3038","montedeoca40":"uruguay198","montesdeoca40":"uruguay198"};
 // nombre que se muestra siempre para cada cliente unificado
-const CANON={"uruguay198":"Uruguay198","olavarria3038":"OLAVARRIA 3038"};
+const CANON={"uruguay198":"Uruguay198","olavarria3038":"Quesada"};
 // Config comisión CARGA VIRTUAL: directo del CSV (GJ), por % del vendido, o sin comisión
 const VIRT_DIRECT=new Set(["alberdi1382a","donald1066","donald2822","encalada2332","erios286","indep1673"]);
 const VIRT_PCT={hyrigoyen1400:0.02,lacroze2929:0.015,montiel1905:0.015,olavarria3038:0.01,rivadavia1400:0.02,rivadavia2289:0.02,rivadavia5406:0.01,rivadavia7376:0.03,sanpedrito27:0.02,uruguay198:0.01};
@@ -472,6 +472,12 @@ async function load(){
   if(!state.ventasCleanV2){state.ventas=[];state.ventasCleanV2=true;}
   if(!state.ganOpeningSeeded){state.ganOpening={};for(const o of GAN_OPENING){const k=key(o.name);if(!state.ganOpening[k])state.ganOpening[k]={name:o.name,vV:0,gdV:0,gjV:0,vS:0,gdS:0,gjS:0};const g=state.ganOpening[k];g.vV+=o.vV;g.gdV+=o.gdV;g.gjV+=o.gjV;g.vS+=o.vS;g.gdS+=o.gdS;g.gjS+=o.gjS;}state.ganOpeningSeeded=true;}
   if(!state.openingSeededV2){state.opening={};for(const o of OPENING_SEED){state.opening[key(o.name)]={name:o.name,total:o.total,pagado:o.pagado};}state.openingSeededV2=true;}
+  if(!state.quesadaNameV1){
+    if(state.clientes&&state.clientes["olavarria3038"])state.clientes["olavarria3038"].name="Quesada";
+    if(state.opening&&state.opening["olavarria3038"])state.opening["olavarria3038"].name="Quesada";
+    if(state.ganOpening&&state.ganOpening["olavarria3038"])state.ganOpening["olavarria3038"].name="Quesada";
+    state.quesadaNameV1=true;
+  }
   seller=state.seller||"verdi333";
   await save();
 }
@@ -496,7 +502,7 @@ function parseVentas(text){
 function ventasAgg(){
   const map=new Map();
   const get=(name)=>{const k=key(name);if(!map.has(k))map.set(k,{key:k,name:(state.opening[k]&&state.opening[k].name)||name,vV:0,gdV:0,gjV:0,vS:0,gdS:0,gjS:0,items:[]});return map.get(k);};
-  for(const k in state.ganOpening){const o=state.ganOpening[k];const a=get(o.name);a.vV+=o.vV;a.gdV+=o.gdV;a.gjV+=o.gjV;a.vS+=o.vS;a.gdS+=o.gdS;a.gjS+=o.gjS;}
+  if(!hasEarlyJune())for(const k in state.ganOpening){const o=state.ganOpening[k];const a=get(o.name);a.vV+=o.vV;a.gdV+=o.gdV;a.gjV+=o.gjV;a.vS+=o.vS;a.gdS+=o.gdS;a.gjS+=o.gjS;}
   for(const v of state.ventas){const a=get(v.cli);const c=catVenta(v.prod);
     if(c==="virtual"){a.vV+=v.pvp;a.gdV+=v.gd;a.gjV+=v.gj;}
     else if(c==="sube"){a.vS+=v.pvp;a.gdS+=v.gd;a.gjS+=v.gj;}
@@ -649,6 +655,8 @@ function monthLabel(mk){const n=["","enero","febrero","marzo","abril","mayo","ju
 function nextMonth5(mk){let[y,m]=mk.split("-").map(Number);m++;if(m>12){m=1;y++;}return "5/"+String(m).padStart(2,'0')+"/"+y;}
 function availableMonths(){const s=new Set([BASE_MONTH]);for(const v of state.ventas){const mk=monthOf(v.fecha);if(mk)s.add(mk);}return [...s].sort().reverse();}
 const FUND_SET=new Set(["rivadavia1400","rivadavia2289","rivadavia7376","olavarria3038","montiel1905","sanpedrito27","hyrigoyen1400","lacroze2929"]);
+const ADELANTO_SET=new Set(["rivadavia5406","uruguay198"]);
+function hasEarlyJune(){for(const v of state.ventas){if(monthOf(v.fecha)!==BASE_MONTH)continue;const m=/^(\d{1,2})\//.exec(v.fecha);if(m&&+m[1]<=16)return true;}return false;}
 function ventaSplit(v){
   const k=key(v.cli);const cf=clientConf(k);const cat=catVenta(v.prod);
   let mode,pct;
@@ -656,15 +664,17 @@ function ventaSplit(v){
   else if(cat==="sube"){mode=cf.subeMode;pct=cf.subePct||0;}
   else return {fondo:0,tuyo:0};
   const credit=(mode==="directo")?(v.gd||0):((v.gd||0)+(v.gj||0));
-  const fondo=(FUND_SET.has(k)&&mode==="pct")?((v.pvp||0)*pct):0;
-  return {fondo,tuyo:credit-fondo};
+  const com=(mode==="pct")?((v.pvp||0)*pct):0;
+  if(FUND_SET.has(k))return {fondo:com,tuyo:credit-com};       // % que pagás el 5
+  if(ADELANTO_SET.has(k))return {fondo:0,tuyo:credit-com};      // comisión adelantada en la acreditación (ni fondo ni tuyo)
+  return {fondo:0,tuyo:credit};                                  // directo/cero: todo lo acreditado es tuyo
 }
 function fondoData(mk){
   const days=new Map();
   for(const v of state.ventas){if(monthOf(v.fecha)!==mk)continue;const d=dayOf(v.fecha);if(!d)continue;const s=ventaSplit(v);const o=days.get(d)||{fondo:0,tuyo:0};o.fondo+=s.fondo;o.tuyo+=s.tuyo;days.set(d,o);}
   const dayArr=[...days.entries()].map(([d,o])=>({d,fondo:o.fondo,tuyo:o.tuyo})).sort((a,b)=>parseTs(b.d+" 00:00:00")-parseTs(a.d+" 00:00:00"));
   let base=null;
-  if(mk===BASE_MONTH){let f=0,t=0;
+  if(mk===BASE_MONTH&&!hasEarlyJune()){let f=0,t=0;
     for(const kk in state.ganOpening){const o=state.ganOpening[kk];const k=key(o.name||kk);const cf=clientConf(k);
       const credV=(cf.virtMode==="directo")?(o.gdV||0):((o.gdV||0)+(o.gjV||0));
       const credS=(cf.subeMode==="directo")?(o.gdS||0):((o.gdS||0)+(o.gjS||0));
@@ -686,7 +696,7 @@ function fondoReservado(){
 function ganAPagarMonth(mk){
   const map=new Map();
   const get=(name)=>{const k=key(name);if(!map.has(k))map.set(k,{key:k,name:dispName(k)||name,vV:0,vS:0});return map.get(k);};
-  if(mk===BASE_MONTH){for(const kk in state.ganOpening){const o=state.ganOpening[kk];const a=get(o.name);a.vV+=o.vV;a.vS+=o.vS;}}
+  if(mk===BASE_MONTH&&!hasEarlyJune()){for(const kk in state.ganOpening){const o=state.ganOpening[kk];const a=get(o.name);a.vV+=o.vV;a.vS+=o.vS;}}
   for(const v of state.ventas){if(monthOf(v.fecha)!==mk)continue;const a=get(v.cli);const c=catVenta(v.prod);if(c==="virtual")a.vV+=v.pvp;else if(c==="sube")a.vS+=v.pvp;}
   const rows=[];
   for(const a of map.values()){const cf=clientConf(a.key);const inV=cf.virtMode==="pct",inS=cf.subeMode==="pct";if(!inV&&!inS)continue;
@@ -698,7 +708,7 @@ function renderPAG(){
   const months=availableMonths();
   if(!pagMonth||!months.includes(pagMonth))pagMonth=months[0];
   const sel=$("#monthSel");sel.innerHTML=months.map(m=>`<option value="${m}">${monthLabel(m)}</option>`).join("");sel.value=pagMonth;
-  const rows=ganAPagarMonth(pagMonth);
+  const rows=ganAPagarMonth(pagMonth).filter(r=>FUND_SET.has(r.key));
   const paidMap=state.paid[pagMonth]||{};
   let tA=0,tPag=0;
   $("#rowsP").innerHTML=rows.length?rows.map(c=>{const paid=!!paidMap[c.key];tA+=c.total;if(paid)tPag+=c.total;
