@@ -166,6 +166,18 @@
   .toast{position:fixed;left:50%;bottom:82px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:12px 17px;border-radius:13px;font-size:13px;font-weight:600;opacity:0;transition:.25s;z-index:50;pointer-events:none;max-width:90%;text-align:center;box-shadow:var(--shadow)}
   .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
   .filein{display:none}
+  #login{position:fixed;inset:0;z-index:100;display:none;align-items:center;justify-content:center;
+    background:linear-gradient(160deg,#1c1f3b,#3a2a73)}
+  #login.on{display:flex}
+  .loginbox{background:var(--card);border-radius:22px;padding:30px 24px;width:min(360px,90vw);text-align:center;box-shadow:0 30px 60px -20px rgba(0,0,0,.5)}
+  .loginbox .llogo{width:54px;height:54px;border-radius:15px;background:linear-gradient(135deg,var(--brand),var(--brand-2));display:grid;place-items:center;color:#fff;font-family:var(--disp);font-weight:700;font-size:26px;margin:0 auto 14px}
+  .loginbox h2{font-family:var(--disp);font-size:24px;font-weight:700}
+  .loginbox p{color:var(--muted);font-size:13.5px;margin:4px 0 18px}
+  .loginbox input{width:100%;font-size:16px;padding:13px;border:1.5px solid var(--line);border-radius:12px;background:#fbfbff;margin-bottom:10px;font-weight:600}
+  .loginbox input:focus{outline:none;border-color:var(--brand-2)}
+  .loginbox button{width:100%;font:inherit;font-weight:700;font-size:15px;background:linear-gradient(135deg,var(--brand),var(--brand-2));color:#fff;border:none;border-radius:12px;padding:14px;cursor:pointer;margin-top:4px}
+  .loginbox button:active{transform:scale(.98)}
+  #lerr{color:var(--neg);font-size:13px;font-weight:600;margin-top:10px;min-height:18px}
 </style>
 
 <header>
@@ -261,6 +273,21 @@
 <div class="scrim" id="scrim"><div class="sheet" id="sheet"></div></div>
 <div class="toast" id="toast"></div>
 
+<div id="login">
+  <div class="loginbox">
+    <div class="llogo">$</div>
+    <h2>Cargas</h2>
+    <p>Ingresá para ver tus datos</p>
+    <input id="lemail" type="email" inputmode="email" placeholder="Email" autocomplete="username">
+    <input id="lpass" type="password" placeholder="Contraseña" autocomplete="current-password">
+    <button id="lbtn">Entrar</button>
+    <div id="lerr"></div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script>
 const STORE_KEY="pinweb_acred_v1";
 const SEED=[{"fecha":"17/06/2026 18:27:46","desc":"ok","obs":"","otorga":"verdi333","recibe":"MONTIEL1905","importe":-100000},{"fecha":"17/06/2026 17:19:11","desc":"126621-Acreditacion Deposito/Transferencia NACION (350000)","obs":"","otorga":"PinWeb","recibe":"verdi333","importe":350000},{"fecha":"17/06/2026 17:16:11","desc":"ok","obs":"","otorga":"verdi333","recibe":"25demayo641","importe":-30000},{"fecha":"17/06/2026 16:45:27","desc":"ok","obs":"","otorga":"verdi333","recibe":"Rivadavia1400","importe":-100000},{"fecha":"17/06/2026 14:08:07","desc":"Pl","obs":"app","otorga":"verdi333","recibe":"Donald2822","importe":-1000000},{"fecha":"17/06/2026 14:07:54","desc":"Ok","obs":"app","otorga":"verdi333","recibe":"Donald1066","importe":-1200000},{"fecha":"17/06/2026 13:49:31","desc":"ok","obs":"","otorga":"verdi333","recibe":"Quesada","importe":-70000},{"fecha":"17/06/2026 13:39:49","desc":"ok","obs":"","otorga":"verdi333","recibe":"Rivadavia1400","importe":-50000},{"fecha":"17/06/2026 13:39:42","desc":"ok","obs":"","otorga":"verdi333","recibe":"MONTIEL1905","importe":-50000},{"fecha":"17/06/2026 12:38:56","desc":"Ok","obs":"app","otorga":"verdi333","recibe":"Alberdi1382A","importe":-50000},{"fecha":"17/06/2026 12:09:29","desc":"126587-Acreditacion Deposito/Transferencia NACION (600000,600000)","obs":"","otorga":"PinWeb","recibe":"verdi333","importe":1200000},{"fecha":"17/06/2026 11:36:23","desc":"Ok","obs":"app","otorga":"verdi333","recibe":"encalada2332","importe":-30000},{"fecha":"17/06/2026 10:49:00","desc":"OK","obs":"","otorga":"verdi333","recibe":"HYrigoyen1400","importe":-150000},{"fecha":"17/06/2026 10:08:40","desc":"ok","obs":"","otorga":"verdi333","recibe":"Lspena121","importe":-50000},{"fecha":"17/06/2026 10:08:29","desc":"ok","obs":"","otorga":"verdi333","recibe":"MONTIEL1905","importe":-100000},{"fecha":"17/06/2026 09:26:12","desc":"Ok","obs":"app","otorga":"verdi333","recibe":"indep1673","importe":-100000},{"fecha":"17/06/2026 08:31:05","desc":"126549-Acreditacion Deposito/Transferencia NACION (1300000)","obs":"","otorga":"PinWeb","recibe":"verdi333","importe":1300000},{"fecha":"17/06/2026 08:28:21","desc":"Ok","obs":"app","otorga":"verdi333","recibe":"Rivadavia7376","importe":-250000},{"fecha":"17/06/2026 07:41:21","desc":"Ok","obs":"app","otorga":"verdi333","recibe":"Rivadavia1400","importe":-100000},{"fecha":"17/06/2026 07:32:30","desc":"Ok","obs":"app","otorga":"verdi333","recibe":"RIVADAVIA2289","importe":-340000},{"fecha":"17/06/2026 00:44:30","desc":"ok","obs":"","otorga":"verdi333","recibe":"HYrigoyen1400","importe":15000}];
@@ -288,7 +315,7 @@ let sortMode="debe";
 let sortG="gan";
 let tab="cc";
 // Guardado: usa el de Claude si existe (preview), si no localStorage (subido a internet)
-const store=(typeof window!=="undefined"&&window.storage&&window.storage.get)
+let store=(typeof window!=="undefined"&&window.storage&&window.storage.get)
   ? {get:k=>window.storage.get(k), set:(k,v)=>window.storage.set(k,v)}
   : {get:async k=>{try{const v=localStorage.getItem(k);return v==null?null:{value:v};}catch(e){return null;}},
      set:async(k,v)=>{try{localStorage.setItem(k,v);}catch(e){}return {value:v};}};
@@ -615,9 +642,11 @@ function moreMenu(){
   openSheet(`<h3>Más</h3><ul class="menulist">
     <li id="mAcc">Acreditar saldo a un cliente (a mano)</li>
     <li id="mRec">Cargar recarga a mi cuenta</li>
+    ${useCloud?'<li id="mOut" style="color:var(--neg)">Cerrar sesión</li>':''}
   </ul>`);
   $("#mAcc").onclick=()=>addMovSheet("acreditacion");
   $("#mRec").onclick=()=>addMovSheet("recarga");
+  const o=$("#mOut");if(o)o.onclick=async()=>{closeSheet();try{await fauth.signOut();}catch(e){}};
 }
 function addMovSheet(tipo){
   openSheet(`<h3>${tipo==="recarga"?"Recarga a mi cuenta":"Acreditar a cliente"}</h3>
@@ -689,6 +718,51 @@ $("#importBtn").onclick=()=>tab==="cc"?importSheet():importVentasSheet();
 $("#moreBtn").onclick=moreMenu;
 $("#pbImp").addEventListener("keydown",e=>{if(e.key==="Enter")$("#pbAdd").click();});
 
-(async()=>{await load();render();renderGAN();renderPAG();})();
+function renderAll(){render();renderGAN();renderPAG();}
+let booted=false;
+
+// ---- Firebase (nube + login) ----
+const FIREBASE_CONFIG={apiKey:"AIzaSyAVE6FFL7nCU18Iqhwb96RnV9mQRcYmIZg",authDomain:"cargasiv.firebaseapp.com",projectId:"cargasiv",storageBucket:"cargasiv.firebasestorage.app",messagingSenderId:"231405999919",appId:"1:231405999919:web:794061b711d3ddd07533da"};
+let fauth=null,fdoc=null,useCloud=false,lastCloud=null;
+function initFirebase(){
+  if(typeof firebase==="undefined"||!firebase.initializeApp)return false;
+  try{firebase.initializeApp(FIREBASE_CONFIG);fauth=firebase.auth();fdoc=firebase.firestore().collection("app").doc("state");return true;}
+  catch(e){return false;}
+}
+const cloudStore={
+  get:async()=>{const s=await fdoc.get();return s.exists?{value:s.data().v}:null;},
+  set:async(k,v)=>{lastCloud=v;await fdoc.set({v,t:Date.now()});return {value:v};}
+};
+function setupSync(){
+  fdoc.onSnapshot(s=>{
+    if(!s.exists)return;const v=s.data().v;
+    if(v&&v!==lastCloud){lastCloud=v;try{state=JSON.parse(v);}catch(e){return;}renderAll();}
+  },err=>{});
+}
+function showLogin(){$("#login").classList.add("on");}
+function hideLogin(){$("#login").classList.remove("on");}
+$("#lbtn").onclick=async()=>{
+  const e=$("#lemail").value.trim(),p=$("#lpass").value;
+  if(!e||!p){$("#lerr").textContent="Completá email y contraseña";return;}
+  $("#lbtn").textContent="Entrando…";$("#lerr").textContent="";
+  try{await fauth.signInWithEmailAndPassword(e,p);}
+  catch(err){$("#lbtn").textContent="Entrar";
+    $("#lerr").textContent=(err.code||"").includes("password")||(err.code||"").includes("credential")||(err.code||"").includes("user")?"Email o contraseña incorrectos":"No se pudo entrar. Revisá los datos.";}
+};
+$("#lpass").addEventListener("keydown",e=>{if(e.key==="Enter")$("#lbtn").click();});
+
+async function bootApp(){await load();renderAll();}
+
+if(initFirebase()){
+  useCloud=true;
+  showLogin();
+  fauth.onAuthStateChanged(async u=>{
+    if(u){store=cloudStore;hideLogin();if(!booted){booted=true;await bootApp();setupSync();}}
+    else{booted=false;showLogin();$("#lbtn").textContent="Entrar";}
+  });
+}else{
+  // sin nube (preview/sin internet): guarda local y entra directo
+  bootApp();
+}
 if("serviceWorker" in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));}
 </script>
