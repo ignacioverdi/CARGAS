@@ -468,7 +468,8 @@ async function load(){
   state.saldoSistema=state.saldoSistema||0;state.prestamo=state.prestamo||0;
   state.caja=state.caja||{base:0,cierres:{}};state.caja.cierres=state.caja.cierres||{};state.cajaMovs=state.cajaMovs||[];
   state.cuentasIni=state.cuentasIni||{mp:0,efectivo:0,banco:0};state.depositos=state.depositos||[];
-  state.ganArchive=state.ganArchive||{};state.log=state.log||[];
+  state.ganArchive=state.ganArchive||{};state.log=state.log||[];state.depRecSeen=state.depRecSeen||[];
+  state.capitalTrabajo=state.capitalTrabajo==null?2000000:state.capitalTrabajo;
   state.mpMap=state.mpMap||{};state.mpInbox=state.mpInbox||[];
   state.clientes=state.clientes||{};
   if(!state.clientesSeededV1){seedClientes();state.clientesSeededV1=true;}
@@ -490,6 +491,7 @@ async function load(){
   }
   autoArchive();
   seller=state.seller||"verdi333";
+  if(!state.depAutoV1){state.depRecSeen=state.movs.filter(m=>tipoOf(m)==="recarga").map(recDepId);state.depAutoV1=true;}
   await save();
 }
 let undoJSON=null,storedJSON=null;
@@ -856,6 +858,10 @@ function renderCaja(){
   const libre=saldoPw-prest-reservado;
   const patrim=totalCtas+saldoPw+deben-prest-reservado;
   const totalDep=state.depositos.reduce((s,d)=>s+d.monto,0);
+  const gananciaAcum=ventasAgg().reduce((s,c)=>s+c.gd,0);
+  const retirado=state.cajaMovs.filter(m=>m.tipo==="retiro").reduce((s,m)=>s+m.importe,0);
+  const capital=state.capitalTrabajo||0;
+  const tuPlata=patrim-capital;
   const feed=[];
   for(const p of state.pagos)if(p.metodo)feed.push({ts:parseTs(p.fecha),t:p.name,sub:`Cobranza · ${acctName(p.metodo)}`,amt:p.importe,sign:1});
   for(const d of state.depositos)feed.push({ts:parseTs(d.fecha),t:"Depósito a la empresa",sub:`${acctName(d.cuenta)}${d.nota?" · "+d.nota:""}`,amt:d.monto,sign:-1});
@@ -889,11 +895,20 @@ function renderCaja(){
       <div class="arow"><div class="l">Plata libre<small>saldo pinweb − reservado − préstamo</small></div><div class="v num ${libre<0?'neg':'pos'}">${money(libre)}</div></div>
       <div class="totrow"><div class="l">Patrimonio<small style="font-weight:500;color:var(--muted);display:block;margin-top:2px">cuentas + saldo pinweb + te deben − préstamo − reservado</small></div><div class="v num">${money(patrim)}</div></div>
     </div>
+    <div class="card">
+      <h3>Mi plata vs. el trabajo</h3>
+      <div class="arow"><div class="l">Patrimonio total<small>todo lo que tenés hoy</small></div><div class="v num">${money(patrim)}</div></div>
+      <div class="arow edit" id="eCap"><div class="l">Capital de trabajo<small>destinado a operar</small></div><div class="v num">${money(capital)} <span class="pencil">editar</span></div></div>
+      <div class="totrow"><div class="l">Tu plata<small>por encima del capital · es tuya</small></div><div class="v num ${tuPlata<0?'neg':'pos'}">${money(tuPlata)}</div></div>
+      <div class="arow"><div class="l">Ganancia acumulada<small>lo que generó el negocio</small></div><div class="v num">${money(gananciaAcum)}</div></div>
+      ${retirado?`<div class="arow"><div class="l">Ya retiraste para vos</div><div class="v num">${money(retirado)}</div></div>`:""}
+    </div>
     ${recent.length?`<div class="card"><h3>Movimientos recientes</h3>${recent.map(f=>`<div class="movrow"><div class="mc">${f.t}<small style="display:block;margin-top:1px">${f.sub}</small></div><span class="num ${f.sign>0?'pos':'neg'}" style="font-weight:700">${f.sign>0?'+':'−'}${money(f.amt)}</span></div>`).join("")}</div>`:""}`;
   [...document.querySelectorAll('#cajaBody [data-acc]')].forEach(r=>r.onclick=()=>adjustAccountSheet(r.dataset.acc));
   $("#cAddMov").onclick=()=>addCajaMovSheet();
   $("#cAddDep").onclick=()=>registrarDepositoSheet();
   const eD=$("#eDeps");if(eD)eD.onclick=()=>depositosSheet();
+  const eC=$("#eCap");if(eC)eC.onclick=()=>editField("capitalTrabajo");
   $("#eSaldo").onclick=()=>editField("saldoSistema");
   $("#ePrest").onclick=()=>editField("prestamo");
   const impMP=$("#cImpMP");if(impMP)impMP.onclick=()=>importMPSheet();
@@ -910,6 +925,16 @@ function adjustAccountSheet(a){
   $("#ajCancel").onclick=closeSheet;
   const bb=$("#ajBill");if(bb)bb.onclick=()=>billeteSheet(v=>{$("#ajv").value=round0(v);});
   $("#ajSave").onclick=async()=>{const real=parseMoney($("#ajv").value);state.cuentasIni[a]=real-(pagosMet(a)+ingCta(a)-depCta(a)-gastoCta(a));await save();closeSheet();renderCaja();toast("Saldo actualizado");};
+}
+function recDepId(m){const mm=/^\s*(\d+)\s*-/.exec(m.desc||"");return mm?mm[1]:((m.fecha||"")+"|"+m.importe);}
+function absorbRecargas(){
+  state.depRecSeen=state.depRecSeen||[];const seen=new Set(state.depRecSeen);let n=0,sum=0;
+  for(const m of state.movs){if(tipoOf(m)!=="recarga")continue;const id=recDepId(m);if(seen.has(id))continue;
+    seen.add(id);state.depRecSeen.push(id);const monto=Math.abs(m.importe);
+    state.depositos.push({id:"dcsv"+Date.now()+Math.random().toString(36).slice(2,5),recId:id,fecha:m.fecha,monto,cuenta:"mp",nota:"Depósito detectado del CSV"});
+    state.saldoSistema=(state.saldoSistema||0)+monto;n++;sum+=monto;}
+  if(n)logAction("Depósitos detectados del CSV: "+n+" (+"+money(sum)+")");
+  return {n,sum};
 }
 function depositosSheet(){
   const list=[...state.depositos].sort((a,b)=>parseTs(b.fecha)-parseTs(a.fecha));
@@ -1068,14 +1093,17 @@ function closeSheet(){$("#scrim").classList.remove("on");}
 $("#scrim").onclick=e=>{if(e.target===$("#scrim"))closeSheet();};
 
 function editField(which){
-  const isS=which==="saldoSistema";
-  openSheet(`<h3>${isS?"Saldo en el sistema":"Préstamo de la empresa"}</h3>
-    <p class="hint">${isS?"Cuánto saldo tenés ahora en tu cuenta de la empresa para acreditar a los clientes.":"Plata que te presta la empresa (por ejemplo los fines de semana). Ponela acá para tenerla a la vista."}</p>
+  const meta={saldoSistema:["Saldo en el sistema","Cuánto saldo tenés ahora en tu cuenta de la empresa para acreditar a los clientes."],
+    prestamo:["Préstamo de la empresa","Plata que te presta la empresa (por ejemplo los fines de semana). Ponela acá para tenerla a la vista."],
+    capitalTrabajo:["Capital de trabajo","La plata que querés tener siempre destinada a operar (depositar y acreditar). Todo lo que tengas por encima de esto se considera tuyo."]};
+  const m=meta[which]||meta.prestamo;
+  openSheet(`<h3>${m[0]}</h3>
+    <p class="hint">${m[1]}</p>
     <label class="field">Monto</label>
     <input type="number" id="fv" inputmode="numeric" value="${state[which]||""}" placeholder="0">
     <div class="seg" style="margin-top:14px"><button class="sel" id="fSave">Guardar</button><button id="fCancel">Cancelar</button></div>`);
   $("#fCancel").onclick=closeSheet;
-  $("#fSave").onclick=async()=>{state[which]=parseMoney($("#fv").value);await save();closeSheet();renderAll();toast("Guardado");};
+  $("#fSave").onclick=async()=>{state[which]=parseMoney($("#fv").value);logAction(m[0]+": "+money(state[which]));await save();closeSheet();renderAll();toast("Guardado");};
 }
 
 function openClient(key){
@@ -1275,8 +1303,8 @@ function importSheet(){
   $("#pSave").onclick=async()=>{const txt=$("#paste").value;if(!txt.trim()){toast("Pegá el CSV primero");return;}await ingestAuto(txt);};
 }
 async function ingest(text){const rows=parseCSV(text);if(!rows.length){toast("No encontré movimientos");return;}
-  const d=detectSeller(rows);if(d)seller=d;const added=mergeMovs(rows);await save();closeSheet();render();renderPAG();
-  toast(added?`Importadas ${added} acreditaciones nuevas`:"Ya las tenías todas");}
+  const d=detectSeller(rows);if(d)seller=d;const added=mergeMovs(rows);const dep=absorbRecargas();await save();closeSheet();render();renderPAG();
+  let msg=added?`Importadas ${added} acreditaciones nuevas`:"Ya las tenías todas";if(dep.n)msg+=` · ${dep.n} depósito(s) +${money(dep.sum)}`;toast(msg);}
 function looksVentas(t){return /jpdv/i.test(t)&&/(pvp|producto)/i.test(t);}
 async function ingestAuto(text){if(looksVentas(text))return ingestVentas(text);return ingest(text);}
 $("#file").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>ingestAuto(r.result);r.readAsText(f,"utf-8");e.target.value="";};
