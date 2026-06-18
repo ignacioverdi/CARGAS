@@ -178,6 +178,15 @@
   .loginbox button{width:100%;font:inherit;font-weight:700;font-size:15px;background:linear-gradient(135deg,var(--brand),var(--brand-2));color:#fff;border:none;border-radius:12px;padding:14px;cursor:pointer;margin-top:4px}
   .loginbox button:active{transform:scale(.98)}
   #lerr{color:var(--neg);font-size:13px;font-weight:600;margin-top:10px;min-height:18px}
+  .pindots{display:flex;gap:14px;justify-content:center;margin:18px 0 6px}
+  .pindots span{width:15px;height:15px;border-radius:50%;border:2px solid var(--brand-2);transition:.15s}
+  .pindots span.full{background:var(--brand);border-color:var(--brand)}
+  #pinerr{color:var(--neg);font-size:13px;font-weight:600;min-height:18px;margin:4px 0}
+  .pinpad{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:8px auto 6px;max-width:260px}
+  .pinpad button{font:inherit;font-size:24px;font-weight:600;font-family:var(--disp);background:#f3f1ff;border:none;border-radius:16px;padding:16px 0;cursor:pointer;color:var(--ink)}
+  .pinpad button:active{background:#e4e0ff;transform:scale(.96)}
+  .pinpad button.fn{background:transparent;font-size:18px;color:var(--muted)}
+  .pinlink{background:none!important;border:none;color:var(--brand)!important;font-weight:700;font-size:13px;cursor:pointer;margin-top:10px;width:auto!important;padding:6px!important}
 </style>
 
 <header>
@@ -276,12 +285,22 @@
 <div id="login">
   <div class="loginbox">
     <div class="llogo">$</div>
-    <h2>Cargas</h2>
-    <p>Ingresá para ver tus datos</p>
-    <input id="lemail" type="email" inputmode="email" placeholder="Email" autocomplete="username">
-    <input id="lpass" type="password" placeholder="Contraseña" autocomplete="current-password">
-    <button id="lbtn">Entrar</button>
-    <div id="lerr"></div>
+    <div id="emailScreen">
+      <h2>Cargas</h2>
+      <p>Ingresá con tu cuenta (solo la primera vez)</p>
+      <input id="lemail" type="email" inputmode="email" placeholder="Email" autocomplete="username">
+      <input id="lpass" type="password" placeholder="Contraseña" autocomplete="current-password">
+      <button id="lbtn">Entrar</button>
+      <div id="lerr"></div>
+    </div>
+    <div id="pinScreen" style="display:none">
+      <h2 id="pinTitle">Ingresá tu PIN</h2>
+      <p id="pinMsg"></p>
+      <div class="pindots" id="pindots"></div>
+      <div id="pinerr"></div>
+      <div class="pinpad" id="pinpad"></div>
+      <button class="pinlink" id="pinForgot">Entrar con email</button>
+    </div>
   </div>
 </div>
 
@@ -741,27 +760,69 @@ function setupSync(){
 }
 function showLogin(){$("#login").classList.add("on");}
 function hideLogin(){$("#login").classList.remove("on");}
+function showEmail(){$("#emailScreen").style.display="block";$("#pinScreen").style.display="none";showLogin();}
 $("#lbtn").onclick=async()=>{
   const e=$("#lemail").value.trim(),p=$("#lpass").value;
   if(!e||!p){$("#lerr").textContent="Completá email y contraseña";return;}
   $("#lbtn").textContent="Entrando…";$("#lerr").textContent="";
-  try{await fauth.signInWithEmailAndPassword(e,p);}
+  try{await fauth.signInWithEmailAndPassword(e,p);localStorage.removeItem(PIN_KEY);$("#lbtn").textContent="Entrar";$("#lpass").value="";showPin("create");}
   catch(err){$("#lbtn").textContent="Entrar";
-    $("#lerr").textContent=(err.code||"").includes("password")||(err.code||"").includes("credential")||(err.code||"").includes("user")?"Email o contraseña incorrectos":"No se pudo entrar. Revisá los datos.";}
+    const c=err.code||"";
+    $("#lerr").textContent=c.includes("password")||c.includes("credential")||c.includes("user-not")?"Email o contraseña incorrectos":c.includes("not-allowed")?"Falta activar el login por email en Firebase":"No se pudo entrar. Revisá los datos.";}
 };
 $("#lpass").addEventListener("keydown",e=>{if(e.key==="Enter")$("#lbtn").click();});
+
+// ---- PIN ----
+const PIN_KEY="cargas_pin";
+function hashPin(p){let h=5381;for(let i=0;i<p.length;i++)h=((h<<5)+h+p.charCodeAt(i))>>>0;return "h"+h;}
+function pinIsSet(){return !!localStorage.getItem(PIN_KEY);}
+let pinMode="unlock",pinBuf="",pinTemp="";
+function showPin(mode){
+  pinMode=mode;pinBuf="";pinTemp="";
+  $("#emailScreen").style.display="none";$("#pinScreen").style.display="block";showLogin();
+  $("#pinTitle").textContent=mode==="create"?"Creá tu PIN":"Ingresá tu PIN";
+  $("#pinMsg").textContent=mode==="create"?"Elegí 4 números para entrar rápido":"";
+  $("#pinerr").textContent="";
+  $("#pinForgot").style.display=mode==="unlock"?"block":"none";
+  buildPad();drawDots();
+}
+function drawDots(){$("#pindots").innerHTML=[0,1,2,3].map(i=>`<span class="${i<pinBuf.length?'full':''}"></span>`).join("");}
+function buildPad(){
+  const keys=["1","2","3","4","5","6","7","8","9","","0","⌫"];
+  $("#pinpad").innerHTML=keys.map(k=>k===""?`<button class="fn" disabled style="visibility:hidden"></button>`:k==="⌫"?`<button class="fn" data-k="del">⌫</button>`:`<button data-k="${k}">${k}</button>`).join("");
+  [...document.querySelectorAll("#pinpad button[data-k]")].forEach(b=>b.onclick=()=>pinPress(b.dataset.k));
+}
+function pinPress(k){
+  $("#pinerr").textContent="";
+  if(k==="del"){pinBuf=pinBuf.slice(0,-1);drawDots();return;}
+  if(pinBuf.length>=4)return;
+  pinBuf+=k;drawDots();
+  if(pinBuf.length===4)setTimeout(pinComplete,120);
+}
+function pinComplete(){
+  if(pinMode==="unlock"){
+    if(hashPin(pinBuf)===localStorage.getItem(PIN_KEY)){pinUnlocked();}
+    else{$("#pinerr").textContent="PIN incorrecto";pinBuf="";drawDots();}
+  }else{
+    if(!pinTemp){pinTemp=pinBuf;pinBuf="";drawDots();$("#pinTitle").textContent="Repetí el PIN";$("#pinMsg").textContent="";}
+    else{
+      if(pinBuf===pinTemp){localStorage.setItem(PIN_KEY,hashPin(pinBuf));pinUnlocked();}
+      else{$("#pinerr").textContent="No coinciden, probá de nuevo";pinTemp="";pinBuf="";drawDots();$("#pinTitle").textContent="Creá tu PIN";$("#pinMsg").textContent="Elegí 4 números para entrar rápido";}
+    }
+  }
+}
+async function pinUnlocked(){hideLogin();if(!booted){booted=true;await bootApp();setupSync();}}
+$("#pinForgot").onclick=()=>showEmail();
 
 async function bootApp(){await load();renderAll();}
 
 if(initFirebase()){
-  useCloud=true;
-  showLogin();
+  useCloud=true;showLogin();
   fauth.onAuthStateChanged(async u=>{
-    if(u){store=cloudStore;hideLogin();if(!booted){booted=true;await bootApp();setupSync();}}
-    else{booted=false;showLogin();$("#lbtn").textContent="Entrar";}
+    if(u){store=cloudStore;if(pinIsSet())showPin("unlock");else showPin("create");}
+    else{booted=false;showEmail();$("#lbtn").textContent="Entrar";}
   });
 }else{
-  // sin nube (preview/sin internet): guarda local y entra directo
   bootApp();
 }
 if("serviceWorker" in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));}
