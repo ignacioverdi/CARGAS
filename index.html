@@ -465,6 +465,7 @@ async function load(){
   state.saldoSistema=state.saldoSistema||0;state.prestamo=state.prestamo||0;
   state.caja=state.caja||{base:0,cierres:{}};state.caja.cierres=state.caja.cierres||{};state.cajaMovs=state.cajaMovs||[];
   state.cuentasIni=state.cuentasIni||{mp:0,efectivo:0,banco:0};state.depositos=state.depositos||[];
+  state.ganArchive=state.ganArchive||{};state.log=state.log||[];
   state.mpMap=state.mpMap||{};state.mpInbox=state.mpInbox||[];
   state.clientes=state.clientes||{};
   if(!state.clientesSeededV1){seedClientes();state.clientesSeededV1=true;}
@@ -479,10 +480,13 @@ async function load(){
     if(state.ganOpening&&state.ganOpening["olavarria3038"])state.ganOpening["olavarria3038"].name="Quesada";
     state.quesadaNameV1=true;
   }
+  autoArchive();
   seller=state.seller||"verdi333";
   await save();
 }
-async function save(){state.seller=seller;try{await store.set(STORE_KEY,JSON.stringify(state));}catch(e){toast("No se pudo guardar");}}
+let undoJSON=null,storedJSON=null;
+function logAction(desc){if(!state.log)state.log=[];state.log.unshift({t:nowStr(),d:desc});if(state.log.length>120)state.log.length=120;}
+async function save(){state.seller=seller;const j=JSON.stringify(state);if(storedJSON!==null&&storedJSON!==j)undoJSON=storedJSON;storedJSON=j;try{await store.set(STORE_KEY,j);}catch(e){toast("No se pudo guardar");}}
 function mergeMovs(arr){const have=new Set(state.movs.map(movId));let n=0;for(const m of arr){const id=movId(m);if(!have.has(id)){state.movs.push(m);have.add(id);n++;}}return n;}
 function mergeVentas(arr){const have=new Set(state.ventas.map(v=>v.id));let n=0;for(const v of arr){if(v.id&&!have.has(v.id)){state.ventas.push(v);have.add(v.id);n++;}}return n;}
 function catVenta(prod){const p=(prod||"").trim().toUpperCase();if(p.startsWith("SUBE"))return "sube";if(p.startsWith("RECARGAS"))return "virtual";return "otro";}
@@ -500,10 +504,44 @@ function parseVentas(text){
     out.push({id,fecha:(r[cF]||"").trim(),cli,prod:(r[cP]||"").trim(),pvp:parseMoney(r[cV]),gd:parseMoney(r[cGD]),gj:parseMoney(r[cGJ])});}
   return out;
 }
+function aggSplit(list){
+  let f=0,t=0;
+  for(const o of list){const k=key(o.name);const cf=clientConf(k);
+    const credV=(cf.virtMode==="directo")?(o.gdV||0):((o.gdV||0)+(o.gjV||0));
+    const credS=(cf.subeMode==="directo")?(o.gdS||0):((o.gdS||0)+(o.gjS||0));
+    const cV=(cf.virtMode==="pct")?((o.vV||0)*(cf.virtPct||0)):0;
+    const cS=(cf.subeMode==="pct")?((o.vS||0)*(cf.subePct||0)):0;
+    if(FUND_SET.has(k)){f+=cV+cS;t+=(credV+credS)-(cV+cS);}
+    else if(ADELANTO_SET.has(k)){t+=(credV+credS)-(cV+cS);}
+    else{t+=credV+credS;}}
+  return {fondo:f,tuyo:t};
+}
+function curMonthKey(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,'0');}
+function archiveMonth(mk){
+  const list=state.ventas.filter(v=>monthOf(v.fecha)===mk);
+  if(!list.length)return 0;
+  const hadEarly=(mk===BASE_MONTH)&&list.some(v=>{const m=/^(\d{1,2})\//.exec(v.fecha);return m&&+m[1]<=16;});
+  const arc=state.ganArchive[mk]||{};
+  for(const v of list){const k=key(v.cli);const cat=catVenta(v.prod);
+    const a=arc[k]||(arc[k]={name:dispName(k)||v.cli,vV:0,gdV:0,gjV:0,vS:0,gdS:0,gjS:0});
+    if(cat==="virtual"){a.vV+=v.pvp;a.gdV+=v.gd;a.gjV+=v.gj;}else if(cat==="sube"){a.vS+=v.pvp;a.gdS+=v.gd;a.gjS+=v.gj;}}
+  state.ganArchive[mk]=arc;
+  const n=list.length;
+  state.ventas=state.ventas.filter(v=>monthOf(v.fecha)!==mk);
+  if(hadEarly)state.ganOpening={};
+  return n;
+}
+function autoArchive(){
+  const cur=curMonthKey();const months=new Set();
+  for(const v of state.ventas){const mk=monthOf(v.fecha);if(mk&&mk<cur)months.add(mk);}
+  let total=0;for(const mk of months)total+=archiveMonth(mk);
+  return total;
+}
 function ventasAgg(){
   const map=new Map();
   const get=(name)=>{const k=key(name);if(!map.has(k))map.set(k,{key:k,name:(state.opening[k]&&state.opening[k].name)||name,vV:0,gdV:0,gjV:0,vS:0,gdS:0,gjS:0,items:[]});return map.get(k);};
   if(!hasEarlyJune())for(const k in state.ganOpening){const o=state.ganOpening[k];const a=get(o.name);a.vV+=o.vV;a.gdV+=o.gdV;a.gjV+=o.gjV;a.vS+=o.vS;a.gdS+=o.gdS;a.gjS+=o.gjS;}
+  for(const mk in state.ganArchive){for(const o of Object.values(state.ganArchive[mk])){const a=get(o.name);a.vV+=o.vV;a.gdV+=o.gdV;a.gjV+=o.gjV;a.vS+=o.vS;a.gdS+=o.gdS;a.gjS+=o.gjS;}}
   for(const v of state.ventas){const a=get(v.cli);const c=catVenta(v.prod);
     if(c==="virtual"){a.vV+=v.pvp;a.gdV+=v.gd;a.gjV+=v.gj;}
     else if(c==="sube"){a.vS+=v.pvp;a.gdS+=v.gd;a.gjS+=v.gj;}
@@ -675,15 +713,10 @@ function fondoData(mk){
   for(const v of state.ventas){if(monthOf(v.fecha)!==mk)continue;const d=dayOf(v.fecha);if(!d)continue;const s=ventaSplit(v);const o=days.get(d)||{fondo:0,tuyo:0};o.fondo+=s.fondo;o.tuyo+=s.tuyo;days.set(d,o);}
   const dayArr=[...days.entries()].map(([d,o])=>({d,fondo:o.fondo,tuyo:o.tuyo})).sort((a,b)=>parseTs(b.d+" 00:00:00")-parseTs(a.d+" 00:00:00"));
   let base=null;
-  if(mk===BASE_MONTH&&!hasEarlyJune()){let f=0,t=0;
-    for(const kk in state.ganOpening){const o=state.ganOpening[kk];const k=key(o.name||kk);const cf=clientConf(k);
-      const credV=(cf.virtMode==="directo")?(o.gdV||0):((o.gdV||0)+(o.gjV||0));
-      const credS=(cf.subeMode==="directo")?(o.gdS||0):((o.gdS||0)+(o.gjS||0));
-      const fV=(FUND_SET.has(k)&&cf.virtMode==="pct")?((o.vV||0)*(cf.virtPct||0)):0;
-      const fS=(FUND_SET.has(k)&&cf.subeMode==="pct")?((o.vS||0)*(cf.subePct||0)):0;
-      f+=fV+fS;t+=(credV+credS)-(fV+fS);}
-    base={fondo:f,tuyo:t};
-  }
+  let bf=0,bt=0,hasBase=false;
+  if(mk===BASE_MONTH&&!hasEarlyJune()){const r=aggSplit(Object.values(state.ganOpening));bf+=r.fondo;bt+=r.tuyo;hasBase=true;}
+  if(state.ganArchive&&state.ganArchive[mk]){const r=aggSplit(Object.values(state.ganArchive[mk]));bf+=r.fondo;bt+=r.tuyo;hasBase=true;}
+  if(hasBase)base={fondo:bf,tuyo:bt};
   const totFondo=dayArr.reduce((s,x)=>s+x.fondo,0)+(base?base.fondo:0);
   const totTuyo=dayArr.reduce((s,x)=>s+x.tuyo,0)+(base?base.tuyo:0);
   return {dayArr,base,totFondo,totTuyo};
@@ -698,6 +731,7 @@ function ganAPagarMonth(mk){
   const map=new Map();
   const get=(name)=>{const k=key(name);if(!map.has(k))map.set(k,{key:k,name:dispName(k)||name,vV:0,vS:0});return map.get(k);};
   if(mk===BASE_MONTH&&!hasEarlyJune()){for(const kk in state.ganOpening){const o=state.ganOpening[kk];const a=get(o.name);a.vV+=o.vV;a.vS+=o.vS;}}
+  if(state.ganArchive&&state.ganArchive[mk]){for(const o of Object.values(state.ganArchive[mk])){const a=get(o.name);a.vV+=o.vV;a.vS+=o.vS;}}
   for(const v of state.ventas){if(monthOf(v.fecha)!==mk)continue;const a=get(v.cli);const c=catVenta(v.prod);if(c==="virtual")a.vV+=v.pvp;else if(c==="sube")a.vS+=v.pvp;}
   const rows=[];
   for(const a of map.values()){const cf=clientConf(a.key);const inV=cf.virtMode==="pct",inS=cf.subeMode==="pct";if(!inV&&!inS)continue;
@@ -744,7 +778,7 @@ function renderPAG(){
       ${fd.base?`<div class="movrow"><div class="mc">1–16 (sin desglose diario)<small style="display:block;margin-top:1px">tuyo: ${money(fd.base.tuyo)}</small></div><span class="num" style="font-weight:800;color:var(--amber)">${money(fd.base.fondo)}</span></div>`:""}
     </div>`;
 }
-async function togglePaid(mk,k){state.paid[mk]=state.paid[mk]||{};state.paid[mk][k]=!state.paid[mk][k];await save();renderPAG();}
+async function togglePaid(mk,k){state.paid[mk]=state.paid[mk]||{};state.paid[mk][k]=!state.paid[mk][k];logAction("Comisión "+(state.paid[mk][k]?"PAGADA":"marcada pendiente")+": "+(dispName(k)||k)+" ("+mk+")");await save();renderPAG();}
 
 function renderCobrar(){
   const all=clientsAgg().filter(c=>Math.round(c.debe)>0).sort((a,b)=>b.debe-a.debe);
@@ -879,6 +913,7 @@ function registrarDepositoSheet(){
   $("#dpSave").onclick=async()=>{const imp=parseMoney($("#dpImp").value);if(!imp){toast("Poné el monto");return;}
     state.depositos.push({id:"d"+Date.now()+Math.random().toString(36).slice(2,5),fecha:nowStr(),monto:imp,cuenta:cta,nota:$("#dpNota").value.trim()});
     state.saldoSistema=(state.saldoSistema||0)+imp;
+    logAction("Depósito a la empresa "+money(imp)+" ("+acctName(cta)+")");
     await save();closeSheet();renderCaja();toast("Depósito registrado");};
 }
 function addCajaMovSheet(){
@@ -899,7 +934,7 @@ function addCajaMovSheet(){
   let cta="mp";wirePicker("cmCta",v=>cta=v);
   $("#cmCancel").onclick=closeSheet;
   $("#cmSave").onclick=async()=>{const imp=parseMoney($("#cmImp").value);if(!imp){toast("Poné el importe");return;}
-    state.cajaMovs.push({id:"cm"+Date.now()+Math.random().toString(36).slice(2,5),fecha:nowStr(),cuenta:cta,tipo:$("#cmTipo").value,concepto:$("#cmConc").value.trim(),importe:imp});await save();closeSheet();renderCaja();toast("Movimiento agregado");};
+    state.cajaMovs.push({id:"cm"+Date.now()+Math.random().toString(36).slice(2,5),fecha:nowStr(),cuenta:cta,tipo:$("#cmTipo").value,concepto:$("#cmConc").value.trim(),importe:imp});logAction(($("#cmTipo").value)+" "+money(imp)+" ("+acctName(cta)+")");await save();closeSheet();renderCaja();toast("Movimiento agregado");};
 }
 function billeteSheet(cb){
   const rows=DENOMS.map(v=>`<div class="bd">${money(v)}</div><input class="bq" data-v="${v}" type="number" inputmode="numeric" min="0" placeholder="0"><div class="bs" id="bs${v}">$0</div>`).join("");
@@ -1047,7 +1082,7 @@ function openClient(key){
   $("#oContact").onclick=()=>setContactSheet(key,c.name);
   const eo=$("#editOpen");if(eo)eo.onclick=()=>editOpening(key,c.name);
   [...document.querySelectorAll("#sheet .xbtn")].forEach(b=>b.onclick=async()=>{
-    state.pagos=state.pagos.filter(p=>p.id!==b.dataset.pid);await save();openClient(key);render();toast("Pago eliminado");});
+    state.pagos=state.pagos.filter(p=>p.id!==b.dataset.pid);logAction("Pago eliminado");await save();openClient(key);render();toast("Pago eliminado");});
 }
 
 function diaNombre(d){const m=/(\d{1,2})\/(\d{1,2})\/(\d{4})/.exec(d||"");if(!m)return"";const dt=new Date(+m[3],+m[2]-1,+m[1]);return ["domingo","lunes","martes","miércoles","jueves","viernes","sábado"][dt.getDay()]||"";}
@@ -1096,7 +1131,7 @@ function editOpening(key,name){
 }
 
 async function addPago(name,importe,fecha,metodo){
-  state.pagos.push({id:"p"+Date.now()+Math.random().toString(36).slice(2,6),name,importe,fecha:fecha||nowStr(),metodo:metodo||"mp"});await save();}
+  state.pagos.push({id:"p"+Date.now()+Math.random().toString(36).slice(2,6),name,importe,fecha:fecha||nowStr(),metodo:metodo||"mp"});logAction("Pago: "+name+" "+money(importe)+(metodo?" ("+acctName(metodo)+")":""));await save();}
 
 $("#pbAdd").onclick=async()=>{
   const name=$("#pbCli").value.trim();const v=parseMoney($("#pbImp").value);
@@ -1115,12 +1150,16 @@ function moreMenu(){
     <li id="mAcc">Acreditar saldo a un cliente (a mano)</li>
     <li id="mRec">Cargar recarga a mi cuenta</li>
     <li id="mBackup">💾 Copia de seguridad</li>
+    <li id="mUndo">↩️ Deshacer último cambio</li>
+    <li id="mLog">🕘 Historial</li>
     ${useCloud?'<li id="mOut" style="color:var(--neg)">Cerrar sesión</li>':''}
   </ul>`);
   $("#mCli").onclick=()=>clientesConfigSheet();
   $("#mAcc").onclick=()=>addMovSheet("acreditacion");
   $("#mRec").onclick=()=>addMovSheet("recarga");
   $("#mBackup").onclick=()=>backupSheet();
+  $("#mUndo").onclick=()=>{closeSheet();doUndo();};
+  $("#mLog").onclick=()=>historialSheet();
   const o=$("#mOut");if(o)o.onclick=async()=>{closeSheet();try{await fauth.signOut();}catch(e){}};
 }
 function backupSheet(){
@@ -1147,13 +1186,13 @@ async function importBackupFile(text){
   let data;try{data=JSON.parse(text);}catch(e){toast("Archivo inválido");return;}
   if(!data||typeof data!=="object"||(!data.pagos&&!data.opening&&!data.ventas)){toast("No parece una copia de Cargas");return;}
   if(!confirm("Esto reemplaza TODOS los datos actuales por los de la copia. ¿Seguro?"))return;
-  state=data;await save();closeSheet();renderAll();toast("Datos restaurados desde el archivo");
+  state=data;logAction("Restauración desde archivo");await save();closeSheet();renderAll();toast("Datos restaurados desde el archivo");
 }
 async function restoreSnap(){
   if(!fsnap)return;
   try{const s=await fsnap.get();if(!s.exists){toast("Todavía no hay respaldo automático");return;}
     if(!confirm("Restaurar el respaldo automático (estado de hoy temprano)? Reemplaza los datos actuales."))return;
-    state=JSON.parse(s.data().v);await save();closeSheet();renderAll();toast("Respaldo restaurado");
+    state=JSON.parse(s.data().v);logAction("Restauración de respaldo automático");await save();closeSheet();renderAll();toast("Respaldo restaurado");
   }catch(e){toast("No se pudo restaurar");}
 }
 async function maybeSnapshot(){
@@ -1162,6 +1201,20 @@ async function maybeSnapshot(){
   try{const s=await fsnap.get();const last=s.exists?s.data().d:null;
     if(last!==today)await fsnap.set({v:JSON.stringify(state),d:today,t:Date.now()});
   }catch(e){}
+}
+async function doUndo(){
+  if(undoJSON===null){toast("No hay nada para deshacer");return;}
+  if(!confirm("Deshacer el último cambio?"))return;
+  const u=undoJSON;try{state=JSON.parse(u);}catch(e){toast("No se pudo deshacer");return;}
+  undoJSON=null;logAction("Deshacer último cambio");await save();renderAll();toast("Cambio deshecho");
+}
+function historialSheet(){
+  const log=state.log||[];
+  openSheet(`<h3>🕘 Historial</h3>
+    <p class="hint" style="margin:0 0 6px">Últimos movimientos registrados.</p>
+    ${log.length?log.slice(0,60).map(e=>`<div class="movrow"><div class="mc">${e.d}<small style="display:block;margin-top:1px">${e.t}</small></div></div>`).join(""):'<p class="hint">Todavía no hay nada registrado.</p>'}
+    <button id="hClose" style="margin-top:12px;width:100%">Cerrar</button>`);
+  $("#hClose").onclick=closeSheet;
 }
 function addMovSheet(tipo){
   openSheet(`<h3>${tipo==="recarga"?"Recarga a mi cuenta":"Acreditar a cliente"}</h3>
@@ -1230,7 +1283,7 @@ async function applyMPcobros(arr){
       seen.add(id);aplic++;
     }else{state.mpInbox.push({id,fecha,monto,cuit});inboxIds.add(id);nuevos++;}
   }
-  if(aplic||nuevos)await save();
+  if(aplic||nuevos){logAction("Mercado Pago: "+aplic+" cobros aplicados"+(nuevos?", "+nuevos+" a confirmar":""));await save();}
   return {aplic,nuevos,ign,dup};
 }
 async function importMP(text){
@@ -1334,7 +1387,7 @@ const cloudStore={
 function setupSync(){
   fdoc.onSnapshot(s=>{
     if(!s.exists)return;const v=s.data().v;
-    if(v&&v!==lastCloud){lastCloud=v;try{state=JSON.parse(v);}catch(e){return;}renderAll();}
+    if(v&&v!==lastCloud){lastCloud=v;try{state=JSON.parse(v);}catch(e){return;}storedJSON=v;undoJSON=null;renderAll();}
   },err=>{});
 }
 function setupMPQueue(){
