@@ -866,7 +866,7 @@ function renderCaja(){
     <div class="card">
       <h3>La empresa (pinweb)</h3>
       <div class="arow edit" id="eSaldo"><div class="l">Saldo en pinweb<small>para acreditar a clientes</small></div><div class="v num">${money(saldoPw)} <span class="pencil">editar</span></div></div>
-      <div class="arow"><div class="l">Depositado (total)</div><div class="v num">${money(totalDep)}</div></div>
+      <div class="arow edit" id="eDeps"><div class="l">Depositado (total)</div><div class="v num">${money(totalDep)} <span class="pencil">ver</span></div></div>
       <div class="arow edit" id="ePrest"><div class="l">Préstamo empresa</div><div class="v num">${money(prest)} <span class="pencil">editar</span></div></div>
       <button class="addbtn" id="cAddDep">+ Registrar depósito a la empresa</button>
     </div>
@@ -881,6 +881,7 @@ function renderCaja(){
   [...document.querySelectorAll('#cajaBody [data-acc]')].forEach(r=>r.onclick=()=>adjustAccountSheet(r.dataset.acc));
   $("#cAddMov").onclick=()=>addCajaMovSheet();
   $("#cAddDep").onclick=()=>registrarDepositoSheet();
+  const eD=$("#eDeps");if(eD)eD.onclick=()=>depositosSheet();
   $("#eSaldo").onclick=()=>editField("saldoSistema");
   $("#ePrest").onclick=()=>editField("prestamo");
   const impMP=$("#cImpMP");if(impMP)impMP.onclick=()=>importMPSheet();
@@ -897,6 +898,25 @@ function adjustAccountSheet(a){
   $("#ajCancel").onclick=closeSheet;
   const bb=$("#ajBill");if(bb)bb.onclick=()=>billeteSheet(v=>{$("#ajv").value=round0(v);});
   $("#ajSave").onclick=async()=>{const real=parseMoney($("#ajv").value);state.cuentasIni[a]=real-(pagosMet(a)+ingCta(a)-depCta(a)-gastoCta(a));await save();closeSheet();renderCaja();toast("Saldo actualizado");};
+}
+function depositosSheet(){
+  const list=[...state.depositos].sort((a,b)=>parseTs(b.fecha)-parseTs(a.fecha));
+  const tot=list.reduce((s,d)=>s+d.monto,0);
+  openSheet(`<h3>Depósitos a la empresa</h3>
+    <p class="hint">Plata que pusiste en pinweb. Borrá con ✕ los que no correspondan (se descuenta del saldo).</p>
+    ${list.length?list.map(d=>`<div class="arow"><div class="l">${(d.fecha||"").slice(0,10)}<small style="display:block;margin-top:1px">${acctName(d.cuenta)}${d.nota?" · "+d.nota:""}</small></div><div class="v num">${money(d.monto)} <button class="xbtn" data-del="${d.id}">✕</button></div></div>`).join(""):'<p class="hint">Todavía no registraste depósitos.</p>'}
+    ${list.length?`<div class="totrow"><div class="l">Total</div><div class="v num">${money(tot)}</div></div>`:""}
+    <button class="addbtn" id="depAdd" style="margin-top:10px">+ Registrar depósito</button>
+    <button id="depClose" style="margin-top:8px;width:100%">Cerrar</button>`);
+  $("#depClose").onclick=closeSheet;
+  $("#depAdd").onclick=()=>registrarDepositoSheet();
+  [...document.querySelectorAll("#sheet [data-del]")].forEach(b=>b.onclick=async()=>{
+    const d=state.depositos.find(x=>x.id===b.dataset.del);if(!d)return;
+    if(!confirm("Borrar el depósito de "+money(d.monto)+"?"))return;
+    state.depositos=state.depositos.filter(x=>x.id!==b.dataset.del);
+    state.saldoSistema=(state.saldoSistema||0)-d.monto;
+    logAction("Depósito borrado "+money(d.monto));await save();depositosSheet();renderCaja();toast("Depósito borrado");
+  });
 }
 function registrarDepositoSheet(){
   openSheet(`<h3>Depósito a la empresa</h3>
@@ -1374,10 +1394,10 @@ let booted=false;
 
 // ---- Firebase (nube + login) ----
 const FIREBASE_CONFIG={apiKey:"AIzaSyAVE6FFL7nCU18Iqhwb96RnV9mQRcYmIZg",authDomain:"cargasiv.firebaseapp.com",projectId:"cargasiv",storageBucket:"cargasiv.firebasestorage.app",messagingSenderId:"231405999919",appId:"1:231405999919:web:794061b711d3ddd07533da"};
-let fauth=null,fdoc=null,fqueue=null,fsnap=null,useCloud=false,lastCloud=null;
+let fauth=null,fdoc=null,fqueue=null,fqueue2=null,fsnap=null,useCloud=false,lastCloud=null;
 function initFirebase(){
   if(typeof firebase==="undefined"||!firebase.initializeApp)return false;
-  try{firebase.initializeApp(FIREBASE_CONFIG);fauth=firebase.auth();fdoc=firebase.firestore().collection("app").doc("state");fqueue=firebase.firestore().collection("app").doc("mpqueue");fsnap=firebase.firestore().collection("app").doc("snap");return true;}
+  try{firebase.initializeApp(FIREBASE_CONFIG);fauth=firebase.auth();fdoc=firebase.firestore().collection("app").doc("state");fqueue=firebase.firestore().collection("app").doc("mpqueue");fqueue2=firebase.firestore().collection("app").doc("mpqueue_out");fsnap=firebase.firestore().collection("app").doc("snap");return true;}
   catch(e){return false;}
 }
 const cloudStore={
@@ -1397,6 +1417,29 @@ function setupMPQueue(){
     let arr;try{arr=JSON.parse(v);}catch(e){return;}
     const {aplic,nuevos}=await applyMPcobros(arr);
     if(aplic||nuevos){renderAll();toast(`Mercado Pago: ${aplic} cobro(s) nuevo(s)${nuevos?` · ${nuevos} por confirmar`:""}`);}
+  },err=>{});
+}
+async function applyMPDeps(arr){
+  if(!Array.isArray(arr)||!arr.length)return 0;
+  state.depositos=state.depositos||[];
+  const seen=new Set(state.depositos.map(d=>d.mpId).filter(Boolean));
+  let n=0;
+  for(const d of arr){
+    if(!d||d.id==null)continue;const mpId=String(d.id);if(seen.has(mpId))continue;
+    const monto=Math.round(+d.monto||0);if(!monto)continue;
+    state.depositos.push({id:"dmp"+mpId,mpId,fecha:d.fecha||nowStr(),monto,cuenta:"mp",nota:"Depósito a pinweb (auto MP)"});
+    state.saldoSistema=(state.saldoSistema||0)+monto;seen.add(mpId);n++;
+  }
+  if(n){logAction("Depósitos a pinweb (auto MP): "+n);await save();}
+  return n;
+}
+function setupMPDepQueue(){
+  if(!fqueue2)return;
+  fqueue2.onSnapshot(async s=>{
+    if(!s.exists)return;const v=s.data().v;if(!v)return;
+    let arr;try{arr=JSON.parse(v);}catch(e){return;}
+    const n=await applyMPDeps(arr);
+    if(n){renderAll();toast(`${n} depósito(s) a pinweb detectado(s)`);}
   },err=>{});
 }
 function showLogin(){$("#login").classList.add("on");}
@@ -1452,7 +1495,7 @@ function pinComplete(){
     }
   }
 }
-async function pinUnlocked(){hideLogin();if(!booted){booted=true;await bootApp();setupSync();setupMPQueue();maybeSnapshot();}}
+async function pinUnlocked(){hideLogin();if(!booted){booted=true;await bootApp();setupSync();setupMPQueue();setupMPDepQueue();maybeSnapshot();}}
 $("#pinForgot").onclick=()=>showEmail();
 
 async function bootApp(){await load();renderAll();}
