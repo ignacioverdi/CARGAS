@@ -329,6 +329,7 @@
     </div>
     <aside class="saldos" id="resumenP"></aside>
   </div>
+  <div id="fondoP" class="cajawrap" style="margin-top:14px"></div>
  </div>
 
  <div id="viewCOB" style="display:none">
@@ -647,6 +648,41 @@ function monthOf(f){const m=/(\d{1,2})\/(\d{1,2})\/(\d{4})/.exec(f||"");return m
 function monthLabel(mk){const n=["","enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];const[y,m]=mk.split("-");return n[+m]+" "+y;}
 function nextMonth5(mk){let[y,m]=mk.split("-").map(Number);m++;if(m>12){m=1;y++;}return "5/"+String(m).padStart(2,'0')+"/"+y;}
 function availableMonths(){const s=new Set([BASE_MONTH]);for(const v of state.ventas){const mk=monthOf(v.fecha);if(mk)s.add(mk);}return [...s].sort().reverse();}
+const FUND_SET=new Set(["rivadavia1400","rivadavia2289","rivadavia7376","olavarria3038","montiel1905","sanpedrito27","hyrigoyen1400","lacroze2929"]);
+function ventaSplit(v){
+  const k=key(v.cli);const cf=clientConf(k);const cat=catVenta(v.prod);
+  let mode,pct;
+  if(cat==="virtual"){mode=cf.virtMode;pct=cf.virtPct||0;}
+  else if(cat==="sube"){mode=cf.subeMode;pct=cf.subePct||0;}
+  else return {fondo:0,tuyo:0};
+  const credit=(mode==="directo")?(v.gd||0):((v.gd||0)+(v.gj||0));
+  const fondo=(FUND_SET.has(k)&&mode==="pct")?((v.pvp||0)*pct):0;
+  return {fondo,tuyo:credit-fondo};
+}
+function fondoData(mk){
+  const days=new Map();
+  for(const v of state.ventas){if(monthOf(v.fecha)!==mk)continue;const d=dayOf(v.fecha);if(!d)continue;const s=ventaSplit(v);const o=days.get(d)||{fondo:0,tuyo:0};o.fondo+=s.fondo;o.tuyo+=s.tuyo;days.set(d,o);}
+  const dayArr=[...days.entries()].map(([d,o])=>({d,fondo:o.fondo,tuyo:o.tuyo})).sort((a,b)=>parseTs(b.d+" 00:00:00")-parseTs(a.d+" 00:00:00"));
+  let base=null;
+  if(mk===BASE_MONTH){let f=0,t=0;
+    for(const kk in state.ganOpening){const o=state.ganOpening[kk];const k=key(o.name||kk);const cf=clientConf(k);
+      const credV=(cf.virtMode==="directo")?(o.gdV||0):((o.gdV||0)+(o.gjV||0));
+      const credS=(cf.subeMode==="directo")?(o.gdS||0):((o.gdS||0)+(o.gjS||0));
+      const fV=(FUND_SET.has(k)&&cf.virtMode==="pct")?((o.vV||0)*(cf.virtPct||0)):0;
+      const fS=(FUND_SET.has(k)&&cf.subeMode==="pct")?((o.vS||0)*(cf.subePct||0)):0;
+      f+=fV+fS;t+=(credV+credS)-(fV+fS);}
+    base={fondo:f,tuyo:t};
+  }
+  const totFondo=dayArr.reduce((s,x)=>s+x.fondo,0)+(base?base.fondo:0);
+  const totTuyo=dayArr.reduce((s,x)=>s+x.tuyo,0)+(base?base.tuyo:0);
+  return {dayArr,base,totFondo,totTuyo};
+}
+function fondoReservado(){
+  let tot=0;
+  for(const mk of availableMonths()){const paid=state.paid[mk]||{};
+    for(const r of ganAPagarMonth(mk)){if(!FUND_SET.has(r.key))continue;if(!paid[r.key])tot+=r.total;}}
+  return tot;
+}
 function ganAPagarMonth(mk){
   const map=new Map();
   const get=(name)=>{const k=key(name);if(!map.has(k))map.set(k,{key:k,name:dispName(k)||name,vV:0,vS:0});return map.get(k);};
@@ -683,6 +719,19 @@ function renderPAG(){
     <div class="srow"><span class="l"><span class="ico" style="background:var(--pos)"></span>Pagado</span><span class="n num">${money(tPag)}</span></div>
     <div class="srow"><span class="l"><span class="ico" style="background:var(--amber)"></span>Pendiente</span><span class="n num">${money(pend)}</span></div>
     <div class="foot">Se paga el <b>${nextMonth5(pagMonth)}</b> · solo clientes con %</div>`;
+  const fd=fondoData(pagMonth);
+  $("#fondoP").innerHTML=`
+    <div class="card">
+      <h3>💰 Fondo de comisiones · ${monthLabel(pagMonth)}</h3>
+      <p class="hint" style="margin:0 0 8px">Plata de los clientes con % que pagás el ${nextMonth5(pagMonth)}. Apartala/invertila día a día.</p>
+      <div class="totrow"><div class="l">Total al fondo (mes)</div><div class="v num" style="color:var(--amber)">${money(fd.totFondo)}</div></div>
+      <div class="arow"><div class="l">Tu ganancia (mes)</div><div class="v num pos">${money(fd.totTuyo)}</div></div>
+    </div>
+    <div class="card">
+      <h3>Por día · cuánto apartar</h3>
+      ${fd.dayArr.length?fd.dayArr.map(x=>`<div class="movrow"><div class="mc">${x.d}<small style="display:block;margin-top:1px">tuyo: ${money(x.tuyo)}</small></div><span class="num" style="font-weight:800;color:var(--amber)">${money(x.fondo)}</span></div>`).join(""):'<p class="hint">Todavía no hay ventas con detalle diario en este mes.</p>'}
+      ${fd.base?`<div class="movrow"><div class="mc">1–16 (sin desglose diario)<small style="display:block;margin-top:1px">tuyo: ${money(fd.base.tuyo)}</small></div><span class="num" style="font-weight:800;color:var(--amber)">${money(fd.base.fondo)}</span></div>`:""}
+    </div>`;
 }
 async function togglePaid(mk,k){state.paid[mk]=state.paid[mk]||{};state.paid[mk][k]=!state.paid[mk][k];await save();renderPAG();}
 
@@ -746,8 +795,9 @@ function renderCaja(){
   const cs=clientsAgg();const deben=cs.reduce((s,x)=>s+Math.max(0,x.debe),0);
   const totalCtas=saldoCta("mp")+saldoCta("efectivo")+saldoCta("banco");
   const saldoPw=state.saldoSistema||0,prest=state.prestamo||0;
-  const libre=saldoPw-prest;
-  const patrim=totalCtas+saldoPw+deben-prest;
+  const reservado=fondoReservado();
+  const libre=saldoPw-prest-reservado;
+  const patrim=totalCtas+saldoPw+deben-prest-reservado;
   const totalDep=state.depositos.reduce((s,d)=>s+d.monto,0);
   const feed=[];
   for(const p of state.pagos)if(p.metodo)feed.push({ts:parseTs(p.fecha),t:p.name,sub:`Cobranza · ${acctName(p.metodo)}`,amt:p.importe,sign:1});
@@ -778,8 +828,9 @@ function renderCaja(){
     <div class="card">
       <h3>Resumen</h3>
       <div class="arow"><div class="l">Te deben (total)</div><div class="v num neg">${money(deben)}</div></div>
-      <div class="arow"><div class="l">Plata libre<small>saldo pinweb − préstamo</small></div><div class="v num ${libre<0?'neg':'pos'}">${money(libre)}</div></div>
-      <div class="totrow"><div class="l">Patrimonio<small style="font-weight:500;color:var(--muted);display:block;margin-top:2px">cuentas + saldo pinweb + te deben − préstamo</small></div><div class="v num">${money(patrim)}</div></div>
+      <div class="arow"><div class="l">Reservado comisiones<small>se paga el 5 · no es tuyo</small></div><div class="v num" style="color:var(--amber)">${money(reservado)}</div></div>
+      <div class="arow"><div class="l">Plata libre<small>saldo pinweb − reservado − préstamo</small></div><div class="v num ${libre<0?'neg':'pos'}">${money(libre)}</div></div>
+      <div class="totrow"><div class="l">Patrimonio<small style="font-weight:500;color:var(--muted);display:block;margin-top:2px">cuentas + saldo pinweb + te deben − préstamo − reservado</small></div><div class="v num">${money(patrim)}</div></div>
     </div>
     ${recent.length?`<div class="card"><h3>Movimientos recientes</h3>${recent.map(f=>`<div class="movrow"><div class="mc">${f.t}<small style="display:block;margin-top:1px">${f.sub}</small></div><span class="num ${f.sign>0?'pos':'neg'}" style="font-weight:700">${f.sign>0?'+':'−'}${money(f.amt)}</span></div>`).join("")}</div>`:""}`;
   [...document.querySelectorAll('#cajaBody [data-acc]')].forEach(r=>r.onclick=()=>adjustAccountSheet(r.dataset.acc));
