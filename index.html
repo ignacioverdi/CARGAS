@@ -72,6 +72,7 @@
   .paybar input:focus{outline:none;border-color:var(--brand-2)}
   .paybar button{font:inherit;font-weight:700;font-size:14px;background:linear-gradient(135deg,var(--pos),#0aa86f);color:#fff;border:none;border-radius:12px;padding:12px 18px;cursor:pointer;white-space:nowrap;box-shadow:0 10px 20px -10px var(--pos)}
   .paybar button:active{transform:scale(.97)}
+  .paybar select{grid-column:1/4;font:inherit;font-weight:600;font-size:14px;padding:9px 10px;border:1.5px solid var(--line);border-radius:11px;background:#fbfbff;color:var(--ink)}
 
   .toolbar{display:flex;align-items:center;gap:8px;margin:14px 2px 6px}
   .toolbar .sortbtn{font:inherit;font-size:12px;font-weight:700;color:var(--brand);background:#f3f1ff;border:1px solid #e4e0ff;border-radius:999px;padding:5px 11px;cursor:pointer}
@@ -250,7 +251,7 @@
   <div class="tabs">
     <button class="tab on" data-tab="cc">Cuenta</button>
     <button class="tab" data-tab="cob">Cobrar</button>
-    <button class="tab" data-tab="caja">Caja</button>
+    <button class="tab" data-tab="caja">Plata</button>
     <button class="tab" data-tab="gan">Ganancias</button>
     <button class="tab" data-tab="pag">A pagar</button>
   </div>
@@ -263,6 +264,7 @@
     <input type="text" id="pbCli" placeholder="Cliente" list="clilist" autocomplete="off">
     <input type="number" id="pbImp" inputmode="numeric" placeholder="Pagó $">
     <button id="pbAdd">Sumar</button>
+    <select id="pbMet"><option value="mp">Mercado Pago</option><option value="efectivo">Efectivo</option><option value="banco">Banco</option></select>
     <datalist id="clilist"></datalist>
   </div>
 
@@ -459,6 +461,7 @@ async function load(){
   state.movs=state.movs||[];state.pagos=state.pagos||[];state.opening=state.opening||{};state.ventas=state.ventas||[];state.ganOpening=state.ganOpening||{};state.paid=state.paid||{};state.contacts=state.contacts||{};
   state.saldoSistema=state.saldoSistema||0;state.prestamo=state.prestamo||0;
   state.caja=state.caja||{base:0,cierres:{}};state.caja.cierres=state.caja.cierres||{};state.cajaMovs=state.cajaMovs||[];
+  state.cuentasIni=state.cuentasIni||{mp:0,efectivo:0,banco:0};state.depositos=state.depositos||[];
   state.clientes=state.clientes||{};
   if(!state.clientesSeededV1){seedClientes();state.clientesSeededV1=true;}
   rebuildAlias();
@@ -700,12 +703,15 @@ function quickPay(k){
   const c=clientsAgg().find(x=>x.key===k);if(!c)return;
   openSheet(`<h3>${c.name}</h3>
     <div class="hint">Debe <b class="neg">${money(c.debe)}</b></div>
-    <button class="bigpay" id="qpFull">Saldó todo · ${money(c.debe)}</button>
+    <label class="field">¿Cómo pagó?</label>
+    ${acctPicker("qpMet","mp")}
+    <button class="bigpay" id="qpFull" style="margin-top:12px">Saldó todo · ${money(c.debe)}</button>
     <label class="field" style="margin-top:14px">…o pago parcial</label>
     <div class="seg"><input type="number" id="qpAmt" inputmode="numeric" placeholder="Pagó $" style="flex:2"><button class="go" id="qpPart" style="flex:1">Sumar</button></div>
     <button class="wabtn" id="qpWa">Mandar WhatsApp</button>`);
-  $("#qpFull").onclick=async()=>{await addPago(c.name,c.debe);closeSheet();render();renderCobrar();toast(`${c.name} saldó todo`);};
-  $("#qpPart").onclick=async()=>{const v=parseMoney($("#qpAmt").value);if(!v){toast("Poné el importe");return;}await addPago(c.name,v);closeSheet();render();renderCobrar();const a=clientsAgg().find(x=>x.key===k);toast(`${c.name} pagó ${money(v)} · debe ${money(a?a.debe:0)}`);};
+  let met="mp";wirePicker("qpMet",v=>met=v);
+  $("#qpFull").onclick=async()=>{await addPago(c.name,c.debe,null,met);closeSheet();render();renderCobrar();renderCaja();toast(`${c.name} saldó todo`);};
+  $("#qpPart").onclick=async()=>{const v=parseMoney($("#qpAmt").value);if(!v){toast("Poné el importe");return;}await addPago(c.name,v,null,met);closeSheet();render();renderCobrar();renderCaja();const a=clientsAgg().find(x=>x.key===k);toast(`${c.name} pagó ${money(v)} · debe ${money(a?a.debe:0)}`);};
   $("#qpWa").onclick=()=>window.open(waLink(c),"_blank");
 }
 function setContactSheet(k,name){
@@ -723,115 +729,105 @@ function setContactSheet(k,name){
 }
 
 // ---- CAJA / arqueo ----
-let cajaDay="";
 const DENOMS=[20000,10000,2000,1000,500,200,100,50,20,10];
 const round0=n=>Math.round(n||0);
-function todayKey(){return dayOf(nowStr());}
-function dkToDate(d){const m=/(\d{1,2})\/(\d{1,2})\/(\d{4})/.exec(d||"");return m?new Date(+m[3],+m[2]-1,+m[1]):new Date();}
-function dateToDk(dt){const p=n=>String(n).padStart(2,'0');return p(dt.getDate())+"/"+p(dt.getMonth()+1)+"/"+dt.getFullYear();}
-function shiftDay(d,n){const dt=dkToDate(d);dt.setDate(dt.getDate()+n);return dateToDk(dt);}
-function dkLabel(d){const dt=dkToDate(d);const dias=["domingo","lunes","martes","miércoles","jueves","viernes","sábado"];const mes=["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];return `${dias[dt.getDay()]} ${dt.getDate()} ${mes[dt.getMonth()]}`;}
-function pagosDia(d){return state.pagos.filter(p=>dayOf(p.fecha)===d).reduce((s,p)=>s+p.importe,0);}
-function acredDia(d){return state.movs.filter(m=>dayOf(m.fecha)===d&&tipoOf(m)==="acreditacion").reduce((s,m)=>s+Math.abs(m.importe),0);}
-function recargaDia(d){return state.movs.filter(m=>dayOf(m.fecha)===d&&tipoOf(m)==="recarga").reduce((s,m)=>s+Math.abs(m.importe),0);}
-function cajaMovsDia(d){return state.cajaMovs.filter(m=>m.dia===d);}
-function cajaSalidas(d){return cajaMovsDia(d).filter(m=>m.tipo!=="ingreso").reduce((s,m)=>s+m.importe,0);}
-function cajaIngresos(d){return cajaMovsDia(d).filter(m=>m.tipo==="ingreso").reduce((s,m)=>s+m.importe,0);}
-function inicialDefault(d){const prev=shiftDay(d,-1);const c=state.caja.cierres[prev];if(c&&c.real!=null)return c.real;return state.caja.base||0;}
-function ganDelDia(d){
-  const map=new Map();const get=name=>{const k=key(name);if(!map.has(k))map.set(k,{key:k,vV:0,gdV:0,gjV:0,vS:0,gdS:0,gjS:0});return map.get(k);};
-  for(const v of state.ventas){if(dayOf(v.fecha)!==d)continue;const a=get(v.cli);const c=catVenta(v.prod);
-    if(c==="virtual"){a.vV+=v.pvp;a.gdV+=v.gd;a.gjV+=v.gj;}else if(c==="sube"){a.vS+=v.pvp;a.gdS+=v.gd;a.gjS+=v.gj;}}
-  let mi=0,venta=0;
-  for(const a of map.values()){const cf=clientConf(a.key);let comV;
-    if(cf.virtMode==="pct")comV=a.vV*(cf.virtPct||0);else if(cf.virtMode==="cero")comV=0;else comV=a.gjV;
-    const comS=cf.subeMode==="pct"?a.vS*(cf.subePct||0):a.gjS;
-    mi+=(a.gdV+a.gjV-comV)+(a.gdS+a.gjS-comS);venta+=a.vV+a.vS;}
-  return {mi,venta};
-}
-async function setCierre(d,f,v){state.caja.cierres[d]=state.caja.cierres[d]||{};state.caja.cierres[d][f]=v;await save();renderCaja();}
-function histHtml(){
-  const days=Object.keys(state.caja.cierres).filter(d=>state.caja.cierres[d].cerrado).sort((a,b)=>parseTs(b+" 00:00:00")-parseTs(a+" 00:00:00")).slice(0,7);
-  if(!days.length)return "";
-  return `<div class="card"><h3>Cierres anteriores</h3>${days.map(d=>{const c=state.caja.cierres[d];const dif=(c.real!=null&&c.esperado!=null)?c.real-c.esperado:0;
-    return `<div class="arow"><div class="l">${dkLabel(d)}</div><div style="text-align:right"><div class="v num">${money(c.real!=null?c.real:0)}</div>${Math.abs(dif)>=1?`<small class="${dif>0?'pos':'neg'}" style="font-weight:700">${dif>0?'sobró ':'faltó '}${money(Math.abs(dif))}</small>`:`<small class="pos" style="font-weight:700">cuadró ✓</small>`}</div></div>`;}).join("")}</div>`;
-}
+const ACCTS=[["mp","Mercado Pago","#00a8e8"],["efectivo","Efectivo","#2bd29f"],["banco","Banco","#5b6bff"]];
+const acctName=a=>({mp:"Mercado Pago",efectivo:"Efectivo",banco:"Banco"}[a]||a);
+function pagosMet(a){return state.pagos.filter(p=>p.metodo===a).reduce((s,p)=>s+p.importe,0);}
+function depCta(a){return state.depositos.filter(d=>d.cuenta===a).reduce((s,d)=>s+d.monto,0);}
+function gastoCta(a){return state.cajaMovs.filter(m=>(m.cuenta||"mp")===a&&m.tipo!=="ingreso").reduce((s,m)=>s+m.importe,0);}
+function ingCta(a){return state.cajaMovs.filter(m=>(m.cuenta||"mp")===a&&m.tipo==="ingreso").reduce((s,m)=>s+m.importe,0);}
+function saldoCta(a){return (state.cuentasIni[a]||0)+pagosMet(a)+ingCta(a)-depCta(a)-gastoCta(a);}
+function acctPicker(id,cur){return `<div class="segctl" id="${id}">${ACCTS.map(([v,t])=>`<button data-v="${v}" class="${v===cur?'on':''}">${t}</button>`).join("")}</div>`;}
+function wirePicker(id,fn){[...document.querySelectorAll("#"+id+" button")].forEach(b=>b.onclick=()=>{[...document.querySelectorAll("#"+id+" button")].forEach(x=>x.classList.remove("on"));b.classList.add("on");fn(b.dataset.v);});}
 function renderCaja(){
-  if(!cajaDay)cajaDay=todayKey();
-  const d=cajaDay;
-  const cob=pagosDia(d),acr=acredDia(d),rec=recargaDia(d),gan=ganDelDia(d).mi;
-  const c=state.caja.cierres[d]||{};
-  const inicial=c.inicial!=null?c.inicial:inicialDefault(d);
-  const cobEf=c.cobrEf!=null?c.cobrEf:cob;
-  const sal=cajaSalidas(d),ing=cajaIngresos(d);
-  const esperado=inicial+cobEf-sal+ing;
-  const real=c.real!=null?c.real:null;
-  const dif=real!=null?real-esperado:null;
   const cs=clientsAgg();const deben=cs.reduce((s,x)=>s+Math.max(0,x.debe),0);
-  const libre=(state.saldoSistema||0)-(state.prestamo||0);
-  const patrim=esperado+(state.saldoSistema||0)+deben-(state.prestamo||0);
-  const movs=cajaMovsDia(d);
-  const tl={gasto:"Gasto",retiro:"Retiro",comision:"Pago comisión",ingreso:"Ingreso"};
+  const totalCtas=saldoCta("mp")+saldoCta("efectivo")+saldoCta("banco");
+  const saldoPw=state.saldoSistema||0,prest=state.prestamo||0;
+  const libre=saldoPw-prest;
+  const patrim=totalCtas+saldoPw+deben-prest;
+  const totalDep=state.depositos.reduce((s,d)=>s+d.monto,0);
+  const feed=[];
+  for(const p of state.pagos)if(p.metodo)feed.push({ts:parseTs(p.fecha),t:p.name,sub:`Cobranza · ${acctName(p.metodo)}`,amt:p.importe,sign:1});
+  for(const d of state.depositos)feed.push({ts:parseTs(d.fecha),t:"Depósito a la empresa",sub:`${acctName(d.cuenta)}${d.nota?" · "+d.nota:""}`,amt:d.monto,sign:-1});
+  for(const m of state.cajaMovs)feed.push({ts:parseTs(m.fecha||""),t:({gasto:"Gasto",retiro:"Retiro",comision:"Pago comisión",ingreso:"Ingreso"}[m.tipo]||m.tipo),sub:`${acctName(m.cuenta||"mp")}${m.concepto?" · "+m.concepto:""}`,amt:m.importe,sign:m.tipo==="ingreso"?1:-1});
+  feed.sort((a,b)=>b.ts-a.ts);const recent=feed.slice(0,12);
   $("#cajaBody").innerHTML=`
-    <div class="daynav"><button id="dPrev">‹</button><div class="dl">${dkLabel(d)}${d===todayKey()?" · hoy":""}</div><button id="dNext">›</button></div>
-    <div class="cajagrid">
-      <div class="minicard"><div class="k">Cobrado</div><div class="v num pos">${money(cob)}</div></div>
-      <div class="minicard"><div class="k">Acreditado</div><div class="v num">${money(acr)}</div></div>
-      <div class="minicard"><div class="k">Recargas</div><div class="v num">${money(rec)}</div></div>
-      <div class="minicard"><div class="k">Ganancia</div><div class="v num" style="color:var(--brand)">${money(gan)}</div></div>
+    <div class="card">
+      <h3>Mis cuentas</h3>
+      ${ACCTS.map(([a,nm,col])=>`<div class="arow edit" data-acc="${a}"><div class="l"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${col};margin-right:7px"></span>${nm}</div><div class="v num">${money(saldoCta(a))} <span class="pencil">ajustar</span></div></div>`).join("")}
+      <div class="totrow"><div class="l">Total en mis cuentas</div><div class="v num">${money(totalCtas)}</div></div>
+      <button class="addbtn" id="cAddMov">+ Gasto / retiro / ingreso</button>
     </div>
     <div class="card">
-      <h3>Arqueo de caja</h3>
-      <div class="arow"><div class="l">Efectivo inicial<small>lo que quedó del día anterior</small></div><input class="ci" id="aIni" type="number" inputmode="numeric" value="${round0(inicial)}"></div>
-      <div class="arow"><div class="l">+ Cobranzas en efectivo<small>cobranzas del día (editable)</small></div><input class="ci" id="aCob" type="number" inputmode="numeric" value="${round0(cobEf)}"></div>
-      <div class="arow"><div class="l">− Salidas de caja<small>${movs.length?movs.length+" movimiento(s)":"sin movimientos"}</small></div><div class="v neg">${money(sal)}${ing?` <small style="color:var(--pos);font-weight:700">+${money(ing)}</small>`:""}</div></div>
-      ${movs.length?`<div>${movs.map(m=>`<div class="movrow"><div class="mc">${tl[m.tipo]||m.tipo}${m.concepto?` <small>· ${m.concepto}</small>`:""}</div><div style="display:flex;gap:8px;align-items:center"><span class="num ${m.tipo==="ingreso"?"pos":"neg"}" style="font-weight:700">${m.tipo==="ingreso"?"+":"−"}${money(m.importe)}</span><button class="xbtn" data-cm="${m.id}">✕</button></div></div>`).join("")}</div>`:""}
-      <button class="addbtn" id="aAddMov">+ Agregar gasto / retiro / ingreso</button>
-      <div class="totrow"><div class="l">Efectivo esperado</div><div class="v num">${money(esperado)}</div></div>
-      <div class="arow" style="margin-top:4px"><div class="l">Efectivo real (contado)</div><input class="ci" id="aReal" type="number" inputmode="numeric" value="${real!=null?round0(real):""}" placeholder="contar"></div>
-      <button class="addbtn" id="aBill">🧮 Contar billetes</button>
-      ${dif!=null?`<div class="difbox ${Math.abs(dif)<1?"ok":dif>0?"warn":"bad"}"><span>${Math.abs(dif)<1?"Caja cuadrada ✓":dif>0?"Sobra en caja":"Falta en caja"}</span><span class="num">${money(Math.abs(dif))}</span></div>`:""}
-      <button class="bigpay" id="aClose" style="background:linear-gradient(135deg,var(--brand),var(--brand-2))">Cerrar caja del día</button>
+      <h3>La empresa (pinweb)</h3>
+      <div class="arow edit" id="eSaldo"><div class="l">Saldo en pinweb<small>para acreditar a clientes</small></div><div class="v num">${money(saldoPw)} <span class="pencil">editar</span></div></div>
+      <div class="arow"><div class="l">Depositado (total)</div><div class="v num">${money(totalDep)}</div></div>
+      <div class="arow edit" id="ePrest"><div class="l">Préstamo empresa</div><div class="v num">${money(prest)} <span class="pencil">editar</span></div></div>
+      <button class="addbtn" id="cAddDep">+ Registrar depósito a la empresa</button>
     </div>
     <div class="card">
-      <h3>Situación</h3>
+      <h3>Resumen</h3>
       <div class="arow"><div class="l">Te deben (total)</div><div class="v num neg">${money(deben)}</div></div>
-      <div class="arow edit" id="eSaldo"><div class="l">Saldo en el sistema</div><div class="v num">${money(state.saldoSistema||0)} <span class="pencil">editar</span></div></div>
-      <div class="arow edit" id="ePrest"><div class="l">Préstamo empresa</div><div class="v num">${money(state.prestamo||0)} <span class="pencil">editar</span></div></div>
-      <div class="arow"><div class="l">Plata libre<small>saldo − préstamo</small></div><div class="v num ${libre<0?"neg":"pos"}">${money(libre)}</div></div>
-      <div class="totrow"><div class="l">Patrimonio<small style="font-weight:500;color:var(--muted);display:block;margin-top:2px">efectivo + saldo + te deben − préstamo</small></div><div class="v num">${money(patrim)}</div></div>
+      <div class="arow"><div class="l">Plata libre<small>saldo pinweb − préstamo</small></div><div class="v num ${libre<0?'neg':'pos'}">${money(libre)}</div></div>
+      <div class="totrow"><div class="l">Patrimonio<small style="font-weight:500;color:var(--muted);display:block;margin-top:2px">cuentas + saldo pinweb + te deben − préstamo</small></div><div class="v num">${money(patrim)}</div></div>
     </div>
-    ${histHtml()}`;
-  $("#dPrev").onclick=()=>{cajaDay=shiftDay(d,-1);renderCaja();};
-  $("#dNext").onclick=()=>{cajaDay=shiftDay(d,1);renderCaja();};
-  $("#aIni").onchange=e=>setCierre(d,"inicial",parseMoney(e.target.value));
-  $("#aCob").onchange=e=>setCierre(d,"cobrEf",parseMoney(e.target.value));
-  $("#aReal").onchange=e=>setCierre(d,"real",e.target.value===""?null:parseMoney(e.target.value));
-  $("#aAddMov").onclick=()=>addCajaMovSheet(d);
-  $("#aBill").onclick=()=>billeteSheet(d);
-  $("#aClose").onclick=()=>cerrarCaja(d,esperado);
+    ${recent.length?`<div class="card"><h3>Movimientos recientes</h3>${recent.map(f=>`<div class="movrow"><div class="mc">${f.t}<small style="display:block;margin-top:1px">${f.sub}</small></div><span class="num ${f.sign>0?'pos':'neg'}" style="font-weight:700">${f.sign>0?'+':'−'}${money(f.amt)}</span></div>`).join("")}</div>`:""}`;
+  [...document.querySelectorAll('#cajaBody [data-acc]')].forEach(r=>r.onclick=()=>adjustAccountSheet(r.dataset.acc));
+  $("#cAddMov").onclick=()=>addCajaMovSheet();
+  $("#cAddDep").onclick=()=>registrarDepositoSheet();
   $("#eSaldo").onclick=()=>editField("saldoSistema");
   $("#ePrest").onclick=()=>editField("prestamo");
-  [...document.querySelectorAll("#cajaBody .xbtn[data-cm]")].forEach(b=>b.onclick=async()=>{state.cajaMovs=state.cajaMovs.filter(m=>m.id!==b.dataset.cm);await save();renderCaja();});
 }
-function addCajaMovSheet(d){
-  openSheet(`<h3>Movimiento de caja</h3>
+function adjustAccountSheet(a){
+  openSheet(`<h3>Ajustar ${acctName(a)}</h3>
+    <p class="hint">Poné cuánto tenés realmente ahora en ${acctName(a)} y lo dejo cuadrado.</p>
+    <label class="field">Saldo actual</label>
+    <input type="number" id="ajv" inputmode="numeric" value="${round0(saldoCta(a))}">
+    ${a==="efectivo"?'<button class="addbtn" id="ajBill">🧮 Contar billetes</button>':''}
+    <div class="seg" style="margin-top:14px"><button class="sel" id="ajSave">Guardar</button><button id="ajCancel">Cancelar</button></div>`);
+  $("#ajCancel").onclick=closeSheet;
+  const bb=$("#ajBill");if(bb)bb.onclick=()=>billeteSheet(v=>{$("#ajv").value=round0(v);});
+  $("#ajSave").onclick=async()=>{const real=parseMoney($("#ajv").value);state.cuentasIni[a]=real-(pagosMet(a)+ingCta(a)-depCta(a)-gastoCta(a));await save();closeSheet();renderCaja();toast("Saldo actualizado");};
+}
+function registrarDepositoSheet(){
+  openSheet(`<h3>Depósito a la empresa</h3>
+    <p class="hint">Plata que pusiste en pinweb para tener saldo y acreditar. Suma a tu saldo en pinweb y sale de la cuenta que elijas.</p>
+    <label class="field">¿De qué cuenta salió?</label>
+    ${acctPicker("dpCta","mp")}
+    <label class="field" style="margin-top:10px">Monto</label>
+    <input type="number" id="dpImp" inputmode="numeric" placeholder="$">
+    <label class="field" style="margin-top:10px">Nota (opcional)</label>
+    <input type="text" id="dpNota" placeholder="Ej: transferencia a pinweb">
+    <div class="seg" style="margin-top:14px"><button class="sel" id="dpSave">Registrar</button><button id="dpCancel">Cancelar</button></div>`);
+  let cta="mp";wirePicker("dpCta",v=>cta=v);
+  $("#dpCancel").onclick=closeSheet;
+  $("#dpSave").onclick=async()=>{const imp=parseMoney($("#dpImp").value);if(!imp){toast("Poné el monto");return;}
+    state.depositos.push({id:"d"+Date.now()+Math.random().toString(36).slice(2,5),fecha:nowStr(),monto:imp,cuenta:cta,nota:$("#dpNota").value.trim()});
+    state.saldoSistema=(state.saldoSistema||0)+imp;
+    await save();closeSheet();renderCaja();toast("Depósito registrado");};
+}
+function addCajaMovSheet(){
+  openSheet(`<h3>Movimiento de plata</h3>
     <label class="field">Tipo</label>
     <select id="cmTipo" class="search" style="margin-bottom:6px">
       <option value="gasto">Gasto (sale plata)</option>
       <option value="retiro">Retiro (me llevo)</option>
       <option value="comision">Pago de comisión</option>
       <option value="ingreso">Ingreso extra (entra plata)</option></select>
-    <label class="field">Concepto (opcional)</label>
+    <label class="field">Cuenta</label>
+    ${acctPicker("cmCta","mp")}
+    <label class="field" style="margin-top:10px">Concepto (opcional)</label>
     <input type="text" id="cmConc" placeholder="Ej: nafta, retiro, etc.">
     <label class="field" style="margin-top:10px">Importe</label>
     <input type="number" id="cmImp" inputmode="numeric" placeholder="$">
     <div class="seg" style="margin-top:14px"><button class="sel" id="cmSave">Agregar</button><button id="cmCancel">Cancelar</button></div>`);
+  let cta="mp";wirePicker("cmCta",v=>cta=v);
   $("#cmCancel").onclick=closeSheet;
   $("#cmSave").onclick=async()=>{const imp=parseMoney($("#cmImp").value);if(!imp){toast("Poné el importe");return;}
-    state.cajaMovs.push({id:"cm"+Date.now()+Math.random().toString(36).slice(2,5),dia:d,tipo:$("#cmTipo").value,concepto:$("#cmConc").value.trim(),importe:imp});await save();closeSheet();renderCaja();toast("Movimiento agregado");};
+    state.cajaMovs.push({id:"cm"+Date.now()+Math.random().toString(36).slice(2,5),fecha:nowStr(),cuenta:cta,tipo:$("#cmTipo").value,concepto:$("#cmConc").value.trim(),importe:imp});await save();closeSheet();renderCaja();toast("Movimiento agregado");};
 }
-function billeteSheet(d){
+function billeteSheet(cb){
   const rows=DENOMS.map(v=>`<div class="bd">${money(v)}</div><input class="bq" data-v="${v}" type="number" inputmode="numeric" min="0" placeholder="0"><div class="bs" id="bs${v}">$0</div>`).join("");
   openSheet(`<h3>Contar billetes</h3>
     <p class="hint">Poné cuántos tenés de cada uno y te sumo el total.</p>
@@ -841,13 +837,7 @@ function billeteSheet(d){
   const recalc=()=>{let t=0;[...document.querySelectorAll(".bq")].forEach(i=>{const v=+i.dataset.v,q=parseInt(i.value)||0;const st=v*q;t+=st;$("#bs"+v).textContent=money(st);});$("#bTot").textContent=money(t);return t;};
   [...document.querySelectorAll(".bq")].forEach(i=>i.oninput=recalc);
   $("#bCancel").onclick=closeSheet;
-  $("#bSave").onclick=async()=>{const t=recalc();closeSheet();await setCierre(d,"real",t);toast("Total contado: "+money(t));};
-}
-function cerrarCaja(d,esp){
-  const cc=state.caja.cierres[d]=state.caja.cierres[d]||{};
-  if(cc.real==null)cc.real=esp;
-  cc.cerrado=true;cc.esperado=esp;
-  save();renderCaja();toast("Caja cerrada ✓");
+  $("#bSave").onclick=()=>{const t=recalc();closeSheet();cb&&cb(t);};
 }
 
 // ---- Config de clientes ----
@@ -959,7 +949,8 @@ function openClient(key){
       <div><div class="k">Debe</div><div class="v num ${Math.round(c.debe)<=0?'pos':'neg'}">${money(c.debe)}</div></div>
     </div>
     <label class="field">Registrar un pago de ${c.name}</label>
-    <div class="seg"><input type="number" id="cPay" inputmode="numeric" placeholder="Pagó $" style="flex:2">
+    ${acctPicker("cMet","mp")}
+    <div class="seg" style="margin-top:8px"><input type="number" id="cPay" inputmode="numeric" placeholder="Pagó $" style="flex:2">
       <button class="go" id="cPayBtn" style="flex:1">Sumar pago</button></div>
     ${Math.round(c.debe)>0?`<button class="bigpay" id="cFull">Saldó todo · ${money(c.debe)}</button>`:""}
     <div class="seg" style="margin-top:8px"><button class="go" id="oWa" style="flex:2;background:#e7f8f0;color:#0a8f5b">WhatsApp</button><button id="oContact" style="flex:1">✎ Contacto</button></div>
@@ -972,9 +963,10 @@ function openClient(key){
     ${op?`<div class="mrow"><div class="d">Saldo anterior<small>de tu Excel</small></div><div class="num neg" style="font-weight:700">${money(op.total)}</div></div>`:""}
     ${acc.map(m=>{const dv=m.importe>0;return `<div class="mrow"><div class="d">${dv?"Devolución":"Acreditación"}<small>${m.fecha}</small></div>
       <div class="num ${dv?'pos':'neg'}" style="font-weight:700">${money(Math.abs(m.importe))}</div></div>`}).join("")}`);
+  let cMet="mp";wirePicker("cMet",v=>cMet=v);
   $("#cPayBtn").onclick=async()=>{const v=parseMoney($("#cPay").value);if(!v){toast("Poné el importe");return;}
-    await addPago(c.name,v);openClient(key);render();renderCobrar();toast(`Sumado ${money(v)} a ${c.name}`);};
-  const cf=$("#cFull");if(cf)cf.onclick=async()=>{await addPago(c.name,c.debe);closeSheet();render();renderCobrar();toast(`${c.name} saldó todo`);};
+    await addPago(c.name,v,null,cMet);openClient(key);render();renderCobrar();renderCaja();toast(`Sumado ${money(v)} a ${c.name}`);};
+  const cf=$("#cFull");if(cf)cf.onclick=async()=>{await addPago(c.name,c.debe,null,cMet);closeSheet();render();renderCobrar();renderCaja();toast(`${c.name} saldó todo`);};
   $("#oWa").onclick=()=>window.open(waLink(c),"_blank");
   $("#oContact").onclick=()=>setContactSheet(key,c.name);
   const eo=$("#editOpen");if(eo)eo.onclick=()=>editOpening(key,c.name);
@@ -997,14 +989,15 @@ function editOpening(key,name){
     await save();openClient(key);render();toast("Guardado");};
 }
 
-async function addPago(name,importe,fecha){
-  state.pagos.push({id:"p"+Date.now()+Math.random().toString(36).slice(2,6),name,importe,fecha:fecha||nowStr()});await save();}
+async function addPago(name,importe,fecha,metodo){
+  state.pagos.push({id:"p"+Date.now()+Math.random().toString(36).slice(2,6),name,importe,fecha:fecha||nowStr(),metodo:metodo||"mp"});await save();}
 
 $("#pbAdd").onclick=async()=>{
   const name=$("#pbCli").value.trim();const v=parseMoney($("#pbImp").value);
   if(!name){toast("Elegí el cliente");return;}if(!v){toast("Poné cuánto pagó");return;}
   const ex=clientsAgg().find(c=>c.key===key(name));const finalName=ex?ex.name:name;
-  await addPago(finalName,v);render();
+  const met=($("#pbMet")&&$("#pbMet").value)||"mp";
+  await addPago(finalName,v,null,met);render();renderCaja();
   const after=clientsAgg().find(c=>c.key===key(name));
   $("#pbCli").value="";$("#pbImp").value="";$("#pbCli").focus();
   toast(`${finalName} pagó ${money(v)} · debe ${money(after?after.debe:0)}`);
@@ -1079,7 +1072,7 @@ function switchTab(t){
   $("#viewCAJA").style.display=t==="caja"?"block":"none";
   $("#viewGAN").style.display=t==="gan"?"block":"none";
   $("#viewPAG").style.display=t==="pag"?"block":"none";
-  $("#title").textContent=t==="cc"?"Cuenta corriente":t==="cob"?"Cobranza":t==="caja"?"Caja":t==="gan"?"Ganancias":"Gan a pagar";
+  $("#title").textContent=t==="cc"?"Cuenta corriente":t==="cob"?"Cobranza":t==="caja"?"Mi plata":t==="gan"?"Ganancias":"Gan a pagar";
   $("#importBtn").textContent=t==="cc"?"↑ Importar CSV":"↑ Importar ventas";
   $("#importBtn").style.display=(t==="pag"||t==="cob"||t==="caja")?"none":"block";
   $("#moreBtn").style.display=t==="cc"?"block":"none";
