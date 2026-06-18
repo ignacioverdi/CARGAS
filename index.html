@@ -12,21 +12,23 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#eceef6; --bg-2:#e3e6f2; --card:#ffffff; --ink:#171a2b; --ink-2:#3b3f55;
-    --muted:#797f9b; --line:#e7e9f3; --line-2:#eef0f7;
-    --brand:#5b4bff; --brand-2:#8a7bff;
-    --pos:#08b67a; --pos-soft:#e7f8f0; --neg:#ff486a; --neg-soft:#ffe9ee; --amber:#ff9f1c;
-    --panel-1:#1c1f3b; --panel-2:#3a2a73; --panel-3:#5b4bff;
-    --shadow:0 18px 40px -26px rgba(28,31,59,.55);
-    --shadow-sm:0 8px 22px -18px rgba(28,31,59,.5);
+    --bg:#080a14; --bg-2:#0e1020; --card:#14162a; --ink:#eceeff; --ink-2:#c0c4e6;
+    --muted:#7f86b0; --line:rgba(255,255,255,.08); --line-2:rgba(255,255,255,.05);
+    --brand:#7b6bff; --brand-2:#a98bff;
+    --pos:#2fe8a4; --pos-soft:rgba(47,232,164,.13); --neg:#ff5d7e; --neg-soft:rgba(255,93,126,.14); --amber:#ffb443;
+    --panel-1:#16183a; --panel-2:#3a2a73; --panel-3:#6b5bff;
+    --shadow:0 24px 60px -30px rgba(0,0,0,.85);
+    --shadow-sm:0 12px 30px -20px rgba(0,0,0,.7);
     --r:18px;
     --disp:'Space Grotesk',-apple-system,BlinkMacSystemFont,sans-serif;
     --body:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
   }
   *{box-sizing:border-box;margin:0;padding:0}
   html,body{background:
-    radial-gradient(1200px 500px at 80% -10%, #e9e6ff 0%, transparent 60%),
-    radial-gradient(900px 500px at -10% 0%, #e2f3ff 0%, transparent 55%), var(--bg);
+    radial-gradient(1100px 620px at 82% -8%, rgba(123,107,255,.24) 0%, transparent 58%),
+    radial-gradient(900px 600px at -8% 4%, rgba(40,196,255,.15) 0%, transparent 55%),
+    radial-gradient(780px 540px at 50% 116%, rgba(168,139,255,.13) 0%, transparent 60%), var(--bg);
+    background-attachment:fixed;
     color:var(--ink);font-family:var(--body);-webkit-font-smoothing:antialiased}
   body{max-width:1360px;margin:0 auto;padding:0 0 110px}
   .num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1}
@@ -243,6 +245,35 @@
   .pinpad button:active{background:#e4e0ff;transform:scale(.96)}
   .pinpad button.fn{background:transparent;font-size:18px;color:var(--muted)}
   .pinlink{background:none!important;border:none;color:var(--brand)!important;font-weight:700;font-size:13px;cursor:pointer;margin-top:10px;width:auto!important;padding:6px!important}
+  /* ===== tema oscuro / futurista (overrides) ===== */
+  .card{background:linear-gradient(180deg,rgba(255,255,255,.055),rgba(255,255,255,.02));border:1px solid var(--line);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:var(--shadow)}
+  header{background:linear-gradient(180deg,rgba(8,10,20,.94),rgba(8,10,20,.7) 72%,transparent);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+  .tabs{background:rgba(255,255,255,.05);border:1px solid var(--line)}
+  .tab.on{background:linear-gradient(135deg,rgba(123,107,255,.32),rgba(169,139,255,.18));color:#fff;box-shadow:0 6px 18px -8px rgba(123,107,255,.65)}
+  .brand .acct{background:rgba(123,107,255,.16);border-color:rgba(123,107,255,.4);color:var(--brand-2)}
+  .toolbar .sortbtn{background:rgba(123,107,255,.14);border-color:rgba(255,255,255,.08);color:var(--brand-2)}
+  .paybar{background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02));border-color:var(--line);backdrop-filter:blur(12px)}
+  .paybar input,.paybar select,.arow input.ci,.billgrid input,.loginbox input,input[type=text],input[type=number],textarea{background:rgba(255,255,255,.05);color:var(--ink);border-color:var(--line)}
+  input::placeholder,textarea::placeholder{color:#5a6188}
+  tbody tr:hover{background:rgba(255,255,255,.05)}
+  .addbtn{background:rgba(123,107,255,.15);color:var(--brand-2)}
+  .addbtn:active{transform:scale(.99)}
+  .totrow{border-top-color:rgba(255,255,255,.16)}
+  .seg button{color:var(--ink)} .seg button.sel{background:var(--brand);color:#fff;border-color:transparent}
+  .segctl button{color:var(--muted)}
+  .toast{background:#1b1e36;border:1px solid var(--line)}
+  .grab{background:rgba(255,255,255,.22)}
+  .difbox.bad{background:var(--neg-soft);color:var(--neg)} .difbox.warn{background:rgba(255,180,67,.14);color:var(--amber)} .difbox.ok{background:var(--pos-soft);color:var(--pos)}
+  .gtable td.gtot{background:rgba(255,180,67,.10)}
+  .gtable td.vsep{border-left-color:rgba(255,255,255,.1)}
+  .menulist li{border-color:var(--line)}
+  .pinpad button{background:rgba(123,107,255,.13);color:var(--ink)} .pinpad button:active{background:rgba(123,107,255,.24)}
+  .logo,.loginbox .llogo{box-shadow:0 10px 26px -8px rgba(123,107,255,.75)}
+  .fab .btn{box-shadow:0 16px 34px -12px rgba(123,107,255,.8)}
+  .fab .btn.sec{background:rgba(20,22,42,.92);color:var(--ink);border:1px solid var(--line);backdrop-filter:blur(10px)}
+  .mrow{border-bottom-color:var(--line)}
+  /* Plata en 2 columnas en pantallas anchas */
+  @media(min-width:720px){#cajaBody{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start}#cajaBody .card{margin-bottom:0}}
 </style>
 
 <header>
