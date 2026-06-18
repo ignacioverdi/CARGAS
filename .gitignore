@@ -1,0 +1,9 @@
+# Solo se sube la app. Lo demas (scripts con token, etc.) NO se sube.
+*
+!index.html
+!manifest.json
+!sw.js
+!icon-192.png
+!icon-512.png
+!icon-180.png
+!.gitignore
