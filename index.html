@@ -352,6 +352,7 @@
 <input type="file" id="file" class="filein" accept=".csv,text/csv">
 <input type="file" id="fileG" class="filein" accept=".csv,text/csv">
 <input type="file" id="fileMP" class="filein" accept=".json,application/json">
+<input type="file" id="fileBackup" class="filein" accept=".json,application/json">
 
 <div class="scrim" id="scrim"><div class="sheet" id="sheet"></div></div>
 <div class="toast" id="toast"></div>
@@ -1113,12 +1114,54 @@ function moreMenu(){
     <li id="mCli">⚙️ Clientes y comisiones</li>
     <li id="mAcc">Acreditar saldo a un cliente (a mano)</li>
     <li id="mRec">Cargar recarga a mi cuenta</li>
+    <li id="mBackup">💾 Copia de seguridad</li>
     ${useCloud?'<li id="mOut" style="color:var(--neg)">Cerrar sesión</li>':''}
   </ul>`);
   $("#mCli").onclick=()=>clientesConfigSheet();
   $("#mAcc").onclick=()=>addMovSheet("acreditacion");
   $("#mRec").onclick=()=>addMovSheet("recarga");
+  $("#mBackup").onclick=()=>backupSheet();
   const o=$("#mOut");if(o)o.onclick=async()=>{closeSheet();try{await fauth.signOut();}catch(e){}};
+}
+function backupSheet(){
+  const json=JSON.stringify(state);const kb=Math.round(json.length/1024);const pct=Math.min(100,Math.round(json.length/1048576*100));
+  openSheet(`<h3>💾 Copia de seguridad</h3>
+    <p class="hint">Tus datos ocupan <b>${kb} KB</b> (${pct}% del máximo). Conviene exportar una copia seguido — es tu red de seguridad.</p>
+    <button class="addbtn" id="bkExport">⬇️ Exportar copia (descargar archivo)</button>
+    <button class="addbtn" id="bkImport">⬆️ Restaurar desde un archivo</button>
+    ${useCloud?'<button class="addbtn" id="bkSnap">↩️ Restaurar respaldo automático (de hoy temprano)</button>':''}
+    <p class="hint" style="margin-top:10px;color:var(--neg)">Restaurar reemplaza TODOS los datos por los de la copia. Usalo solo si algo se rompió.</p>
+    <button id="bkClose" style="margin-top:6px;width:100%">Cerrar</button>`);
+  $("#bkClose").onclick=closeSheet;
+  $("#bkExport").onclick=()=>exportBackup();
+  $("#bkImport").onclick=()=>$("#fileBackup").click();
+  const bs=$("#bkSnap");if(bs)bs.onclick=()=>restoreSnap();
+}
+function exportBackup(){
+  const json=JSON.stringify(state);const d=new Date();const p=n=>String(n).padStart(2,'0');
+  const fn=`cargas-backup-${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}.json`;
+  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([json],{type:"application/json"}));a.download=fn;
+  document.body.appendChild(a);a.click();a.remove();toast("Copia descargada");
+}
+async function importBackupFile(text){
+  let data;try{data=JSON.parse(text);}catch(e){toast("Archivo inválido");return;}
+  if(!data||typeof data!=="object"||(!data.pagos&&!data.opening&&!data.ventas)){toast("No parece una copia de Cargas");return;}
+  if(!confirm("Esto reemplaza TODOS los datos actuales por los de la copia. ¿Seguro?"))return;
+  state=data;await save();closeSheet();renderAll();toast("Datos restaurados desde el archivo");
+}
+async function restoreSnap(){
+  if(!fsnap)return;
+  try{const s=await fsnap.get();if(!s.exists){toast("Todavía no hay respaldo automático");return;}
+    if(!confirm("Restaurar el respaldo automático (estado de hoy temprano)? Reemplaza los datos actuales."))return;
+    state=JSON.parse(s.data().v);await save();closeSheet();renderAll();toast("Respaldo restaurado");
+  }catch(e){toast("No se pudo restaurar");}
+}
+async function maybeSnapshot(){
+  if(!fsnap)return;
+  const today=new Date().toISOString().slice(0,10);
+  try{const s=await fsnap.get();const last=s.exists?s.data().d:null;
+    if(last!==today)await fsnap.set({v:JSON.stringify(state),d:today,t:Date.now()});
+  }catch(e){}
 }
 function addMovSheet(tipo){
   openSheet(`<h3>${tipo==="recarga"?"Recarga a mi cuenta":"Acreditar a cliente"}</h3>
@@ -1210,6 +1253,7 @@ function importMPSheet(){
   $("#mpSave").onclick=async()=>{const t=$("#mpPaste").value;if(!t.trim()){toast("Pegá el contenido o elegí el archivo");return;}await importMP(t);};
 }
 $("#fileMP").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>importMP(r.result);r.readAsText(f,"utf-8");e.target.value="";};
+$("#fileBackup").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>importBackupFile(r.result);r.readAsText(f,"utf-8");e.target.value="";};
 function resolveMPSheet(id){
   const it=state.mpInbox.find(x=>String(x.id)===String(id));if(!it)return;
   const same=it.cuit?state.mpInbox.filter(x=>x.cuit===it.cuit):[it];
@@ -1277,10 +1321,10 @@ let booted=false;
 
 // ---- Firebase (nube + login) ----
 const FIREBASE_CONFIG={apiKey:"AIzaSyAVE6FFL7nCU18Iqhwb96RnV9mQRcYmIZg",authDomain:"cargasiv.firebaseapp.com",projectId:"cargasiv",storageBucket:"cargasiv.firebasestorage.app",messagingSenderId:"231405999919",appId:"1:231405999919:web:794061b711d3ddd07533da"};
-let fauth=null,fdoc=null,fqueue=null,useCloud=false,lastCloud=null;
+let fauth=null,fdoc=null,fqueue=null,fsnap=null,useCloud=false,lastCloud=null;
 function initFirebase(){
   if(typeof firebase==="undefined"||!firebase.initializeApp)return false;
-  try{firebase.initializeApp(FIREBASE_CONFIG);fauth=firebase.auth();fdoc=firebase.firestore().collection("app").doc("state");fqueue=firebase.firestore().collection("app").doc("mpqueue");return true;}
+  try{firebase.initializeApp(FIREBASE_CONFIG);fauth=firebase.auth();fdoc=firebase.firestore().collection("app").doc("state");fqueue=firebase.firestore().collection("app").doc("mpqueue");fsnap=firebase.firestore().collection("app").doc("snap");return true;}
   catch(e){return false;}
 }
 const cloudStore={
@@ -1355,7 +1399,7 @@ function pinComplete(){
     }
   }
 }
-async function pinUnlocked(){hideLogin();if(!booted){booted=true;await bootApp();setupSync();setupMPQueue();}}
+async function pinUnlocked(){hideLogin();if(!booted){booted=true;await bootApp();setupSync();setupMPQueue();maybeSnapshot();}}
 $("#pinForgot").onclick=()=>showEmail();
 
 async function bootApp(){await load();renderAll();}
