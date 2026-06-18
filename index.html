@@ -966,6 +966,7 @@ function openClient(key){
       <button class="go" id="cPayBtn" style="flex:1">Sumar pago</button></div>
     ${Math.round(c.debe)>0?`<button class="bigpay" id="cFull">Saldó todo · ${money(c.debe)}</button>`:""}
     <div class="seg" style="margin-top:8px"><button class="go" id="oWa" style="flex:2;background:#e7f8f0;color:#0a8f5b">WhatsApp</button><button id="oContact" style="flex:1">✎ Contacto</button></div>
+    <button class="addbtn" id="oCierre">📋 Cierre del día (WhatsApp)</button>
     ${op?`<div class="hint" style="margin-top:14px">Saldo de arranque (de tu Excel): <b>${money(op.total)}</b> · <button class="pencil" id="editOpen" style="background:none;border:none;color:var(--brand);font-weight:700;cursor:pointer;text-decoration:underline">ajustar</button></div>`:`<div class="hint" style="margin-top:14px"><button class="pencil" id="editOpen" style="background:none;border:none;color:var(--brand);font-weight:700;cursor:pointer;text-decoration:underline">+ Cargar saldo de arranque</button></div>`}
     <label class="field" style="margin-top:14px">Pagos</label>
     ${pays.length?pays.map(p=>`<div class="mrow"><div class="d">Pago<small>${p.fecha}</small></div>
@@ -980,10 +981,41 @@ function openClient(key){
     await addPago(c.name,v,null,cMet);openClient(key);render();renderCobrar();renderCaja();toast(`Sumado ${money(v)} a ${c.name}`);};
   const cf=$("#cFull");if(cf)cf.onclick=async()=>{await addPago(c.name,c.debe,null,cMet);closeSheet();render();renderCobrar();renderCaja();toast(`${c.name} saldó todo`);};
   $("#oWa").onclick=()=>window.open(waLink(c),"_blank");
+  $("#oCierre").onclick=()=>cierreSheet(key);
   $("#oContact").onclick=()=>setContactSheet(key,c.name);
   const eo=$("#editOpen");if(eo)eo.onclick=()=>editOpening(key,c.name);
   [...document.querySelectorAll("#sheet .xbtn")].forEach(b=>b.onclick=async()=>{
     state.pagos=state.pagos.filter(p=>p.id!==b.dataset.pid);await save();openClient(key);render();toast("Pago eliminado");});
+}
+
+function diaNombre(d){const m=/(\d{1,2})\/(\d{1,2})\/(\d{4})/.exec(d||"");if(!m)return"";const dt=new Date(+m[3],+m[2]-1,+m[1]);return ["domingo","lunes","martes","miércoles","jueves","viernes","sábado"][dt.getDay()]||"";}
+function cierreInfo(k){
+  const c=clientsAgg().find(x=>x.key===k);if(!c)return null;
+  let lastDay=null,lastTs=-1;
+  for(const v of state.ventas){if(key(v.cli)!==k)continue;const d=dayOf(v.fecha);if(!d)continue;const ts=parseTs(d+" 00:00:00");if(ts>lastTs){lastTs=ts;lastDay=d;}}
+  let V=0,S=0;
+  if(lastDay)for(const v of state.ventas){if(key(v.cli)!==k)continue;if(dayOf(v.fecha)!==lastDay)continue;const cat=catVenta(v.prod);if(cat==="virtual")V+=v.pvp;else if(cat==="sube")S+=v.pvp;}
+  return {c,lastDay,V,S,D:c.debe,deuda:c.debe-V-S};
+}
+function cierreMsg(k){
+  const i=cierreInfo(k);if(!i)return"";
+  const dia=diaNombre(i.lastDay);const f=n=>Math.round(n||0).toLocaleString("es-AR");
+  const total=i.V+i.S;
+  return `venta virtual ${dia}: ${f(i.V)}\nventa sube ${dia}: ${f(i.S)}\n\nTOTAL A PAGAR: ${f(total)}\n\nMe lo mandás por favor? Gracias! 🙏`;
+}
+function cierreLink(k){const ct=state.contacts[k]||{};const ph=(ct.phone||"").replace(/\D/g,"");return (ph?`https://wa.me/${ph}`:"https://wa.me/")+`?text=${encodeURIComponent(cierreMsg(k))}`;}
+function cierreSheet(k){
+  const c=clientsAgg().find(x=>x.key===k);if(!c)return;
+  const i=cierreInfo(k);const msg=cierreMsg(k);const ct=state.contacts[k]||{};
+  openSheet(`<h3>Cierre del día · ${c.name}</h3>
+    ${i&&i.lastDay?`<p class="hint">Ventas del <b>${diaNombre(i.lastDay)} ${i.lastDay}</b> · podés editar el texto antes de enviar</p>`:'<p class="hint" style="color:var(--neg)">No encontré ventas recientes de este cliente.</p>'}
+    <textarea id="ciTxt" class="pasta" style="min-height:160px;font:inherit;line-height:1.5">${msg.replace(/</g,"&lt;")}</textarea>
+    ${!ct.phone?'<p class="hint" style="color:var(--neg)">⚠️ Este cliente no tiene teléfono cargado (cargalo en ✎ Contacto para que abra el chat directo).</p>':""}
+    <div class="seg" style="margin-top:14px"><button class="sel" id="ciWa">Enviar por WhatsApp</button><button id="ciCopy">Copiar</button></div>
+    <button id="ciClose" style="margin-top:10px;width:100%">Cerrar</button>`);
+  $("#ciClose").onclick=()=>openClient(k);
+  $("#ciWa").onclick=()=>{const t=$("#ciTxt").value;const ph=((state.contacts[k]||{}).phone||"").replace(/\D/g,"");window.open((ph?`https://wa.me/${ph}`:"https://wa.me/")+`?text=${encodeURIComponent(t)}`,"_blank");};
+  $("#ciCopy").onclick=async()=>{try{await navigator.clipboard.writeText($("#ciTxt").value);toast("Copiado");}catch(e){toast("No se pudo copiar");}};
 }
 
 function editOpening(key,name){
