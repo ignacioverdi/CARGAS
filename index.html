@@ -1078,9 +1078,8 @@ $("#fileG").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new File
 
 // ---- Pagos de Mercado Pago (match por CUIT) ----
 function fechaToStr(d){const m=/(\d{4})-(\d{2})-(\d{2})/.exec(d||"");return m?`${m[3]}/${m[2]}/${m[1]} 00:00:00`:(d||nowStr());}
-async function importMP(text){
-  let arr;try{arr=JSON.parse(text);}catch(e){toast("Archivo inválido");return;}
-  if(!Array.isArray(arr)){toast("Formato inesperado");return;}
+async function applyMPcobros(arr){
+  if(!Array.isArray(arr))return {aplic:0,nuevos:0,ign:0,dup:0};
   const seen=new Set(state.pagos.filter(p=>p.mpId).map(p=>String(p.mpId)));
   const inboxIds=new Set(state.mpInbox.map(x=>String(x.id)));
   let aplic=0,nuevos=0,ign=0,dup=0;
@@ -1095,7 +1094,14 @@ async function importMP(text){
       seen.add(id);aplic++;
     }else{state.mpInbox.push({id,fecha,monto,cuit});inboxIds.add(id);nuevos++;}
   }
-  await save();closeSheet();renderAll();
+  if(aplic||nuevos)await save();
+  return {aplic,nuevos,ign,dup};
+}
+async function importMP(text){
+  let arr;try{arr=JSON.parse(text);}catch(e){toast("Archivo inválido");return;}
+  if(!Array.isArray(arr)){toast("Formato inesperado");return;}
+  const {aplic,nuevos,ign,dup}=await applyMPcobros(arr);
+  closeSheet();renderAll();
   toast(`MP: ${aplic} aplicados · ${nuevos} a confirmar · ${ign} ignorados${dup?` · ${dup} repetidos`:""}`);
   if(nuevos)switchTab("caja");
 }
@@ -1178,10 +1184,10 @@ let booted=false;
 
 // ---- Firebase (nube + login) ----
 const FIREBASE_CONFIG={apiKey:"AIzaSyAVE6FFL7nCU18Iqhwb96RnV9mQRcYmIZg",authDomain:"cargasiv.firebaseapp.com",projectId:"cargasiv",storageBucket:"cargasiv.firebasestorage.app",messagingSenderId:"231405999919",appId:"1:231405999919:web:794061b711d3ddd07533da"};
-let fauth=null,fdoc=null,useCloud=false,lastCloud=null;
+let fauth=null,fdoc=null,fqueue=null,useCloud=false,lastCloud=null;
 function initFirebase(){
   if(typeof firebase==="undefined"||!firebase.initializeApp)return false;
-  try{firebase.initializeApp(FIREBASE_CONFIG);fauth=firebase.auth();fdoc=firebase.firestore().collection("app").doc("state");return true;}
+  try{firebase.initializeApp(FIREBASE_CONFIG);fauth=firebase.auth();fdoc=firebase.firestore().collection("app").doc("state");fqueue=firebase.firestore().collection("app").doc("mpqueue");return true;}
   catch(e){return false;}
 }
 const cloudStore={
@@ -1192,6 +1198,15 @@ function setupSync(){
   fdoc.onSnapshot(s=>{
     if(!s.exists)return;const v=s.data().v;
     if(v&&v!==lastCloud){lastCloud=v;try{state=JSON.parse(v);}catch(e){return;}renderAll();}
+  },err=>{});
+}
+function setupMPQueue(){
+  if(!fqueue)return;
+  fqueue.onSnapshot(async s=>{
+    if(!s.exists)return;const v=s.data().v;if(!v)return;
+    let arr;try{arr=JSON.parse(v);}catch(e){return;}
+    const {aplic,nuevos}=await applyMPcobros(arr);
+    if(aplic||nuevos){renderAll();toast(`Mercado Pago: ${aplic} cobro(s) nuevo(s)${nuevos?` · ${nuevos} por confirmar`:""}`);}
   },err=>{});
 }
 function showLogin(){$("#login").classList.add("on");}
@@ -1247,7 +1262,7 @@ function pinComplete(){
     }
   }
 }
-async function pinUnlocked(){hideLogin();if(!booted){booted=true;await bootApp();setupSync();}}
+async function pinUnlocked(){hideLogin();if(!booted){booted=true;await bootApp();setupSync();setupMPQueue();}}
 $("#pinForgot").onclick=()=>showEmail();
 
 async function bootApp(){await load();renderAll();}
