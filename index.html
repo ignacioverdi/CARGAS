@@ -278,7 +278,44 @@
   .totrow .l small{display:block;font-weight:500;color:var(--muted);font-size:11.5px;margin-top:2px}
   @media(min-width:720px){#cajaBody{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}#cajaBody .card{margin-bottom:0}}
   @media(min-width:1280px){#cajaBody{grid-template-columns:1fr 1fr 1fr}}
-  @media(min-width:1100px){#gasBody,#tendBody{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}#gasBody .card,#tendBody .card{margin-bottom:0}}
+  .kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:14px}
+  @media(min-width:680px){.kpis{grid-template-columns:repeat(4,1fr)}}
+  .kpi{position:relative;overflow:hidden;background:linear-gradient(160deg,rgba(255,255,255,.07),rgba(255,255,255,.02));border:1px solid var(--line);border-radius:16px;padding:14px 16px;box-shadow:var(--shadow-sm)}
+  .kpi .kl{font-size:11px;color:var(--muted);font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+  .kpi .kv{font-family:var(--disp);font-size:24px;font-weight:700;margin-top:7px;line-height:1.05;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .kpi .ks{font-size:11.5px;color:var(--muted);margin-top:5px}
+  .kpi .glow{position:absolute;right:-26px;top:-26px;width:84px;height:84px;border-radius:50%;filter:blur(32px);opacity:.55;pointer-events:none}
+  .chip{display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:800;padding:2px 8px;border-radius:99px;margin-top:9px}
+  .chip.up{background:var(--pos-soft);color:var(--pos)} .chip.down{background:var(--neg-soft);color:var(--neg)}
+  .chartgrid{display:grid;gap:14px;margin-bottom:14px}
+  @media(min-width:980px){.chartgrid{grid-template-columns:1fr 1fr}.chartgrid .card{margin-bottom:0}}
+  .chead{display:flex;justify-content:space-between;align-items:center;margin-bottom:2px}
+  .chead h3{margin:0}
+  .pill{font:inherit;font-weight:700;font-size:12.5px;color:#fff;background:linear-gradient(135deg,var(--brand),var(--brand-2));border:none;border-radius:99px;padding:7px 15px;cursor:pointer;box-shadow:0 8px 18px -8px rgba(123,107,255,.7)}
+  .pill:active{transform:scale(.97)}
+  .donutwrap{display:flex;gap:18px;align-items:center;flex-wrap:wrap;margin-top:8px}
+  .legend{display:flex;flex-direction:column;gap:10px;flex:1;min-width:170px}
+  .legrow{display:flex;align-items:center;gap:10px;font-size:13px}
+  .legrow .dot{width:11px;height:11px;border-radius:3px;flex:0 0 auto}
+  .legrow .ln{flex:1;color:var(--ink-2);font-weight:600}
+  .legrow .lv{font-weight:700}
+  .legrow .lp{color:var(--muted);font-size:11.5px;min-width:36px;text-align:right}
+  @keyframes drawLine{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
+  @keyframes arUp{from{opacity:0}to{opacity:1}}
+  @keyframes popDot{from{opacity:0;transform:scale(0)}to{opacity:1;transform:scale(1)}}
+  @keyframes donutIn{from{opacity:0;transform:scale(.86) rotate(-10deg)}to{opacity:1;transform:none}}
+  @keyframes kpiIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  .areachart .ln{stroke-dasharray:1;animation:drawLine 1s ease forwards}
+  .areachart .ar{opacity:0;animation:arUp .7s ease .25s forwards}
+  .areachart .dt{opacity:0;transform-box:fill-box;transform-origin:center;animation:popDot .35s ease forwards}
+  .donutchart .dwrap{animation:donutIn .6s cubic-bezier(.2,.8,.2,1)}
+  .kpi{animation:kpiIn .5s ease backwards;transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease}
+  .kpis .kpi:nth-child(2){animation-delay:.06s}.kpis .kpi:nth-child(3){animation-delay:.12s}.kpis .kpi:nth-child(4){animation-delay:.18s}
+  .kpi:hover{transform:translateY(-3px);border-color:rgba(255,255,255,.2);box-shadow:0 18px 36px -22px rgba(0,0,0,.9)}
+  .chartgrid .card{transition:transform .18s ease}
+  .chartgrid .card:hover{transform:translateY(-2px)}
+  .charttip{position:absolute;transform:translate(-50%,-100%);background:#1b1e36;border:1px solid var(--line);padding:5px 9px;border-radius:9px;font-size:12px;font-weight:600;white-space:nowrap;pointer-events:none;transition:opacity .12s;z-index:6;box-shadow:0 10px 22px -10px rgba(0,0,0,.7)}
+  .charttip b{color:var(--ink-2)}
 </style>
 
 <header>
@@ -952,7 +989,7 @@ function renderCaja(){
       <div class="arow edit" id="ePrest"><div class="l">Préstamo de la empresa</div><div class="v num">${money(prest)} <span class="pencil">editar</span></div></div>
       <div class="totrow"><div class="l">Patrimonio total<small style="font-weight:500;color:var(--muted);display:block;margin-top:2px">cuentas + pinweb + te deben − préstamo − fondo</small></div><div class="v num">${money(patrim)}</div></div>
     </div>
-    ${recent.length?`<div class="card"><h3>Movimientos recientes</h3>${recent.map(f=>`<div class="movrow"><div class="mc">${f.t}<small style="display:block;margin-top:1px">${f.sub}</small></div><span class="num ${f.sign>0?'pos':'neg'}" style="font-weight:700">${f.sign>0?'+':'−'}${money(f.amt)}</span></div>`).join("")}</div>`:""}`;
+    ${recent.length?`<div class="card"><h3>Movimientos recientes</h3>${recent.map(f=>{const net=f.sign*f.amt;return `<div class="movrow"><div class="mc">${f.t}<small style="display:block;margin-top:1px">${f.sub}</small></div><span class="num ${net>=0?'pos':'neg'}" style="font-weight:700">${net>=0?'+':'−'}${money(Math.abs(net))}</span></div>`}).join("")}</div>`:""}`;
   [...document.querySelectorAll('#cajaBody [data-acc]')].forEach(r=>r.onclick=()=>adjustAccountSheet(r.dataset.acc));
   $("#cAddMov").onclick=()=>addCajaMovSheet();
   $("#cAddDep").onclick=()=>registrarDepositoSheet();
@@ -1486,44 +1523,114 @@ const GASTO_COL={"Comida":"#ff7a59","Súper":"#ffb443","Auto / Nafta":"#7b6bff",
 function monthShort(mk){const n=["","ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];const p=mk.split("-");return n[+p[1]]||p[1];}
 function gastosMes(mk){return state.gastos.filter(g=>monthOf(g.fecha)===mk);}
 function prevMonthKey(mk){const p=mk.split("-");const d=new Date(+p[0],+p[1]-1,1);d.setMonth(d.getMonth()-1);return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,'0');}
-function svgBars(data,color){
-  const w=340,h=130;const n=data.length||1;const bw=w/n;
+function moneyShort(n){n=Math.round(n);const a=Math.abs(n);if(a>=1000000)return '$'+(n/1000000).toFixed(a>=10000000?0:1)+'M';if(a>=1000)return '$'+Math.round(n/1000)+'k';return '$'+n;}
+function _uid(){return 'g'+Math.random().toString(36).slice(2,8);}
+function smoothPath(p){
+  if(!p.length)return"";if(p.length<3)return "M"+p.map(q=>q[0].toFixed(1)+","+q[1].toFixed(1)).join(" L");
+  let d="M"+p[0][0].toFixed(1)+","+p[0][1].toFixed(1);
+  for(let i=0;i<p.length-1;i++){const p0=p[i-1]||p[i],p1=p[i],p2=p[i+1],p3=p[i+2]||p2;
+    const c1x=p1[0]+(p2[0]-p0[0])/6,c1y=p1[1]+(p2[1]-p0[1])/6,c2x=p2[0]-(p3[0]-p1[0])/6,c2y=p2[1]-(p3[1]-p1[1])/6;
+    d+=` C${c1x.toFixed(1)},${c1y.toFixed(1)} ${c2x.toFixed(1)},${c2y.toFixed(1)} ${p2[0].toFixed(1)},${p2[1].toFixed(1)}`;}
+  return d;
+}
+function svgArea(data,color,o){
+  o=o||{};const w=o.w||440,h=o.h||190,padL=12,padR=14,padT=22,padB=26;
+  const iw=w-padL-padR,ih=h-padT-padB,n=data.length;
   const max=Math.max(1,...data.map(d=>d.value));
-  let s="";
-  data.forEach((d,i)=>{
-    const bh=d.value/max*(h-40);const bwid=bw*0.56;const x=i*bw+(bw-bwid)/2;const y=h-22-bh;
-    const fmt=d.value>=1000000?(d.value/1000000).toFixed(1)+"M":d.value>=1000?Math.round(d.value/1000)+"k":Math.round(d.value);
-    s+=`<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${bwid.toFixed(1)}" height="${Math.max(2,bh).toFixed(1)}" rx="5" fill="${color}"></rect>`;
-    s+=`<text x="${(x+bwid/2).toFixed(1)}" y="${(y-5).toFixed(1)}" fill="#c0c4e6" font-size="9.5" font-weight="700" text-anchor="middle">${fmt}</text>`;
-    s+=`<text x="${(x+bwid/2).toFixed(1)}" y="${h-6}" fill="#7f86b0" font-size="9.5" text-anchor="middle">${d.label}</text>`;
+  const X=i=>padL+(n<=1?iw/2:i/(n-1)*iw),Y=v=>padT+ih-(v/max)*ih;
+  const pts=data.map((d,i)=>[X(i),Y(d.value)]);
+  const line=smoothPath(pts);
+  const area=line+` L${X(n-1).toFixed(1)},${(padT+ih).toFixed(1)} L${X(0).toFixed(1)},${(padT+ih).toFixed(1)} Z`;
+  const id=_uid();let grid="";
+  for(let g=0;g<=3;g++){const y=(padT+ih*g/3).toFixed(1);grid+=`<line x1="${padL}" y1="${y}" x2="${w-padR}" y2="${y}" stroke="rgba(255,255,255,.05)"/>`;}
+  let dots="",labels="";
+  data.forEach((d,i)=>{const last=i===n-1;dots+=`<circle class="dt" cx="${X(i).toFixed(1)}" cy="${Y(d.value).toFixed(1)}" r="${last?5:3.2}" fill="${last?color:'#0e1020'}" stroke="${color}" stroke-width="2" style="animation-delay:${(0.5+i*0.08).toFixed(2)}s"/>`;
+    labels+=`<text x="${X(i).toFixed(1)}" y="${h-7}" fill="#7f86b0" font-size="10.5" text-anchor="middle">${d.label}</text>`;});
+  const lv=data[n-1];const lvx=Math.min(w-padR,X(n-1)),lvy=Math.max(padT+9,Y(lv?lv.value:0)-11);
+  const vlabel=lv?`<text x="${lvx.toFixed(1)}" y="${lvy.toFixed(1)}" fill="${color}" font-size="12" font-weight="800" text-anchor="end">${moneyShort(lv.value)}</text>`:"";
+  const geom=JSON.stringify({w,h,padL,padR,padT,padB,iw,ih,max,n});
+  return `<svg class="areachart" data-geom='${geom}' data-ser='${JSON.stringify(data)}' data-color="${color}" viewBox="0 0 ${w} ${h}" style="width:100%;height:auto;display:block;margin-top:4px;overflow:visible"><defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${color}" stop-opacity=".34"/><stop offset="100%" stop-color="${color}" stop-opacity="0"/></linearGradient></defs>${grid}<path class="ar" d="${area}" fill="url(#${id})"/><path class="ln" pathLength="1" d="${line}" fill="none" stroke="${color}" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>${dots}${labels}${vlabel}</svg>`;
+}
+function wireArea(svg){
+  let geom,ser,color;try{geom=JSON.parse(svg.getAttribute('data-geom'));ser=JSON.parse(svg.getAttribute('data-ser'));color=svg.getAttribute('data-color');}catch(e){return;}
+  const {w,h,padL,padT,iw,ih,max,n}=geom;
+  const X=i=>padL+(n<=1?iw/2:i/(n-1)*iw),Y=v=>padT+ih-(v/max)*ih;
+  const NS="http://www.w3.org/2000/svg";
+  const guide=document.createElementNS(NS,"line");guide.setAttribute("stroke","rgba(255,255,255,.2)");guide.setAttribute("stroke-width","1");guide.setAttribute("stroke-dasharray","3 3");guide.style.opacity="0";svg.appendChild(guide);
+  const focus=document.createElementNS(NS,"circle");focus.setAttribute("r","6");focus.setAttribute("fill",color);focus.setAttribute("stroke","#0e1020");focus.setAttribute("stroke-width","2.5");focus.style.opacity="0";svg.appendChild(focus);
+  const card=svg.closest(".card")||svg.parentNode;card.style.position="relative";
+  const tip=document.createElement("div");tip.className="charttip";tip.style.opacity="0";card.appendChild(tip);
+  const step=n>1?iw/(n-1):iw;
+  svg.addEventListener("mousemove",e=>{
+    const r=svg.getBoundingClientRect(),cr=card.getBoundingClientRect();
+    const vx=(e.clientX-r.left)/r.width*w;let i=Math.round((vx-padL)/step);i=Math.max(0,Math.min(n-1,i));
+    const px=X(i),py=Y(ser[i].value);
+    guide.setAttribute("x1",px);guide.setAttribute("x2",px);guide.setAttribute("y1",padT);guide.setAttribute("y2",padT+ih);guide.style.opacity="1";
+    focus.setAttribute("cx",px);focus.setAttribute("cy",py);focus.style.opacity="1";
+    tip.innerHTML=`<b>${ser[i].label}</b> · ${money(ser[i].value)}`;
+    const offX=r.left-cr.left,offY=r.top-cr.top;
+    tip.style.left=(offX+px*(r.width/w))+"px";tip.style.top=(offY+py*(r.height/h)-6)+"px";tip.style.opacity="1";
   });
-  return `<svg viewBox="0 0 ${w} ${h}" style="width:100%;height:auto;display:block;margin-top:4px">${s}</svg>`;
+  svg.addEventListener("mouseleave",()=>{guide.style.opacity="0";focus.style.opacity="0";tip.style.opacity="0";});
+}
+function svgDonut(segs,o){
+  o=o||{};const size=o.size||160,R=size/2-2,r=R*0.6,cx=size/2,cy=size/2;
+  const tot=segs.reduce((s,x)=>s+x.value,0)||1;let a=-Math.PI/2,paths="";
+  segs.forEach(s=>{const pct=s.value/tot*100,sweep=Math.min(s.value/tot,0.9999)*Math.PI*2,a2=a+sweep;
+    const x1=cx+R*Math.cos(a),y1=cy+R*Math.sin(a),x2=cx+R*Math.cos(a2),y2=cy+R*Math.sin(a2);
+    const x3=cx+r*Math.cos(a2),y3=cy+r*Math.sin(a2),x4=cx+r*Math.cos(a),y4=cy+r*Math.sin(a);
+    const large=sweep>Math.PI?1:0;
+    paths+=`<path class="dseg" data-label="${s.label}" data-val="${s.value}" data-pct="${pct.toFixed(0)}" d="M${x1.toFixed(2)},${y1.toFixed(2)} A${R},${R} 0 ${large} 1 ${x2.toFixed(2)},${y2.toFixed(2)} L${x3.toFixed(2)},${y3.toFixed(2)} A${r},${r} 0 ${large} 0 ${x4.toFixed(2)},${y4.toFixed(2)} Z" fill="${s.color}"/>`;a=a2;});
+  return `<svg class="donutchart" data-center="${o.center||""}" data-sub="${o.sub||""}" viewBox="0 0 ${size} ${size}" style="width:150px;height:auto;flex:0 0 auto"><g class="dwrap" style="transform-box:fill-box;transform-origin:center">${paths}</g><text class="dcenter" x="${cx}" y="${cy-1}" text-anchor="middle" fill="#eceeff" font-size="17" font-weight="800" font-family="var(--disp)">${o.center||""}</text><text class="dsub" x="${cx}" y="${cy+15}" text-anchor="middle" fill="#7f86b0" font-size="9.5">${o.sub||""}</text></svg>`;
+}
+function wireDonut(svg){
+  const center=svg.querySelector(".dcenter"),sub=svg.querySelector(".dsub");
+  const defC=svg.getAttribute("data-center"),defS=svg.getAttribute("data-sub");
+  const segs=[...svg.querySelectorAll(".dseg")];
+  segs.forEach(p=>{p.style.transition="opacity .15s";p.style.cursor="pointer";
+    p.addEventListener("mouseenter",()=>{segs.forEach(q=>q.style.opacity=q===p?"1":"0.3");if(center)center.textContent=moneyShort(+p.dataset.val);if(sub)sub.textContent=p.dataset.label+" · "+p.dataset.pct+"%";});});
+  svg.addEventListener("mouseleave",()=>{segs.forEach(q=>q.style.opacity="1");if(center)center.textContent=defC;if(sub)sub.textContent=defS;});
+}
+function countUp(root){
+  root.querySelectorAll(".kv[data-count]").forEach(el=>{const target=+el.dataset.count;if(!isFinite(target))return;const dur=750,t0=performance.now();
+    const step=t=>{const k=Math.min(1,(t-t0)/dur),e=1-Math.pow(1-k,3);el.textContent=money(target*e);if(k<1)requestAnimationFrame(step);};requestAnimationFrame(step);});
+}
+function animateBars(root){root.querySelectorAll(".gbar[data-w]").forEach(b=>{requestAnimationFrame(()=>{requestAnimationFrame(()=>{b.style.width=b.dataset.w;});});});}
+function hydrate(root){if(!root)return;countUp(root);root.querySelectorAll("svg.areachart").forEach(wireArea);root.querySelectorAll("svg.donutchart").forEach(wireDonut);animateBars(root);}
+function kpi(label,value,sub,deltaPct,glow,countNum){
+  let chip="";if(deltaPct!=null&&isFinite(deltaPct)){const up=deltaPct>=0;chip=`<div class="chip ${up?'up':'down'}">${up?'▲':'▼'} ${Math.abs(deltaPct).toFixed(0)}%</div>`;}
+  const kc=(countNum!=null&&isFinite(countNum))?` data-count="${countNum}"`:"";
+  return `<div class="kpi">${glow?`<div class="glow" style="background:${glow}"></div>`:""}<div class="kl">${label}</div><div class="kv num"${kc}>${value}</div>${sub?`<div class="ks">${sub}</div>`:""}${chip}</div>`;
 }
 function renderGastos(){
-  const cur=curMonthKey();const prevMK=prevMonthKey(cur);
+  const cur=curMonthKey(),prevMK=prevMonthKey(cur);
   const cg=gastosMes(cur),pg=gastosMes(prevMK);
   const totCur=cg.reduce((s,g)=>s+g.monto,0),totPrev=pg.reduce((s,g)=>s+g.monto,0);
-  const diff=totPrev>0?((totCur-totPrev)/totPrev*100):0;
+  const diff=totPrev>0?((totCur-totPrev)/totPrev*100):null;
+  const today=new Date();const dia=today.getDate(),diasMes=new Date(today.getFullYear(),today.getMonth()+1,0).getDate();
+  const prom=dia>0?totCur/dia:0,proy=dia>0?totCur/dia*diasMes:0;
   const byCat={};for(const g of cg)byCat[g.cat]=(byCat[g.cat]||0)+g.monto;
-  const cats=Object.entries(byCat).sort((a,b)=>b[1]-a[1]);const maxCat=cats.length?cats[0][1]:1;
+  const cats=Object.entries(byCat).map(([c,v])=>({label:c,value:v,color:GASTO_COL[c]||'#9aa0c8'})).sort((a,b)=>b.value-a.value);
+  const topCat=cats.length?cats[0].label:"—";
   const months=[];const d0=new Date();for(let i=5;i>=0;i--){const dd=new Date(d0.getFullYear(),d0.getMonth()-i,1);months.push(dd.getFullYear()+"-"+String(dd.getMonth()+1).padStart(2,'0'));}
   const trend=months.map(mk=>({label:monthShort(mk),value:gastosMes(mk).reduce((s,g)=>s+g.monto,0)}));
   const list=[...state.gastos].sort((a,b)=>parseTs(b.fecha)-parseTs(a.fecha)).slice(0,40);
   $("#gasBody").innerHTML=`
-    <div class="card">
-      <h3>Gastos · ${monthLabel(cur)}</h3>
-      <div class="arow" style="border-top:none"><div class="l">Total del mes</div><div class="v num neg" style="font-size:22px">${money(totCur)}</div></div>
-      <div class="arow"><div class="l">Mes anterior</div><div class="v num">${money(totPrev)} ${totPrev>0?`<small style="color:${diff>0?'var(--neg)':'var(--pos)'}">${diff>0?'▲':'▼'} ${Math.abs(diff).toFixed(0)}%</small>`:""}</div></div>
-      <button class="addbtn" id="gAdd">+ Agregar gasto</button>
+    <div class="kpis">
+      ${kpi("Gastado "+monthShort(cur),money(totCur),"este mes",diff,"#ff7a59",totCur)}
+      ${kpi("Por día",money(prom),"promedio diario",null,"#ffb443",prom)}
+      ${kpi("Proyección",money(proy),"fin de mes",null,"#ff5d9e",proy)}
+      ${kpi("Top categoría",topCat,cats.length?money(cats[0].value):"sin gastos",null,GASTO_COL[topCat]||"#9aa0c8")}
     </div>
-    ${cats.length?`<div class="card"><h3>Por categoría</h3>${cats.map(([c,v])=>`
-      <div style="margin:10px 0 2px">
-        <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:600;margin-bottom:5px"><span>${c}</span><span class="num">${money(v)}</span></div>
-        <div style="height:9px;border-radius:99px;background:rgba(255,255,255,.06);overflow:hidden"><div style="height:100%;width:${Math.max(5,v/maxCat*100)}%;border-radius:99px;background:${GASTO_COL[c]||'#9aa0c8'}"></div></div>
-      </div>`).join("")}</div>`:""}
-    <div class="card"><h3>Últimos 6 meses</h3>${svgBars(trend,"#ff7a59")}</div>
-    ${list.length?`<div class="card"><h3>Movimientos</h3>${list.map(g=>`<div class="arow"><div class="l"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${GASTO_COL[g.cat]||'#9aa0c8'};margin-right:7px"></span>${g.cat}<small style="display:block;margin-left:15px">${(g.fecha||"").slice(0,10)}${g.nota?" · "+g.nota:""}</small></div><div class="v num neg">−${money(g.monto)} <button class="xbtn" data-delg="${g.id}">✕</button></div></div>`).join("")}</div>`:'<div class="card"><p class="hint" style="margin:0">Todavía no cargaste gastos. Tocá "+ Agregar gasto" para empezar.</p></div>'}
+    <div class="chartgrid">
+      <div class="card"><div class="chead"><h3>Por categoría</h3><button class="pill" id="gAdd">+ Gasto</button></div>
+        ${cats.length?`<div class="donutwrap">${svgDonut(cats,{center:moneyShort(totCur),sub:"este mes"})}<div class="legend">${cats.map(c=>`<div class="legrow"><span class="dot" style="background:${c.color}"></span><span class="ln">${c.label}</span><span class="lv num">${money(c.value)}</span><span class="lp">${(c.value/totCur*100).toFixed(0)}%</span></div>`).join("")}</div></div>`:'<p class="hint" style="margin:10px 0 0">Todavía no cargaste gastos este mes. Tocá "+ Gasto" para empezar.</p>'}
+      </div>
+      <div class="card"><h3>Evolución · 6 meses</h3>${svgArea(trend,"#ff7a59",{h:200})}</div>
+    </div>
+    ${list.length?`<div class="card"><h3>Movimientos</h3>${list.map(g=>`<div class="arow"><div class="l"><span style="display:inline-block;width:9px;height:9px;border-radius:3px;background:${GASTO_COL[g.cat]||'#9aa0c8'};margin-right:8px"></span>${g.cat}<small style="display:block;margin-left:17px">${(g.fecha||"").slice(0,10)}${g.nota?" · "+g.nota:""}</small></div><div class="v num neg">−${money(g.monto)} <button class="xbtn" data-delg="${g.id}">✕</button></div></div>`).join("")}</div>`:""}
   `;
+  hydrate($("#gasBody"));
   $("#gAdd").onclick=()=>addGastoSheet();
   [...document.querySelectorAll("#gasBody [data-delg]")].forEach(b=>b.onclick=async()=>{
     const g=state.gastos.find(x=>x.id===b.dataset.delg);if(!g)return;
@@ -1549,25 +1656,32 @@ function renderTend(){
   const ms=availableGanMonths().slice().reverse();
   const ganBy=ms.map(mk=>({label:monthShort(mk),value:ventasAggMonth(mk).reduce((s,c)=>s+c.gd,0)}));
   const factBy=ms.map(mk=>({label:monthShort(mk),value:ventasAggMonth(mk).reduce((s,c)=>s+c.venta,0)}));
-  const cur=curMonthKey();
+  const cur=curMonthKey(),prevMK=prevMonthKey(cur);
   const ganCur=ventasAggMonth(cur).reduce((s,c)=>s+c.gd,0);
-  const today=new Date();const dia=today.getDate();const diasMes=new Date(today.getFullYear(),today.getMonth()+1,0).getDate();
-  const proy=dia>0?(ganCur/dia*diasMes):ganCur;
-  const gastoCur=gastosMes(cur).reduce((s,g)=>s+g.monto,0);
-  const queda=ganCur-gastoCur;
+  const ganPrev=ventasAggMonth(prevMK).reduce((s,c)=>s+c.gd,0);
+  const factCur=ventasAggMonth(cur).reduce((s,c)=>s+c.venta,0);
+  const today=new Date();const dia=today.getDate(),diasMes=new Date(today.getFullYear(),today.getMonth()+1,0).getDate();
+  const proy=dia>0?ganCur/dia*diasMes:ganCur;
+  const proyDelta=ganPrev>0?((proy-ganPrev)/ganPrev*100):null;
+  const margen=factCur>0?(ganCur/factCur*100):0;
+  const topCli=ventasAggMonth(cur).filter(c=>c.gd>0).sort((a,b)=>b.gd-a.gd).slice(0,7);
+  const maxCli=topCli.length?topCli[0].gd:1;
   $("#tendBody").innerHTML=`
-    <div class="card"><h3>Tu ganancia por mes</h3>${svgBars(ganBy,"#7b6bff")}</div>
-    <div class="card"><h3>Proyección de ${monthLabel(cur)}</h3>
-      <div class="arow" style="border-top:none"><div class="l">Ganancia hasta hoy<small>día ${dia} de ${diasMes}</small></div><div class="v num pos">${money(ganCur)}</div></div>
-      <div class="totrow"><div class="l">Vas a cerrar en<small>al ritmo de este mes</small></div><div class="v num">${money(proy)}</div></div>
+    <div class="kpis">
+      ${kpi("Ganancia "+monthShort(cur),money(ganCur),"tuya este mes",null,"#7b6bff",ganCur)}
+      ${kpi("Proyección",money(proy),"al ritmo actual",proyDelta,"#2fc8ff",proy)}
+      ${kpi("Facturación",money(factCur),"vendido este mes",null,"#2fe8a4",factCur)}
+      ${kpi("Margen",margen.toFixed(1)+"%","ganancia / venta",null,"#ffb443")}
     </div>
-    <div class="card"><h3>Facturación por mes</h3>${svgBars(factBy,"#2fc8ff")}</div>
-    <div class="card"><h3>Ganancia vs. gastos · ${monthLabel(cur)}</h3>
-      <div class="arow" style="border-top:none"><div class="l">Ganaste</div><div class="v num pos">${money(ganCur)}</div></div>
-      <div class="arow"><div class="l">Gastaste (personal)</div><div class="v num neg">${money(gastoCur)}</div></div>
-      <div class="totrow"><div class="l">Te queda<small>ganancia − gastos</small></div><div class="v num ${queda<0?'neg':'pos'}">${money(queda)}</div></div>
+    <div class="chartgrid">
+      <div class="card"><h3>Tu ganancia por mes</h3>${svgArea(ganBy,"#7b6bff",{h:210})}</div>
+      <div class="card"><h3>Facturación por mes</h3>${svgArea(factBy,"#2fc8ff",{h:210})}</div>
+    </div>
+    <div class="card"><h3>Top clientes · ${monthLabel(cur)}</h3>
+      ${topCli.length?topCli.map((c,i)=>`<div style="margin:12px 0 2px"><div style="display:flex;justify-content:space-between;font-size:13.5px;font-weight:600;margin-bottom:5px"><span><span style="color:var(--muted);margin-right:7px">${i+1}</span>${c.name}</span><span class="num pos">${money(c.gd)}</span></div><div style="height:9px;border-radius:99px;background:rgba(255,255,255,.06);overflow:hidden"><div class="gbar" data-w="${Math.max(4,c.gd/maxCli*100)}%" style="height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,#6b5bff,#a98bff);transition:width .9s cubic-bezier(.2,.8,.2,1)"></div></div></div>`).join(""):'<p class="hint">Sin datos este mes.</p>'}
     </div>
   `;
+  hydrate($("#tendBody"));
 }
 function renderAll(){render();renderCobrar();renderCaja();renderGAN();renderPAG();renderGastos();renderTend();}
 let booted=false;
