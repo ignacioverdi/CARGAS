@@ -1428,7 +1428,7 @@ async function applyMPcobros(arr){
     const id=String(p.id||"");const cuit=String(p.cuit||"");const monto=+p.monto||0;const fecha=p.fecha||"";
     if(!id||!monto)continue;
     if(seen.has(id)){const ex=byMp.get(id),nf=fechaToStr(fecha);
-      if(ex&&/ 00:00:00$/.test(ex.fecha||"")&&!/ 00:00:00$/.test(nf)){ex.fecha=nf;upd++;}
+      if(ex&&nf&&nf!==ex.fecha&&!/ 00:00:00$/.test(nf)){ex.fecha=nf;upd++;}
       dup++;continue;}
     if(inboxIds.has(id)){dup++;continue;}
     const map=cuit?state.mpMap[cuit]:null;
