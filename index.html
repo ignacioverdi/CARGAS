@@ -869,9 +869,37 @@ function renderPAG(){
     </div>
     <div class="card">
       <h3>Por día · cuánto apartar</h3>
-      ${fd.dayArr.length?fd.dayArr.map(x=>`<div class="movrow"><div class="mc">${x.d}<small style="display:block;margin-top:1px">tuyo: ${money(x.tuyo)}</small></div><span class="num" style="font-weight:800;color:var(--amber)">${money(x.fondo)}</span></div>`).join(""):'<p class="hint">Todavía no hay ventas con detalle diario en este mes.</p>'}
+      ${fd.dayArr.length?fd.dayArr.map(x=>`<div class="movrow fdayrow" data-fday="${x.d}" style="cursor:pointer"><div class="mc">${x.d} <span style="color:var(--muted);font-weight:600;font-size:11px">ver detalle ›</span><small style="display:block;margin-top:1px">tuyo: ${money(x.tuyo)}</small></div><span class="num" style="font-weight:800;color:var(--amber)">${money(x.fondo)}</span></div>`).join(""):'<p class="hint">Todavía no hay ventas con detalle diario en este mes.</p>'}
       ${fd.base?`<div class="movrow"><div class="mc">1–16 (sin desglose diario)<small style="display:block;margin-top:1px">tuyo: ${money(fd.base.tuyo)}</small></div><span class="num" style="font-weight:800;color:var(--amber)">${money(fd.base.fondo)}</span></div>`:""}
     </div>`;
+  [...document.querySelectorAll("#fondoP .fdayrow")].forEach(e=>e.onclick=()=>fondoDayDetailSheet(pagMonth,e.dataset.fday));
+}
+function fondoDayDetail(mk,day){
+  const m=new Map();
+  for(const v of state.ventas){
+    if(monthOf(v.fecha)!==mk)continue;if(dayOf(v.fecha)!==day)continue;
+    const k=key(v.cli);if(!FUND_SET.has(k))continue;
+    const cf=clientConf(k);const cat=catVenta(v.prod);
+    let pct=0,mode;
+    if(cat==="virtual"){mode=cf.virtMode;pct=cf.virtPct||0;}
+    else if(cat==="sube"){mode=cf.subeMode;pct=cf.subePct||0;}
+    else continue;
+    const com=(mode==="pct")?((v.pvp||0)*pct):0;
+    const o=m.get(k)||{name:dispName(k)||k,volV:0,comV:0,volS:0,comS:0,com:0,vol:0};
+    if(cat==="virtual"){o.volV+=(v.pvp||0);o.comV+=com;}else{o.volS+=(v.pvp||0);o.comS+=com;}
+    o.vol+=(v.pvp||0);o.com+=com;m.set(k,o);
+  }
+  return [...m.values()].sort((a,b)=>b.com-a.com);
+}
+function fondoDayDetailSheet(mk,day){
+  const rows=fondoDayDetail(mk,day);
+  const tot=rows.reduce((s,r)=>s+r.com,0);const totVol=rows.reduce((s,r)=>s+r.vol,0);
+  openSheet(`<h3>Fondo del ${day}</h3>
+    <p class="hint">Los clientes con % que aportan al fondo ese día. <b style="color:var(--ink-2)">Volumen × su % = lo que apartás.</b></p>
+    ${rows.length?rows.map(r=>`<div class="arow"><div class="l">${r.name}<small style="display:block;margin-top:2px;color:var(--muted)">${r.volV?`virtual ${money(r.volV)} → ${money(r.comV)} (${(r.volV?r.comV/r.volV*100:0).toFixed(2)}%)`:""}${r.volV&&r.volS?" · ":""}${r.volS?`SUBE ${money(r.volS)} → ${money(r.comS)} (${(r.volS?r.comS/r.volS*100:0).toFixed(2)}%)`:""}</small></div><div class="v num" style="color:var(--amber);font-weight:800">${money(r.com)}</div></div>`).join(""):'<p class="hint">Ese día no vendió ninguno de los 8 clientes con %.</p>'}
+    <div class="totrow"><div class="l">Total a apartar<small style="display:block;margin-top:1px;color:var(--muted)">volumen total ${money(totVol)}</small></div><div class="v num" style="color:var(--amber)">${money(tot)}</div></div>
+    <button id="fdClose" style="margin-top:12px;width:100%">Cerrar</button>`);
+  $("#fdClose").onclick=closeSheet;
 }
 async function togglePaid(mk,k){state.paid[mk]=state.paid[mk]||{};state.paid[mk][k]=!state.paid[mk][k];logAction("Comisión "+(state.paid[mk][k]?"PAGADA":"marcada pendiente")+": "+(dispName(k)||k)+" ("+mk+")");await save();renderPAG();}
 
