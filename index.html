@@ -316,6 +316,11 @@
   .chartgrid .card:hover{transform:translateY(-2px)}
   .charttip{position:absolute;transform:translate(-50%,-100%);background:#1b1e36;border:1px solid var(--line);padding:5px 9px;border-radius:9px;font-size:12px;font-weight:600;white-space:nowrap;pointer-events:none;transition:opacity .12s;z-index:6;box-shadow:0 10px 22px -10px rgba(0,0,0,.7)}
   .charttip b{color:var(--ink-2)}
+  .pdh,.pdr{display:grid;grid-template-columns:1.1fr 1fr 1fr 1fr;gap:6px;padding:9px 4px;align-items:center;font-size:13px}
+  .pdh{color:var(--muted);font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--line)}
+  .pdr{border-bottom:1px solid rgba(255,255,255,.05)}
+  .pdh .r,.pdr .r{text-align:right}
+  .pdt{border-top:1px solid var(--line);border-bottom:none;margin-top:2px;font-weight:700}
 </style>
 
 <header>
@@ -843,7 +848,7 @@ function renderPAG(){
   let tA=0,tPag=0;
   $("#rowsP").innerHTML=rows.length?rows.map(c=>{const paid=!!paidMap[c.key];tA+=c.total;if(paid)tPag+=c.total;
     return `<tr data-k="${c.key}" class="${paid?'ok':''}">
-      <td><span class="gname"><span class="gdot" style="background:${avatarBg(c.name)}"></span>${c.name}</span></td>
+      <td><button class="gname pagopen" data-pagopen="${c.key}" style="background:none;border:none;color:inherit;font:inherit;cursor:pointer;display:inline-flex;align-items:center;gap:8px;padding:0"><span class="gdot" style="background:${avatarBg(c.name)}"></span>${c.name} <span style="color:var(--muted);font-size:10.5px;font-weight:700">›</span></button></td>
       <td class="r num">${c.inV?money(c.comV):"—"}</td>
       <td class="r num">${c.inS?money(c.comS):"—"}</td>
       <td class="r num" style="font-weight:800">${money(c.total)}</td>
@@ -851,6 +856,7 @@ function renderPAG(){
     </tr>`;}).join(""):`<tr><td colspan="5"><div class="empty">No hay comisiones a pagar en este mes.</div></td></tr>`;
   $("#footP").innerHTML=rows.length?`<tr><td>TOTAL</td><td></td><td></td><td class="r num">${money(tA)}</td><td></td></tr>`:"";
   [...document.querySelectorAll("#rowsP .paybtn")].forEach(b=>b.onclick=()=>togglePaid(pagMonth,b.dataset.k));
+  [...document.querySelectorAll("#rowsP .pagopen")].forEach(b=>b.onclick=()=>clientPagDetailSheet(b.dataset.pagopen,pagMonth));
   $("#pagInfo").textContent=`${rows.length} clientes · pagar el ${nextMonth5(pagMonth)}`;
   const pend=tA-tPag;
   $("#resumenP").innerHTML=`<h2>A pagar · ${monthLabel(pagMonth)}</h2>
@@ -900,6 +906,39 @@ function fondoDayDetailSheet(mk,day){
     <div class="totrow"><div class="l">Total a apartar<small style="display:block;margin-top:1px;color:var(--muted)">volumen total ${money(totVol)}</small></div><div class="v num" style="color:var(--amber)">${money(tot)}</div></div>
     <button id="fdClose" style="margin-top:12px;width:100%">Cerrar</button>`);
   $("#fdClose").onclick=closeSheet;
+}
+function clientPagDetail(k,mk){
+  const cf=clientConf(k);const days=new Map();
+  for(const v of state.ventas){
+    if(key(v.cli)!==k||monthOf(v.fecha)!==mk)continue;
+    const d=dayOf(v.fecha);if(!d)continue;const cat=catVenta(v.prod);
+    let cv=0,cs=0;
+    if(cat==="virtual"&&cf.virtMode==="pct")cv=(v.pvp||0)*(cf.virtPct||0);
+    else if(cat==="sube"&&cf.subeMode==="pct")cs=(v.pvp||0)*(cf.subePct||0);
+    if(!cv&&!cs)continue;
+    const o=days.get(d)||{d,comV:0,comS:0};o.comV+=cv;o.comS+=cs;days.set(d,o);
+  }
+  return [...days.values()].sort((a,b)=>parseTs(b.d+" 00:00:00")-parseTs(a.d+" 00:00:00"));
+}
+function clientPagDetailSheet(k,mk){
+  const cf=clientConf(k);const name=dispName(k)||k;
+  const rows=clientPagDetail(k,mk);
+  const tV=rows.reduce((s,r)=>s+r.comV,0),tS=rows.reduce((s,r)=>s+r.comS,0),tot=tV+tS;
+  const arch=state.ganArchive&&state.ganArchive[mk]&&state.ganArchive[mk][k];
+  let body;
+  if(rows.length){
+    body=`<div class="pdh"><span>Fecha</span><span class="r">Virtual</span><span class="r">SUBE</span><span class="r">Total</span></div>`+
+      rows.map(r=>`<div class="pdr"><span>${r.d}</span><span class="r num">${r.comV?money(r.comV):"—"}</span><span class="r num">${r.comS?money(r.comS):"—"}</span><span class="r num" style="font-weight:800;color:var(--amber)">${money(r.comV+r.comS)}</span></div>`).join("")+
+      `<div class="pdr pdt"><span>TOTAL</span><span class="r num">${money(tV)}</span><span class="r num">${money(tS)}</span><span class="r num" style="font-weight:800;color:var(--amber)">${money(tot)}</span></div>`;
+  }else if(arch){
+    const aV=(cf.virtMode==="pct")?(arch.vV||0)*(cf.virtPct||0):0,aS=(cf.subeMode==="pct")?(arch.vS||0)*(cf.subePct||0):0;
+    body=`<p class="hint">Mes archivado: guardo solo el total del mes, sin desglose por día.</p><div class="pdh"><span>Periodo</span><span class="r">Virtual</span><span class="r">SUBE</span><span class="r">Total</span></div><div class="pdr pdt"><span>Total del mes</span><span class="r num">${money(aV)}</span><span class="r num">${money(aS)}</span><span class="r num" style="font-weight:800;color:var(--amber)">${money(aV+aS)}</span></div>`;
+  }else body=`<p class="hint">Sin comisiones registradas este mes.</p>`;
+  openSheet(`<h3>${name}</h3>
+    <p class="hint">Comisión que le devolvés, día por día · ${monthLabel(mk)}</p>
+    ${body}
+    <button id="pdClose" style="margin-top:12px;width:100%">Cerrar</button>`);
+  $("#pdClose").onclick=closeSheet;
 }
 async function togglePaid(mk,k){state.paid[mk]=state.paid[mk]||{};state.paid[mk][k]=!state.paid[mk][k];logAction("Comisión "+(state.paid[mk][k]?"PAGADA":"marcada pendiente")+": "+(dispName(k)||k)+" ("+mk+")");await save();renderPAG();}
 
