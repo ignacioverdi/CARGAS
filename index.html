@@ -1412,32 +1412,41 @@ async function ingestVentas(text){const rows=parseVentas(text);if(!rows.length){
 $("#fileG").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>ingestAuto(r.result);r.readAsText(f,"utf-8");e.target.value="";};
 
 // ---- Pagos de Mercado Pago (match por CUIT) ----
-function fechaToStr(d){const m=/(\d{4})-(\d{2})-(\d{2})/.exec(d||"");return m?`${m[3]}/${m[2]}/${m[1]} 00:00:00`:(d||nowStr());}
+function fechaToStr(d){d=(d||"").toString();const p=n=>String(n).padStart(2,'0');
+  let m=/(\d{1,2})\/(\d{1,2})\/(\d{4})(?:[ T](\d{1,2}):(\d{2})(?::(\d{2}))?)?/.exec(d);
+  if(m)return `${p(m[1])}/${p(m[2])}/${m[3]} ${p(m[4]||0)}:${p(m[5]||0)}:${p(m[6]||0)}`;
+  m=/(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{1,2}):(\d{2})(?::(\d{2}))?)?/.exec(d);
+  if(m)return `${m[3]}/${m[2]}/${m[1]} ${p(m[4]||0)}:${p(m[5]||0)}:${p(m[6]||0)}`;
+  return d||nowStr();}
 async function applyMPcobros(arr){
-  if(!Array.isArray(arr))return {aplic:0,nuevos:0,ign:0,dup:0};
-  const seen=new Set(state.pagos.filter(p=>p.mpId).map(p=>String(p.mpId)));
+  if(!Array.isArray(arr))return {aplic:0,nuevos:0,ign:0,dup:0,upd:0};
+  const byMp=new Map();state.pagos.forEach(p=>{if(p.mpId)byMp.set(String(p.mpId),p);});
+  const seen=new Set(byMp.keys());
   const inboxIds=new Set(state.mpInbox.map(x=>String(x.id)));
-  let aplic=0,nuevos=0,ign=0,dup=0;
+  let aplic=0,nuevos=0,ign=0,dup=0,upd=0;
   for(const p of arr){
     const id=String(p.id||"");const cuit=String(p.cuit||"");const monto=+p.monto||0;const fecha=p.fecha||"";
     if(!id||!monto)continue;
-    if(seen.has(id)||inboxIds.has(id)){dup++;continue;}
+    if(seen.has(id)){const ex=byMp.get(id),nf=fechaToStr(fecha);
+      if(ex&&/ 00:00:00$/.test(ex.fecha||"")&&!/ 00:00:00$/.test(nf)){ex.fecha=nf;upd++;}
+      dup++;continue;}
+    if(inboxIds.has(id)){dup++;continue;}
     const map=cuit?state.mpMap[cuit]:null;
     if(map==="__IGN__"){ign++;continue;}
     if(map){const c=clientsAgg().find(x=>x.key===map);const nm=c?c.name:(dispName(map)||map);
-      state.pagos.push({id:"p"+Date.now()+Math.random().toString(36).slice(2,6),name:nm,importe:monto,fecha:fechaToStr(fecha),metodo:"mp",mpId:id,mpCuit:cuit});
-      seen.add(id);aplic++;
+      const np={id:"p"+Date.now()+Math.random().toString(36).slice(2,6),name:nm,importe:monto,fecha:fechaToStr(fecha),metodo:"mp",mpId:id,mpCuit:cuit};
+      state.pagos.push(np);byMp.set(id,np);seen.add(id);aplic++;
     }else{state.mpInbox.push({id,fecha,monto,cuit});inboxIds.add(id);nuevos++;}
   }
-  if(aplic||nuevos){logAction("Mercado Pago: "+aplic+" cobros aplicados"+(nuevos?", "+nuevos+" a confirmar":""));await save();}
-  return {aplic,nuevos,ign,dup};
+  if(aplic||nuevos||upd){logAction("Mercado Pago: "+aplic+" cobros aplicados"+(nuevos?", "+nuevos+" a confirmar":"")+(upd?", "+upd+" con hora corregida":""));await save();}
+  return {aplic,nuevos,ign,dup,upd};
 }
 async function importMP(text){
   let arr;try{arr=JSON.parse(text);}catch(e){toast("Archivo inválido");return;}
   if(!Array.isArray(arr)){toast("Formato inesperado");return;}
-  const {aplic,nuevos,ign,dup}=await applyMPcobros(arr);
+  const {aplic,nuevos,ign,dup,upd}=await applyMPcobros(arr);
   closeSheet();renderAll();
-  toast(`MP: ${aplic} aplicados · ${nuevos} a confirmar · ${ign} ignorados${dup?` · ${dup} repetidos`:""}`);
+  toast(`MP: ${aplic} aplicados · ${nuevos} a confirmar · ${ign} ignorados${dup?` · ${dup} repetidos`:""}${upd?` · ${upd} con hora`:""}`);
   if(nuevos)switchTab("caja");
 }
 function importMPSheet(){
