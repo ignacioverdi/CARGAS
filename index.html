@@ -1026,8 +1026,8 @@ function depositosSheet(){
   const list=[...state.depositos].sort((a,b)=>parseTs(b.fecha)-parseTs(a.fecha));
   const tot=list.reduce((s,d)=>s+d.monto,0);
   openSheet(`<h3>Depósitos a la empresa</h3>
-    <p class="hint">Plata que pusiste en pinweb. Borrá con ✕ los que no correspondan (se descuenta del saldo).</p>
-    ${list.length?list.map(d=>`<div class="arow"><div class="l">${(d.fecha||"").slice(0,10)}<small style="display:block;margin-top:1px">${acctName(d.cuenta)}${d.nota?" · "+d.nota:""}</small></div><div class="v num">${money(d.monto)} <button class="xbtn" data-del="${d.id}">✕</button></div></div>`).join(""):'<p class="hint">Todavía no registraste depósitos.</p>'}
+    <p class="hint">Plata que pusiste en pinweb. <b style="color:var(--ink-2)">Tocá la cuenta de cada uno para marcar de dónde salió</b> (MP / Efectivo / Banco). Borrá con ✕ los que no correspondan.</p>
+    ${list.length?list.map(d=>`<div class="arow"><div class="l">${(d.fecha||"").slice(0,10)}<button class="depacct" data-acct="${d.id}" style="display:inline-block;margin-top:4px;background:rgba(255,255,255,.06);border:1px solid var(--line);color:var(--ink-2);font:inherit;font-size:11.5px;font-weight:700;padding:3px 10px;border-radius:99px;cursor:pointer">${acctName(d.cuenta)} ↻</button>${d.nota?`<small style="display:block;margin-top:3px;color:var(--muted)">${d.nota}</small>`:""}</div><div class="v num">${money(d.monto)} <button class="xbtn" data-del="${d.id}">✕</button></div></div>`).join(""):'<p class="hint">Todavía no registraste depósitos.</p>'}
     ${list.length?`<div class="totrow"><div class="l">Total</div><div class="v num">${money(tot)}</div></div>`:""}
     <button class="addbtn" id="depAdd" style="margin-top:10px">+ Registrar depósito</button>
     <button id="depClose" style="margin-top:8px;width:100%">Cerrar</button>`);
@@ -1039,6 +1039,13 @@ function depositosSheet(){
     state.depositos=state.depositos.filter(x=>x.id!==b.dataset.del);
     state.saldoSistema=(state.saldoSistema||0)-d.monto;
     logAction("Depósito borrado "+money(d.monto));await save();depositosSheet();renderCaja();toast("Depósito borrado");
+  });
+  const ORD=["mp","efectivo","banco"];
+  [...document.querySelectorAll("#sheet [data-acct]")].forEach(b=>b.onclick=async()=>{
+    const d=state.depositos.find(x=>x.id===b.dataset.acct);if(!d)return;
+    const i=ORD.indexOf(d.cuenta||"mp");d.cuenta=ORD[(i+1)%ORD.length];
+    logAction("Depósito "+money(d.monto)+" → salió de "+acctName(d.cuenta));
+    await save();depositosSheet();renderCaja();
   });
 }
 function registrarDepositoSheet(){
