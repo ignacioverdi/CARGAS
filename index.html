@@ -709,7 +709,7 @@ function render(){
   const ds=[...new Set(state.movs.map(m=>dayOf(m.fecha)).filter(Boolean))].sort((a,b)=>parseTs(b+" 00:00:00")-parseTs(a+" 00:00:00"));
   const cs=clientsAgg();const t=totals(cs);
 
-  $("#acctline").textContent=`${cs.length} clientes · ${ds.length?(ds.length===1?ds[0]:ds[ds.length-1]+"–"+ds[0]):"base al 16/06"} · v21jun-d`;
+  $("#acctline").textContent=`${cs.length} clientes · ${ds.length?(ds.length===1?ds[0]:ds[ds.length-1]+"–"+ds[0]):"base al 16/06"} · v21jun-e`;
 
   let sorted=sortClients(cs.slice());
   if(ccSearch)sorted=sorted.filter(c=>c.name.toLowerCase().includes(ccSearch));
@@ -1080,8 +1080,7 @@ function renderCaja(){
   const ganMes=ventasAggMonth(curMK).reduce((s,c)=>s+c.gd,0);
   const fondoMes=fondoData(curMK).totFondo;
   const deberiaTener=capital+ganMes+fondoMes;
-  const capitalReal=saldoPw-prest;
-  const faltaCap=capital-capitalReal;
+  const faltaDep=capital+ganMes+fondoMes+prest-saldoPw-deben;
   const mlbl=monthLabel(curMK);
   const feed=[];
   for(const p of state.pagos)if(p.metodo)feed.push({ts:parseTs(p.fecha),t:p.name,sub:`Cobranza · ${acctName(p.metodo)}`,amt:p.importe,sign:1});
@@ -1091,12 +1090,15 @@ function renderCaja(){
   const mpInbox=state.mpInbox||[];const mpN=Object.keys(state.mpMap||{}).length;
   $("#cajaBody").innerHTML=`
     <div class="card">
-      <h3>Capital de trabajo</h3>
-      <div class="arow edit" id="eCap"><div class="l">Capital objetivo<small>la plata que querés tener operando</small></div><div class="v num">${money(capital)} <span class="pencil">editar</span></div></div>
-      <div class="arow edit" id="eSaldo"><div class="l">Saldo en pinweb hoy<small>lo que figura en pinweb</small></div><div class="v num">${money(saldoPw)} <span class="pencil">editar</span></div></div>
-      ${prest>0?`<div class="arow"><div class="l">Préstamo a devolver<small>de la empresa · detectado del CSV</small></div><div class="v num neg">−${money(prest)}</div></div>`:""}
-      <div class="arow" style="border-top:1px solid var(--line);margin-top:2px"><div class="l">Tu capital real<small>saldo − préstamo · lo tuyo de verdad</small></div><div class="v num ${capitalReal>=0?'pos':'neg'}">${money(capitalReal)}</div></div>
-      <div class="totrow"><div class="l">${faltaCap>0?"Falta depositar":faltaCap<0?"Tenés de más":"Capital completo"}<small>${faltaCap>0?"para llegar al objetivo y quedar sin deuda":faltaCap<0?"por encima del objetivo":"✓ justo"}</small></div><div class="v num ${faltaCap>0?'neg':'pos'}">${money(Math.abs(faltaCap))}</div></div>
+      <h3>Falta depositar</h3>
+      <p class="hint" style="margin:-4px 0 10px">cuánto tenés que poner vos para quedar al día</p>
+      <div class="arow edit" id="eCap"><div class="l">Capital objetivo<small>la plata operando</small></div><div class="v num">+ ${money(capital)} <span class="pencil">editar</span></div></div>
+      <div class="arow"><div class="l">Ganancia mía<small>tu ganancia del mes</small></div><div class="v num">+ ${money(ganMes)}</div></div>
+      <div class="arow"><div class="l">Fondo a devolver<small>la parte de los %</small></div><div class="v num">+ ${money(fondoMes)}</div></div>
+      ${prest>0?`<div class="arow"><div class="l">Préstamo a devolver<small>de la empresa · del CSV</small></div><div class="v num">+ ${money(prest)}</div></div>`:""}
+      <div class="arow edit" id="eSaldo" style="border-top:1px solid var(--line);margin-top:2px"><div class="l">Saldo en pinweb hoy<small>lo que ya tenés</small></div><div class="v num pos">− ${money(saldoPw)} <span class="pencil">editar</span></div></div>
+      <div class="arow"><div class="l">Te deben los clientes<small>lo que va a entrar</small></div><div class="v num pos">− ${money(deben)}</div></div>
+      <div class="totrow"><div class="l">${faltaDep>0?"Falta depositar":faltaDep<0?"Tenés de más":"Justo ✓"}<small>${faltaDep>0?"poné esto y quedás al día":faltaDep<0?"estás por encima":"✓ al día"}</small></div><div class="v num ${faltaDep>0?'neg':'pos'}">${money(Math.abs(faltaDep))}</div></div>
       <div class="arow edit" id="eDeps"><div class="l">Depósitos cargados<small>detectados del CSV + manuales</small></div><div class="v num">${money(totalDep)} <span class="pencil">ver</span></div></div>
       <button class="addbtn" id="cAddDep">+ Registrar depósito a mano</button>
     </div>
@@ -1116,7 +1118,7 @@ function renderCaja(){
     <div class="card">
       <h3>Resumen · automático</h3>
       <div class="arow"><div class="l">Te deben los clientes<small>cuenta corriente</small></div><div class="v num neg">${money(deben)}</div></div>
-      <div class="totrow"><div class="l">Posición neta<small style="font-weight:500;color:var(--muted);display:block;margin-top:2px">tu capital real + te deben − fondo</small></div><div class="v num ${posNeta>=0?'pos':'neg'}">${money(posNeta)}</div></div>
+      <div class="totrow"><div class="l">Posición neta<small style="font-weight:500;color:var(--muted);display:block;margin-top:2px">pinweb + te deben − préstamo − fondo</small></div><div class="v num ${posNeta>=0?'pos':'neg'}">${money(posNeta)}</div></div>
       <button class="addbtn" id="cAddMov">+ Retiro / gasto / ingreso</button>
     </div>
     ${recent.length?`<div class="card"><h3>Movimientos recientes</h3>${recent.map(f=>{const net=f.sign*f.amt;return `<div class="movrow"><div class="mc">${f.t}<small style="display:block;margin-top:1px">${f.sub}</small></div><span class="num ${net>=0?'pos':'neg'}" style="font-weight:700">${net>=0?'+':'−'}${money(Math.abs(net))}</span></div>`}).join("")}</div>`:""}`;
