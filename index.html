@@ -702,7 +702,7 @@ function render(){
   const ds=[...new Set(state.movs.map(m=>dayOf(m.fecha)).filter(Boolean))].sort((a,b)=>parseTs(b+" 00:00:00")-parseTs(a+" 00:00:00"));
   const cs=clientsAgg();const t=totals(cs);
 
-  $("#acctline").textContent=`${cs.length} clientes · ${ds.length?(ds.length===1?ds[0]:ds[ds.length-1]+"–"+ds[0]):"base al 16/06"} · v21jun`;
+  $("#acctline").textContent=`${cs.length} clientes · ${ds.length?(ds.length===1?ds[0]:ds[ds.length-1]+"–"+ds[0]):"base al 16/06"} · v21jun-b`;
 
   let sorted=sortClients(cs.slice());
   if(ccSearch)sorted=sorted.filter(c=>c.name.toLowerCase().includes(ccSearch));
@@ -1349,8 +1349,9 @@ function openClient(key){
     <button class="addbtn" id="oCierre">📋 Cierre del día (WhatsApp)</button>
     ${op?`<div class="hint" style="margin-top:14px">Saldo de arranque (de tu Excel): <b>${money(op.total)}</b> · <button class="pencil" id="editOpen" style="background:none;border:none;color:var(--brand);font-weight:700;cursor:pointer;text-decoration:underline">ajustar</button></div>`:`<div class="hint" style="margin-top:14px"><button class="pencil" id="editOpen" style="background:none;border:none;color:var(--brand);font-weight:700;cursor:pointer;text-decoration:underline">+ Cargar saldo de arranque</button></div>`}
     <label class="field" style="margin-top:14px">Pagos</label>
-    ${pays.length?pays.map(p=>`<div class="mrow"><div class="d">Pago<small>${p.fecha}</small></div>
+    ${pays.length?pays.map(p=>`<div class="mrow"><div class="d">Pago${p.mpId?' · MP':''}<small>${p.fecha}</small></div>
       <div style="display:flex;align-items:center;gap:6px"><span class="num pos" style="font-weight:700">${money(p.importe)}</span>
+      ${p.mpId?`<button class="xbtn" data-mpback="${p.id}" title="Devolver a por confirmar" style="color:var(--amber)">↩</button>`:""}
       <button class="xbtn" data-pid="${p.id}">✕</button></div></div>`).join(""):`<div class="hint" style="padding:6px 0">Sin pagos registrados.</div>`}
     <label class="field" style="margin-top:14px">Acreditaciones</label>
     ${op?`<div class="mrow"><div class="d">Saldo anterior<small>de tu Excel</small></div><div class="num neg" style="font-weight:700">${money(op.total)}</div></div>`:""}
@@ -1364,8 +1365,16 @@ function openClient(key){
   $("#oCierre").onclick=()=>cierreSheet(key);
   $("#oContact").onclick=()=>setContactSheet(key,c.name);
   const eo=$("#editOpen");if(eo)eo.onclick=()=>editOpening(key,c.name);
-  [...document.querySelectorAll("#sheet .xbtn")].forEach(b=>b.onclick=async()=>{
+  [...document.querySelectorAll("#sheet .xbtn[data-pid]")].forEach(b=>b.onclick=async()=>{
     state.pagos=state.pagos.filter(p=>p.id!==b.dataset.pid);logAction("Pago eliminado");await save();openClient(key);render();toast("Pago eliminado");});
+  [...document.querySelectorAll("#sheet [data-mpback]")].forEach(b=>b.onclick=async()=>{
+    const p=state.pagos.find(x=>x.id===b.dataset.mpback);if(!p)return;
+    if(!confirm("¿Devolver este pago a 'por confirmar' para reasignarlo? (suelta el CUIT mal asignado)"))return;
+    state.mpInbox=state.mpInbox||[];
+    if(!state.mpInbox.some(x=>String(x.id)===String(p.mpId)))state.mpInbox.push({id:String(p.mpId),fecha:p.fecha,monto:p.importe,cuit:p.mpCuit||"",nombre:""});
+    if(p.mpCuit&&state.mpMap&&state.mpMap[p.mpCuit])delete state.mpMap[p.mpCuit];
+    state.pagos=state.pagos.filter(x=>x.id!==p.id);
+    logAction("Pago MP devuelto a por confirmar");await save();openClient(key);render();renderCaja();toast("Volvió a 'por confirmar'");});
 }
 
 function diaNombre(d){const m=/(\d{1,2})\/(\d{1,2})\/(\d{4})/.exec(d||"");if(!m)return"";const dt=new Date(+m[3],+m[2]-1,+m[1]);return ["domingo","lunes","martes","miércoles","jueves","viernes","sábado"][dt.getDay()]||"";}
