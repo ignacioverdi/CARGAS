@@ -702,7 +702,7 @@ function render(){
   const ds=[...new Set(state.movs.map(m=>dayOf(m.fecha)).filter(Boolean))].sort((a,b)=>parseTs(b+" 00:00:00")-parseTs(a+" 00:00:00"));
   const cs=clientsAgg();const t=totals(cs);
 
-  $("#acctline").textContent=`${cs.length} clientes · ${ds.length?(ds.length===1?ds[0]:ds[ds.length-1]+"–"+ds[0]):"base al 16/06"} · v19jun`;
+  $("#acctline").textContent=`${cs.length} clientes · ${ds.length?(ds.length===1?ds[0]:ds[ds.length-1]+"–"+ds[0]):"base al 16/06"} · v21jun`;
 
   let sorted=sortClients(cs.slice());
   if(ccSearch)sorted=sorted.filter(c=>c.name.toLowerCase().includes(ccSearch));
@@ -1103,7 +1103,7 @@ function renderCaja(){
     </div>
     <div class="card">
       <h3>Pagos de Mercado Pago${mpInbox.length?` <span class="pos">· ${mpInbox.length} por confirmar</span>`:""}</h3>
-      ${mpInbox.length?mpInbox.map(x=>`<div class="arow edit" data-mp="${x.id}"><div class="l">${x.fecha||""} · CUIT ${x.cuit||"?"}</div><div class="v num">${money(x.monto)} <span class="pencil">asignar</span></div></div>`).join(""):'<p class="hint" style="margin:4px 0 0">No hay pagos pendientes de confirmar.</p>'}
+      ${mpInbox.length?mpInbox.map(x=>`<div class="arow edit" data-mp="${x.id}"><div class="l">${x.fecha||""}${x.nombre?` · ${x.nombre}`:""}<br><span class="hint" style="font-size:11px">${x.cuit?`CUIT ${x.cuit}`:"sin CUIT (transferencia de banco)"}</span></div><div class="v num">${money(x.monto)} <span class="pencil">asignar</span></div></div>`).join(""):'<p class="hint" style="margin:4px 0 0">No hay pagos pendientes de confirmar.</p>'}
       <button class="addbtn" id="cImpMP">↑ Importar pagos de Mercado Pago</button>
       ${mpN?`<button class="addbtn" id="cMpMap">CUIT conocidos (${mpN})</button>`:""}
     </div>
@@ -1562,7 +1562,7 @@ async function applyMPcobros(arr){
   const inboxIds=new Set(state.mpInbox.map(x=>String(x.id)));
   let aplic=0,nuevos=0,ign=0,dup=0,upd=0;
   for(const p of arr){
-    const id=String(p.id||"");const cuit=String(p.cuit||"");const monto=+p.monto||0;const fecha=p.fecha||"";
+    const id=String(p.id||"");const cuit=String(p.cuit||"");const monto=+p.monto||0;const fecha=p.fecha||"";const nombre=String(p.nombre||"");
     if(!id||!monto)continue;
     if(seen.has(id)){const ex=byMp.get(id),nf=fechaToStr(fecha);
       if(ex&&nf&&nf!==ex.fecha&&!/ 00:00:00$/.test(nf)){ex.fecha=nf;upd++;}
@@ -1573,7 +1573,7 @@ async function applyMPcobros(arr){
     if(map){const c=clientsAgg().find(x=>x.key===map);const nm=c?c.name:(dispName(map)||map);
       const np={id:"p"+Date.now()+Math.random().toString(36).slice(2,6),name:nm,importe:monto,fecha:fechaToStr(fecha),metodo:"mp",mpId:id,mpCuit:cuit};
       state.pagos.push(np);byMp.set(id,np);seen.add(id);aplic++;
-    }else{state.mpInbox.push({id,fecha,monto,cuit});inboxIds.add(id);nuevos++;}
+    }else{state.mpInbox.push({id,fecha,monto,cuit,nombre});inboxIds.add(id);nuevos++;}
   }
   if(aplic||nuevos||upd){logAction("Mercado Pago: "+aplic+" cobros aplicados"+(nuevos?", "+nuevos+" a confirmar":"")+(upd?", "+upd+" con hora corregida":""));await save();}
   return {aplic,nuevos,ign,dup,upd};
@@ -1603,7 +1603,7 @@ function resolveMPSheet(id){
   const it=state.mpInbox.find(x=>String(x.id)===String(id));if(!it)return;
   const same=it.cuit?state.mpInbox.filter(x=>x.cuit===it.cuit):[it];
   openSheet(`<h3>Pago de Mercado Pago</h3>
-    <div class="hint">${it.fecha||""} · <b>${money(it.monto)}</b><br>CUIT/CUIL: <b>${it.cuit||"(sin dato)"}</b>${same.length>1?`<br><span class="pos">Hay ${same.length} pagos de este CUIT (${money(same.reduce((s,x)=>s+x.monto,0))})</span>`:""}</div>
+    <div class="hint">${it.fecha||""} · <b>${money(it.monto)}</b>${it.nombre?`<br>De: <b>${it.nombre}</b>`:""}<br>CUIT/CUIL: <b>${it.cuit||"(sin dato · transferencia de banco)"}</b>${same.length>1?`<br><span class="pos">Hay ${same.length} pagos de este CUIT (${money(same.reduce((s,x)=>s+x.monto,0))})</span>`:""}</div>
     <label class="field">¿De qué cliente es?</label>
     <input type="text" id="mpCli" placeholder="Ej: Rivadavia1400" list="mpClilist">
     <datalist id="mpClilist">${clientsAgg().map(c=>`<option value="${c.name}">`).join("")}</datalist>
