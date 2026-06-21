@@ -586,6 +586,13 @@ async function load(){
     if(applied){state.ganOpeningCsvFixV1=true;setTimeout(()=>{try{toast("Junio corregido al CSV ✓");}catch(e){}},900);}
   }
   seller=state.seller||"verdi333";
+  if(!state.depAdelantoFixV1){
+    const adIds=new Set((state.movs||[]).filter(esAdelanto).map(recDepId));
+    let sub=0;
+    state.depositos=(state.depositos||[]).filter(d=>{if(d.recId&&adIds.has(d.recId)){sub+=d.monto;return false;}return true;});
+    if(sub)state.saldoSistema=Math.max(0,(state.saldoSistema||0)-sub);
+    state.depAdelantoFixV1=true;
+  }
   if(!state.depAutoV1){state.depRecSeen=state.movs.filter(m=>tipoOf(m)==="recarga").map(recDepId);state.depAutoV1=true;}
   await save();
 }
@@ -702,7 +709,7 @@ function render(){
   const ds=[...new Set(state.movs.map(m=>dayOf(m.fecha)).filter(Boolean))].sort((a,b)=>parseTs(b+" 00:00:00")-parseTs(a+" 00:00:00"));
   const cs=clientsAgg();const t=totals(cs);
 
-  $("#acctline").textContent=`${cs.length} clientes · ${ds.length?(ds.length===1?ds[0]:ds[ds.length-1]+"–"+ds[0]):"base al 16/06"} · v21jun-b`;
+  $("#acctline").textContent=`${cs.length} clientes · ${ds.length?(ds.length===1?ds[0]:ds[ds.length-1]+"–"+ds[0]):"base al 16/06"} · v21jun-c`;
 
   let sorted=sortClients(cs.slice());
   if(ccSearch)sorted=sorted.filter(c=>c.name.toLowerCase().includes(ccSearch));
@@ -1063,16 +1070,12 @@ function acctPicker(id,cur){return `<div class="segctl" id="${id}">${ACCTS.map((
 function wirePicker(id,fn){[...document.querySelectorAll("#"+id+" button")].forEach(b=>b.onclick=()=>{[...document.querySelectorAll("#"+id+" button")].forEach(x=>x.classList.remove("on"));b.classList.add("on");fn(b.dataset.v);});}
 function renderCaja(){
   const cs=clientsAgg();const deben=cs.reduce((s,x)=>s+Math.max(0,x.debe),0);
-  const totalCtas=saldoCta("mp")+saldoCta("efectivo")+saldoCta("banco");
-  const saldoPw=state.saldoSistema||0,prest=state.prestamo||0;
+  const saldoPw=state.saldoSistema||0,prest=prestamoVigente();
   const reservado=fondoReservado();
-  const libre=saldoPw-prest-reservado;
-  const patrim=totalCtas+saldoPw+deben-prest-reservado;
+  const posNeta=saldoPw+deben-prest-reservado;
   const totalDep=state.depositos.reduce((s,d)=>s+d.monto,0);
-  const gananciaAcum=ventasAgg().reduce((s,c)=>s+c.gd,0);
   const retirado=state.cajaMovs.filter(m=>m.tipo==="retiro").reduce((s,m)=>s+m.importe,0);
   const capital=state.capitalTrabajo||0;
-  const tuPlata=patrim-capital;
   const curMK=curMonthKey();
   const ganMes=ventasAggMonth(curMK).reduce((s,c)=>s+c.gd,0);
   const fondoMes=fondoData(curMK).totFondo;
@@ -1108,25 +1111,18 @@ function renderCaja(){
       ${mpN?`<button class="addbtn" id="cMpMap">CUIT conocidos (${mpN})</button>`:""}
     </div>
     <div class="card">
-      <h3>Mis cuentas</h3>
-      ${ACCTS.map(([a,nm,col])=>`<div class="arow edit" data-acc="${a}"><div class="l"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${col};margin-right:7px"></span>${nm}</div><div class="v num">${money(saldoCta(a))} <span class="pencil">ajustar</span></div></div>`).join("")}
-      <div class="totrow"><div class="l">Total en mis cuentas</div><div class="v num">${money(totalCtas)}</div></div>
-      <button class="addbtn" id="cAddMov">+ Gasto / retiro / ingreso</button>
-    </div>
-    <div class="card">
-      <h3>Resumen general</h3>
-      <div class="arow"><div class="l">Te deben los clientes</div><div class="v num neg">${money(deben)}</div></div>
-      <div class="arow edit" id="ePrest"><div class="l">Préstamo de la empresa</div><div class="v num">${money(prest)} <span class="pencil">editar</span></div></div>
-      <div class="totrow"><div class="l">Patrimonio total<small style="font-weight:500;color:var(--muted);display:block;margin-top:2px">cuentas + pinweb + te deben − préstamo − fondo</small></div><div class="v num">${money(patrim)}</div></div>
+      <h3>Resumen · automático</h3>
+      <div class="arow"><div class="l">Te deben los clientes<small>cuenta corriente</small></div><div class="v num neg">${money(deben)}</div></div>
+      <div class="arow"><div class="l">Préstamo de la empresa<small>detectado del CSV · ${prest>0?"vigente":"al día ✓"}</small></div><div class="v num" style="color:${prest>0?'var(--amber)':'var(--muted)'}">${money(prest)}</div></div>
+      <div class="totrow"><div class="l">Posición neta<small style="font-weight:500;color:var(--muted);display:block;margin-top:2px">pinweb + te deben − préstamo − fondo</small></div><div class="v num ${posNeta>=0?'pos':'neg'}">${money(posNeta)}</div></div>
+      <button class="addbtn" id="cAddMov">+ Retiro / gasto / ingreso</button>
     </div>
     ${recent.length?`<div class="card"><h3>Movimientos recientes</h3>${recent.map(f=>{const net=f.sign*f.amt;return `<div class="movrow"><div class="mc">${f.t}<small style="display:block;margin-top:1px">${f.sub}</small></div><span class="num ${net>=0?'pos':'neg'}" style="font-weight:700">${net>=0?'+':'−'}${money(Math.abs(net))}</span></div>`}).join("")}</div>`:""}`;
-  [...document.querySelectorAll('#cajaBody [data-acc]')].forEach(r=>r.onclick=()=>adjustAccountSheet(r.dataset.acc));
   $("#cAddMov").onclick=()=>addCajaMovSheet();
   $("#cAddDep").onclick=()=>registrarDepositoSheet();
   const eD=$("#eDeps");if(eD)eD.onclick=()=>depositosSheet();
   const eC=$("#eCap");if(eC)eC.onclick=()=>editField("capitalTrabajo");
   $("#eSaldo").onclick=()=>editField("saldoSistema");
-  $("#ePrest").onclick=()=>editField("prestamo");
   const impMP=$("#cImpMP");if(impMP)impMP.onclick=()=>importMPSheet();
   [...document.querySelectorAll('#cajaBody [data-mp]')].forEach(r=>r.onclick=()=>resolveMPSheet(r.dataset.mp));
   const mpm=$("#cMpMap");if(mpm)mpm.onclick=()=>mpMapSheet();
@@ -1143,9 +1139,11 @@ function adjustAccountSheet(a){
   $("#ajSave").onclick=async()=>{const real=parseMoney($("#ajv").value);state.cuentasIni[a]=real-(pagosMet(a)+ingCta(a)-depCta(a)-gastoCta(a));await save();closeSheet();renderCaja();toast("Saldo actualizado");};
 }
 function recDepId(m){const mm=/^\s*(\d+)\s*-/.exec(m.desc||"");return mm?mm[1]:((m.fecha||"")+"|"+m.importe);}
+function esAdelanto(m){return /adelanto/i.test(m.desc||"");}
+function prestamoVigente(){let s=0;for(const m of (state.movs||[])){if(esAdelanto(m))s+=(m.importe||0);}return Math.max(0,Math.round(s));}
 function absorbRecargas(){
   state.depRecSeen=state.depRecSeen||[];const seen=new Set(state.depRecSeen);let n=0,sum=0;
-  for(const m of state.movs){if(tipoOf(m)!=="recarga")continue;const id=recDepId(m);if(seen.has(id))continue;
+  for(const m of state.movs){if(tipoOf(m)!=="recarga")continue;if(esAdelanto(m))continue;const id=recDepId(m);if(seen.has(id))continue;
     seen.add(id);state.depRecSeen.push(id);const monto=Math.abs(m.importe);
     state.depositos.push({id:"dcsv"+Date.now()+Math.random().toString(36).slice(2,5),recId:id,fecha:m.fecha,monto,cuenta:"mp",nota:"Depósito detectado del CSV"});
     state.saldoSistema=(state.saldoSistema||0)+monto;n++;sum+=monto;}
