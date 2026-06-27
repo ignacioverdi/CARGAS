@@ -709,7 +709,7 @@ function render(){
   const ds=[...new Set(state.movs.map(m=>dayOf(m.fecha)).filter(Boolean))].sort((a,b)=>parseTs(b+" 00:00:00")-parseTs(a+" 00:00:00"));
   const cs=clientsAgg();const t=totals(cs);
 
-  $("#acctline").textContent=`${cs.length} clientes · ${ds.length?(ds.length===1?ds[0]:ds[ds.length-1]+"–"+ds[0]):"base al 16/06"} · v21jun-e`;
+  $("#acctline").textContent=`${cs.length} clientes · ${ds.length?(ds.length===1?ds[0]:ds[ds.length-1]+"–"+ds[0]):"base al 16/06"} · v21jun-f`;
 
   let sorted=sortClients(cs.slice());
   if(ccSearch)sorted=sorted.filter(c=>c.name.toLowerCase().includes(ccSearch));
@@ -964,9 +964,48 @@ function clientPagDetailSheet(k,mk){
     <p class="hint">Comisión que le devolvés, día por día · ${monthLabel(mk)}</p>
     ${body}
     ${canExport?`<div class="seg" style="margin-top:14px"><button class="sel" id="pdImg">📷 Imagen</button><button id="pdPdf">🖨️ PDF</button></div>`:""}
+    ${k==="rivadavia7376"?`<button id="pdFact" style="margin-top:8px;width:100%;background:#1e2440;color:#a98bff;font-weight:700;border:1px solid rgba(169,139,255,.3)">📄 Armar mensaje de Factura A</button>`:""}
     <button id="pdClose" style="margin-top:8px;width:100%">Cerrar</button>`);
   $("#pdClose").onclick=closeSheet;
   if(canExport){$("#pdImg").onclick=()=>exportDetailPNG(k,mk);$("#pdPdf").onclick=()=>exportDetailPDF(k,mk);}
+  const pf=$("#pdFact");if(pf)pf.onclick=()=>facturaSheet(k,mk);
+}
+const FACT_DATA={razon:"Ignacio Damian Verdi",cuit:"20-35094005-8",dir:"av San Juan 2981 7A"};
+function facturaComis(k,mk){
+  const cf=clientConf(k);const rows=clientPagDetail(k,mk);
+  if(rows.length)return {virtual:rows.reduce((s,r)=>s+r.comV,0),sube:rows.reduce((s,r)=>s+r.comS,0)};
+  const arch=state.ganArchive&&state.ganArchive[mk]&&state.ganArchive[mk][k];
+  if(arch)return {virtual:(cf.virtMode==="pct")?(arch.vV||0)*(cf.virtPct||0):0,sube:(cf.subeMode==="pct")?(arch.vS||0)*(cf.subePct||0):0};
+  return {virtual:0,sube:0};
+}
+function facturaMsg(k,mk){
+  const c=facturaComis(k,mk);const f=n=>Math.round(n).toLocaleString("es-AR");
+  const vR=Math.round(c.virtual),ivaV=Math.round(c.virtual*0.21),totV=vR+ivaV;
+  const sR=Math.round(c.sube),ivaS=Math.round(c.sube*0.21),totS=sR+ivaS;
+  const fin=totV+totS;
+  return `Te paso los datos con las comisiones para hacer la factura A\nRazón social: ${FACT_DATA.razon}\nCuit: ${FACT_DATA.cuit}\nDirección: ${FACT_DATA.dir}\nPoner comisiones carga virtual y sube ${monthLabel(mk)}\nVirtual: ${f(vR)}\nIva virtual: ${f(ivaV)}\nTotal: ${f(totV)}\nSube: ${f(sR)}\nIva sube: ${f(ivaS)}\nTotal: ${f(totS)}\nTOTAL final: ${f(fin)}`;
+}
+function facturaSheet(k,mk){
+  const name=dispName(k)||k;const cur=curMonthKey();
+  const opts=[prevMonthKey(cur),cur,prevMonthKey(prevMonthKey(cur))];
+  const seen=new Set();const monthOpts=[];
+  for(const o of opts){if(seen.has(o))continue;seen.add(o);const c=facturaComis(k,o);if(c.virtual||c.sube)monthOpts.push(o);}
+  if(!monthOpts.length)monthOpts.push(prevMonthKey(cur));
+  let sel=monthOpts.includes(mk)?mk:monthOpts[0];
+  const render=()=>{
+    const chips=monthOpts.map(o=>`<button class="fmo" data-mo="${o}" style="flex:1;${o===sel?'background:linear-gradient(135deg,#7b6bff,#a98bff);color:#fff':''}">${monthLabel(o)}</button>`).join("");
+    openSheet(`<h3>Factura A · ${name}</h3>
+      <p class="hint">Mensaje para que te haga la factura A de sus comisiones + IVA 21%. Elegí el mes y copialo o mandalo por WhatsApp.</p>
+      ${monthOpts.length>1?`<div class="seg" style="margin-bottom:10px">${chips}</div>`:""}
+      <textarea id="faTxt" style="width:100%;height:240px;font-size:13px;line-height:1.5;font-family:inherit;background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:12px;padding:11px">${facturaMsg(k,sel)}</textarea>
+      <div class="seg" style="margin-top:12px"><button class="sel" id="faWa">Enviar por WhatsApp</button><button id="faCopy">Copiar</button></div>
+      <button id="faBack" style="margin-top:8px;width:100%">Volver</button>`);
+    [...document.querySelectorAll(".fmo")].forEach(b=>b.onclick=()=>{sel=b.dataset.mo;render();});
+    $("#faCopy").onclick=async()=>{try{await navigator.clipboard.writeText($("#faTxt").value);toast("Copiado ✓");}catch(e){toast("No se pudo copiar");}};
+    $("#faWa").onclick=()=>{const ct=state.contacts[k]||{};const ph=(ct.phone||"").replace(/\D/g,"");const url=(ph?`https://wa.me/${ph}`:"https://wa.me/")+`?text=${encodeURIComponent($("#faTxt").value)}`;window.open(url,"_blank");};
+    $("#faBack").onclick=()=>clientPagDetailSheet(k,mk);
+  };
+  render();
 }
 function exportDetailPNG(k,mk){
   const name=dispName(k)||k;const data=exportDetailData(k,mk);if(!data.length){toast("Nada para exportar");return;}
