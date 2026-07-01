@@ -594,6 +594,7 @@ async function load(){
     state.depAdelantoFixV1=true;
   }
   if(!state.depAutoV1){state.depRecSeen=state.movs.filter(m=>tipoOf(m)==="recarga").map(recDepId);state.depAutoV1=true;}
+  autoArchivePastMonths();
   await save();
 }
 let undoJSON=null,storedJSON=null;
@@ -709,7 +710,7 @@ function render(){
   const ds=[...new Set(state.movs.map(m=>dayOf(m.fecha)).filter(Boolean))].sort((a,b)=>parseTs(b+" 00:00:00")-parseTs(a+" 00:00:00"));
   const cs=clientsAgg();const t=totals(cs);
 
-  $("#acctline").textContent=`${cs.length} clientes · ${ds.length?(ds.length===1?ds[0]:ds[ds.length-1]+"–"+ds[0]):"base al 16/06"} · v21jun-f`;
+  $("#acctline").textContent=`${cs.length} clientes · ${ds.length?(ds.length===1?ds[0]:ds[ds.length-1]+"–"+ds[0]):"base al 16/06"} · v21jun-g`;
 
   let sorted=sortClients(cs.slice());
   if(ccSearch)sorted=sorted.filter(c=>c.name.toLowerCase().includes(ccSearch));
@@ -808,7 +809,7 @@ function openClientGAN(k){
 function monthOf(f){const m=/(\d{1,2})\/(\d{1,2})\/(\d{4})/.exec(f||"");return m?m[3]+"-"+String(m[2]).padStart(2,'0'):"";}
 function monthLabel(mk){const n=["","enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];const[y,m]=mk.split("-");return n[+m]+" "+y;}
 function nextMonth5(mk){let[y,m]=mk.split("-").map(Number);m++;if(m>12){m=1;y++;}return "5/"+String(m).padStart(2,'0')+"/"+y;}
-function availableMonths(){const s=new Set([BASE_MONTH]);for(const v of state.ventas){const mk=monthOf(v.fecha);if(mk)s.add(mk);}return [...s].sort().reverse();}
+function availableMonths(){const s=new Set([BASE_MONTH]);for(const mk in state.ganArchive)s.add(mk);for(const v of state.ventas){const mk=monthOf(v.fecha);if(mk)s.add(mk);}return [...s].sort().reverse();}
 const FUND_SET=new Set(["rivadavia1400","rivadavia2289","rivadavia7376","olavarria3038","montiel1905","sanpedrito27","hyrigoyen1400","lacroze2929"]);
 const ADELANTO_SET=new Set(["rivadavia5406","uruguay198"]);
 function hasEarlyJune(){for(const v of state.ventas){if(monthOf(v.fecha)!==BASE_MONTH)continue;const m=/^(\d{1,2})\//.exec(v.fecha);if(m&&+m[1]<=16)return true;}return false;}
@@ -854,6 +855,31 @@ function ganAPagarMonth(mk){
     const comV=inV?a.vV*(cf.virtPct||0):0, comS=inS?a.vS*(cf.subePct||0):0;
     rows.push({key:a.key,name:a.name,comV,comS,total:comV+comS,inV,inS});}
   return rows.sort((a,b)=>b.total-a.total);
+}
+function monthPending(mk){
+  const rows=ganAPagarMonth(mk).filter(r=>FUND_SET.has(r.key));
+  const paidMap=state.paid[mk]||{};let pend=0;
+  for(const r of rows){if(!paidMap[r.key])pend+=r.total;}
+  return {pend,rows:rows.length};
+}
+function archiveMonth(mk){
+  const agg=ventasAggMonth(mk);const summary={};
+  for(const a of agg){
+    if(!a.vV&&!a.gdV&&!a.gjV&&!a.vS&&!a.gdS&&!a.gjS)continue;
+    summary[a.key]={name:a.name,vV:a.vV,gdV:a.gdV,gjV:a.gjV,vS:a.vS,gdS:a.gdS,gjS:a.gjS};
+  }
+  state.ganArchive=state.ganArchive||{};state.ganArchive[mk]=summary;
+  state.ventas=state.ventas.filter(v=>monthOf(v.fecha)!==mk);
+  if(mk===BASE_MONTH)state.ganOpening={};
+  logAction("Mes archivado automáticamente: "+monthLabel(mk)+" ("+Object.keys(summary).length+" clientes, ya pagado)");
+}
+function autoArchivePastMonths(){
+  const cur=curMonthKey();const cand=new Set();
+  for(const v of state.ventas){const mk=monthOf(v.fecha);if(mk&&mk<cur)cand.add(mk);}
+  if(Object.keys(state.ganOpening||{}).length&&BASE_MONTH<cur)cand.add(BASE_MONTH);
+  let did=false;
+  for(const mk of cand){const p=monthPending(mk);if(p.pend===0){archiveMonth(mk);did=true;}}
+  return did;
 }
 function renderPAG(){
   const months=availableMonths();
@@ -934,7 +960,7 @@ function clientPagDetail(k,mk){
     else continue;
     const o=days.get(d)||{d,comV:0,comS:0,volV:0,volS:0};o.comV+=cv;o.comS+=cs;o.volV+=vv;o.volS+=vs;days.set(d,o);
   }
-  if(mk===BASE_MONTH&&typeof JUN16_DETAIL!=="undefined"&&JUN16_DETAIL[k]){
+  if(mk===BASE_MONTH&&!(state.ganArchive&&state.ganArchive[BASE_MONTH])&&typeof JUN16_DETAIL!=="undefined"&&JUN16_DETAIL[k]){
     for(const d in JUN16_DETAIL[k]){if(days.has(d))continue;const s=JUN16_DETAIL[k][d];days.set(d,{d,comV:s.cv,comS:s.cs,volV:s.vv,volS:s.vs});}
   }
   return [...days.values()].sort((a,b)=>parseTs(b.d+" 00:00:00")-parseTs(a.d+" 00:00:00"));
@@ -1594,6 +1620,7 @@ function importVentasSheet(){
   $("#pSaveG").onclick=async()=>{const txt=$("#pasteG").value;if(!txt.trim()){toast("Pegá el CSV primero");return;}await ingestAuto(txt);};
 }
 async function ingestVentas(text){const rows=parseVentas(text);if(!rows.length){toast("No encontré ventas en ese CSV");return;}
+  for(const r of rows){const mk=monthOf(r.fecha);if(mk&&state.ganArchive&&state.ganArchive[mk]){delete state.ganArchive[mk];logAction("Mes des-archivado por re-importación: "+monthLabel(mk));}}
   const added=mergeVentas(rows);await save();closeSheet();renderGAN();renderPAG();
   toast(added?`Importadas ${added} ventas nuevas`:"Ya las tenías todas");}
 $("#fileG").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>ingestAuto(r.result);r.readAsText(f,"utf-8");e.target.value="";};
