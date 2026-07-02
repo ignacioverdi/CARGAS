@@ -720,7 +720,7 @@ function render(){
   const ds=[...new Set(state.movs.map(m=>dayOf(m.fecha)).filter(Boolean))].sort((a,b)=>parseTs(b+" 00:00:00")-parseTs(a+" 00:00:00"));
   const cs=clientsAgg();const t=totals(cs);
 
-  $("#acctline").textContent=`${cs.length} clientes · ${ds.length?(ds.length===1?ds[0]:ds[ds.length-1]+"–"+ds[0]):"base al 16/06"} · v01jul-a`;
+  $("#acctline").textContent=`${cs.length} clientes · ${ds.length?(ds.length===1?ds[0]:ds[ds.length-1]+"–"+ds[0]):"base al 16/06"} · v01jul-b`;
 
   let sorted=sortClients(cs.slice());
   if(ccSearch)sorted=sorted.filter(c=>c.name.toLowerCase().includes(ccSearch));
@@ -972,7 +972,7 @@ function clientPagDetail(k,mk){
     else continue;
     const o=days.get(d)||{d,comV:0,comS:0,volV:0,volS:0};o.comV+=cv;o.comS+=cs;o.volV+=vv;o.volS+=vs;days.set(d,o);
   }
-  if(mk===BASE_MONTH&&!(state.ganArchive&&state.ganArchive[BASE_MONTH])&&typeof JUN16_DETAIL!=="undefined"&&JUN16_DETAIL[k]){
+  if(mk===BASE_MONTH&&!state.juneFromRaw&&!(state.ganArchive&&state.ganArchive[BASE_MONTH])&&typeof JUN16_DETAIL!=="undefined"&&JUN16_DETAIL[k]){
     for(const d in JUN16_DETAIL[k]){if(days.has(d))continue;const s=JUN16_DETAIL[k][d];days.set(d,{d,comV:s.cv,comS:s.cs,volV:s.vv,volS:s.vs});}
   }
   return [...days.values()].sort((a,b)=>parseTs(b.d+" 00:00:00")-parseTs(a.d+" 00:00:00"));
@@ -1629,7 +1629,9 @@ function importVentasSheet(){
   $("#pSaveG").onclick=async()=>{const txt=$("#pasteG").value;if(!txt.trim()){toast("Pegá el CSV primero");return;}await ingestAuto(txt);};
 }
 async function ingestVentas(text){const rows=parseVentas(text);if(!rows.length){toast("No encontré ventas en ese CSV");return;}
-  for(const r of rows){const mk=monthOf(r.fecha);if(mk&&state.ganArchive&&state.ganArchive[mk]){delete state.ganArchive[mk];logAction("Mes des-archivado por re-importación: "+monthLabel(mk));}}
+  const months=new Set(rows.map(r=>monthOf(r.fecha)).filter(Boolean));
+  for(const mk of months){if(state.ganArchive&&state.ganArchive[mk]){delete state.ganArchive[mk];logAction("Mes des-archivado por re-importación: "+monthLabel(mk));}}
+  if(months.has(BASE_MONTH)){if(Object.keys(state.ganOpening||{}).length){state.ganOpening={};logAction("Junio: ahora se calcula con las ventas reales del CSV completo");}state.juneFromRaw=true;}
   const added=mergeVentas(rows);await save();closeSheet();renderGAN();renderPAG();
   toast(added?`Importadas ${added} ventas nuevas`:"Ya las tenías todas");}
 $("#fileG").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>ingestAuto(r.result);r.readAsText(f,"utf-8");e.target.value="";};
