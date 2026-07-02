@@ -351,6 +351,7 @@
 
   <input type="text" id="ccSearch" class="search" placeholder="Buscar cliente…" autocomplete="off">
   <div class="toolbar">
+    <button class="sortbtn" id="ccMonthBtn">mes: Acumulado ▾</button>
     <button class="sortbtn" id="sortbtn">orden: deuda ▾</button>
     <span class="cnt" id="cliCount"></span>
   </div>
@@ -359,7 +360,7 @@
     <div class="tablecard">
       <div class="tscroll">
         <table>
-          <thead><tr><th>Cliente</th><th class="r">Total</th><th class="r">Pagado</th><th class="r">Debe</th></tr></thead>
+          <thead><tr id="ccHead"><th>Cliente</th><th class="r">Total</th><th class="r">Pagado</th><th class="r">Debe</th></tr></thead>
           <tbody id="rows"></tbody>
           <tfoot id="foot"></tfoot>
         </table>
@@ -503,6 +504,7 @@ let seller="verdi333";
 let sortMode="debe";
 let sortG="gan";
 let ganMonth="";
+let ccMonth="all";
 let tab="cc";
 // Guardado: usa el de Claude si existe (preview), si no localStorage (subido a internet)
 let store=(typeof window!=="undefined"&&window.storage&&window.storage.get)
@@ -709,6 +711,22 @@ function clientsAgg(){
   for(const p of state.pagos){const o=get(p.name);o.pagado+=p.importe;o.payItems.push(p);const ts=parseTs(p.fecha);if(ts>o.last)o.last=ts;}
   const arr=[...map.values()];arr.forEach(c=>{c.debe=c.acred-c.pagado;const dn=dispName(c.key);if(dn)c.name=dn;});return arr;
 }
+function ccMonths(){const s=new Set();for(const m of state.movs){const mk=monthOf(m.fecha);if(mk)s.add(mk);}for(const p of state.pagos){const mk=monthOf(p.fecha);if(mk)s.add(mk);}return [...s].sort().reverse();}
+function clientsAggMonth(mk){
+  if(mk==="all"||!mk){const cs=clientsAgg();cs.forEach(c=>{c.ant=0;c.cargas=c.acred;c.pagMes=c.pagado;});return cs;}
+  const map=new Map();
+  const get=(name)=>{const k=key(name);if(!map.has(k))map.set(k,{key:k,name,ant:0,cargas:0,pagMes:0,accItems:[],payItems:[],last:0});return map.get(k);};
+  for(const k in state.opening){const o=state.opening[k];const c=get(o.name);c.ant+=((o.total||0)-(o.pagado||0));}
+  for(const m of state.movs){const t=tipoOf(m);if(t!=="acreditacion"&&t!=="devolucion")continue;
+    const mmk=monthOf(m.fecha);const amt=-m.importe;const o=get(m.recibe);
+    if(mmk&&mmk<mk)o.ant+=amt; else if(mmk===mk){o.cargas+=amt;o.accItems.push(m);}
+    const ts=parseTs(m.fecha);if(ts>=o.last){o.last=ts;o.name=m.recibe;}}
+  for(const p of state.pagos){const mmk=monthOf(p.fecha);const o=get(p.name);
+    if(mmk&&mmk<mk)o.ant-=p.importe; else if(mmk===mk){o.pagMes+=p.importe;o.payItems.push(p);}
+    const ts=parseTs(p.fecha);if(ts>o.last)o.last=ts;}
+  const arr=[...map.values()];arr.forEach(c=>{c.debe=c.ant+c.cargas-c.pagMes;c.acred=c.cargas;c.pagado=c.pagMes;const dn=dispName(c.key);if(dn)c.name=dn;});
+  return arr;
+}
 function totals(cs){return cs.reduce((a,c)=>{a.acred+=c.acred;a.pagado+=c.pagado;a.debe+=c.debe;return a;},{acred:0,pagado:0,debe:0});}
 function sortClients(cs){const m=sortMode;
   if(m==="debe")return cs.sort((a,b)=>b.debe-a.debe||b.acred-a.acred);
@@ -718,9 +736,15 @@ function sortClients(cs){const m=sortMode;
 function render(){
   $("#acct").textContent=seller;
   const ds=[...new Set(state.movs.map(m=>dayOf(m.fecha)).filter(Boolean))].sort((a,b)=>parseTs(b+" 00:00:00")-parseTs(a+" 00:00:00"));
-  const cs=clientsAgg();const t=totals(cs);
+  const isMonth=ccMonth!=="all"&&!!ccMonth;
+  const cs=clientsAggMonth(ccMonth);const t=totals(cs);
+  const tAnt=cs.reduce((s,c)=>s+(c.ant||0),0);
+  $("#ccMonthBtn").textContent="mes: "+(isMonth?monthLabel(ccMonth):"Acumulado")+" ▾";
+  $("#ccHead").innerHTML=isMonth
+    ?`<th>Cliente</th><th class="r">Saldo ant.</th><th class="r">Cargó</th><th class="r">Pagó</th><th class="r">Debe</th>`
+    :`<th>Cliente</th><th class="r">Total</th><th class="r">Pagado</th><th class="r">Debe</th>`;
 
-  $("#acctline").textContent=`${cs.length} clientes · ${ds.length?(ds.length===1?ds[0]:ds[ds.length-1]+"–"+ds[0]):"base al 16/06"} · v01jul-b`;
+  $("#acctline").textContent=`${cs.length} clientes · ${ds.length?(ds.length===1?ds[0]:ds[ds.length-1]+"–"+ds[0]):"base al 16/06"} · v01jul-c`;
 
   let sorted=sortClients(cs.slice());
   if(ccSearch)sorted=sorted.filter(c=>c.name.toLowerCase().includes(ccSearch));
@@ -730,9 +754,22 @@ function render(){
 
   $("#rows").innerHTML=sorted.length?sorted.map(c=>{
     const ok=Math.round(c.debe)<=0;
+    const pagCls=c.pagado>0?'pos':c.pagado<0?'neg':'mut';
+    if(isMonth){
+      const base=(c.ant||0)+(c.cargas||0);
+      const pct=base>0?Math.max(0,Math.min(100,Math.round((c.pagMes||0)/base*100))):0;const full=pct>=100;
+      return `<tr data-k="${c.key}" class="${ok?'ok':''}">
+        <td><div class="cli"><div class="av" style="background:${avatarBg(c.name)}">${initials(c.name)}</div>
+          <div class="cliinfo"><div class="nm">${c.name}</div>
+          ${base>0?`<div class="bar ${full?'full':''}"><span style="width:${pct}%"></span></div>`:``}</div></div></td>
+        <td class="r num mut">${money(c.ant||0)}</td>
+        <td class="r num tot">${money(c.cargas||0)}</td>
+        <td class="r num ${c.pagMes>0?'pos':'mut'}">${money(c.pagMes||0)}</td>
+        <td class="r"><span class="pill ${ok?'ok':''} num">${money(c.debe)}</span></td>
+      </tr>`;
+    }
     const pct=c.acred>0?Math.max(0,Math.min(100,Math.round(c.pagado/c.acred*100))):0;
     const full=pct>=100;
-    const pagCls=c.pagado>0?'pos':c.pagado<0?'neg':'mut';
     return `<tr data-k="${c.key}" class="${ok?'ok':''}">
       <td><div class="cli"><div class="av" style="background:${avatarBg(c.name)}">${initials(c.name)}</div>
         <div class="cliinfo"><div class="nm">${c.name}</div>
@@ -740,8 +777,10 @@ function render(){
       <td class="r num tot">${money(c.acred)}</td>
       <td class="r num ${pagCls}">${money(c.pagado)}</td>
       <td class="r"><span class="pill ${ok?'ok':''} num">${money(c.debe)}</span></td>
-    </tr>`;}).join(""):`<tr><td colspan="4"><div class="empty">Sin clientes. Importá un CSV de pinweb.</div></td></tr>`;
-  $("#foot").innerHTML=sorted.length?`<tr><td>TOTAL</td><td class="r num">${money(t.acred)}</td><td class="r num">${money(t.pagado)}</td><td class="r num ft-deb">${money(t.debe)}</td></tr>`:"";
+    </tr>`;}).join(""):`<tr><td colspan="${isMonth?5:4}"><div class="empty">Sin clientes. Importá un CSV de pinweb.</div></td></tr>`;
+  $("#foot").innerHTML=sorted.length?(isMonth
+    ?`<tr><td>TOTAL</td><td class="r num">${money(tAnt)}</td><td class="r num">${money(t.acred)}</td><td class="r num">${money(t.pagado)}</td><td class="r num ft-deb">${money(t.debe)}</td></tr>`
+    :`<tr><td>TOTAL</td><td class="r num">${money(t.acred)}</td><td class="r num">${money(t.pagado)}</td><td class="r num ft-deb">${money(t.debe)}</td></tr>`):"";
   [...document.querySelectorAll("#rows tr[data-k]")].forEach(tr=>tr.onclick=()=>openClient(tr.dataset.k));
 
   $("#saldos").innerHTML=`<h2>Saldos</h2>
@@ -1746,6 +1785,7 @@ $("#ccSearch").oninput=e=>{ccSearch=e.target.value.trim().toLowerCase();render()
 $("#cobSearch").oninput=e=>{cobSearch=e.target.value.trim().toLowerCase();renderCobrar();};
 
 $("#sortbtn").onclick=()=>{sortMode=sortMode==="debe"?"nombre":sortMode==="nombre"?"reciente":"debe";render();};
+$("#ccMonthBtn").onclick=()=>{const ms=["all",...ccMonths()];const i=ms.indexOf(ccMonth);ccMonth=ms[(i+1)%ms.length];render();};
 $("#sortbtnG").onclick=()=>{sortG=sortG==="gan"?"venta":sortG==="venta"?"nombre":"gan";renderGAN();};
 $("#ganMonthBtn").onclick=()=>{const ms=["all",...availableGanMonths()];const i=ms.indexOf(ganMonth);ganMonth=ms[(i+1)%ms.length];renderGAN();};
 $("#importBtn").onclick=()=>tab==="cc"?importSheet():importVentasSheet();
