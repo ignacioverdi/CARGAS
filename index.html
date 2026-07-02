@@ -716,11 +716,18 @@ function clientsAggMonth(mk){
   if(mk==="all"||!mk){const cs=clientsAgg();cs.forEach(c=>{c.cargas=c.acred;c.pagMes=c.pagado;});return cs;}
   const cur=clientsAgg();const info=new Map(cur.map(c=>[c.key,c]));
   const map=new Map();
-  const get=(name)=>{const k=key(name);if(!map.has(k))map.set(k,{key:k,name,cargas:0,pagMes:0,accItems:[],payItems:[],last:0});return map.get(k);};
-  for(const m of state.movs){const t=tipoOf(m);if((t!=="acreditacion"&&t!=="devolucion")||monthOf(m.fecha)!==mk)continue;const o=get(m.recibe);o.cargas+=-m.importe;o.accItems.push(m);const ts=parseTs(m.fecha);if(ts>=o.last){o.last=ts;o.name=m.recibe;}}
-  for(const p of state.pagos){if(monthOf(p.fecha)!==mk)continue;const o=get(p.name);o.pagMes+=p.importe;o.payItems.push(p);const ts=parseTs(p.fecha);if(ts>o.last)o.last=ts;}
-  for(const c of cur){if(!map.has(c.key)&&Math.round(c.debe)>0){const o=get(c.name);o.key=c.key;o.last=c.last;}}
-  const arr=[...map.values()];arr.forEach(c=>{const ci=info.get(c.key);c.debe=ci?ci.debe:0;c.acred=c.cargas;c.pagado=c.pagMes;c._acredAll=ci?ci.acred:0;c._pagAll=ci?ci.pagado:0;const dn=dispName(c.key)||(ci&&ci.name);if(dn)c.name=dn;});
+  const get=(name)=>{const k=key(name);if(!map.has(k))map.set(k,{key:k,name,ant:0,cargas:0,pagRaw:0,accItems:[],payItems:[],last:0});return map.get(k);};
+  for(const k in state.opening){const o=state.opening[k];const c=get(o.name);c.ant+=((o.total||0)-(o.pagado||0));}
+  for(const m of state.movs){const t=tipoOf(m);if(t!=="acreditacion"&&t!=="devolucion")continue;const mmk=monthOf(m.fecha);const amt=-m.importe;const o=get(m.recibe);if(mmk&&mmk<mk)o.ant+=amt;else if(mmk===mk){o.cargas+=amt;o.accItems.push(m);}const ts=parseTs(m.fecha);if(ts>=o.last){o.last=ts;o.name=m.recibe;}}
+  for(const p of state.pagos){const mmk=monthOf(p.fecha);const o=get(p.name);if(mmk&&mmk<mk)o.ant-=p.importe;else if(mmk===mk){o.pagRaw+=p.importe;o.payItems.push(p);}const ts=parseTs(p.fecha);if(ts>o.last)o.last=ts;}
+  const arr=[...map.values()];arr.forEach(c=>{
+    const ci=info.get(c.key);
+    c.pagMes=c.pagRaw-c.ant;            // pagó del mes − deuda que venía (cancela lo viejo primero)
+    c.debe=c.cargas-c.pagMes;           // = saldo anterior + cargó − pagó = deuda al cierre del mes
+    c.acred=c.cargas;c.pagado=c.pagMes;
+    c._acredAll=ci?ci.acred:0;c._pagAll=ci?ci.pagado:0;
+    const dn=dispName(c.key)||(ci&&ci.name);if(dn)c.name=dn;
+  });
   return arr;
 }
 function totals(cs){return cs.reduce((a,c)=>{a.acred+=c.acred;a.pagado+=c.pagado;a.debe+=c.debe;return a;},{acred:0,pagado:0,debe:0});}
@@ -739,7 +746,7 @@ function render(){
     ?`<th>Cliente</th><th class="r">Cargó</th><th class="r">Pagó</th><th class="r">Debe</th>`
     :`<th>Cliente</th><th class="r">Total</th><th class="r">Pagado</th><th class="r">Debe</th>`;
 
-  $("#acctline").textContent=`${cs.length} clientes · ${ds.length?(ds.length===1?ds[0]:ds[ds.length-1]+"–"+ds[0]):"base al 16/06"} · v01jul-d`;
+  $("#acctline").textContent=`${cs.length} clientes · ${ds.length?(ds.length===1?ds[0]:ds[ds.length-1]+"–"+ds[0]):"base al 16/06"} · v01jul-e`;
 
   let sorted=sortClients(cs.slice());
   if(ccSearch)sorted=sorted.filter(c=>c.name.toLowerCase().includes(ccSearch));
@@ -757,7 +764,7 @@ function render(){
           <div class="cliinfo"><div class="nm">${c.name}</div>
           ${aA>0?`<div class="bar ${full?'full':''}"><span style="width:${pct}%"></span></div>`:``}</div></div></td>
         <td class="r num tot">${money(c.cargas||0)}</td>
-        <td class="r num ${c.pagMes>0?'pos':'mut'}">${money(c.pagMes||0)}</td>
+        <td class="r num ${c.pagMes>0?'pos':c.pagMes<0?'neg':'mut'}">${money(c.pagMes||0)}</td>
         <td class="r"><span class="pill ${ok?'ok':''} num">${money(c.debe)}</span></td>
       </tr>`;
     }
