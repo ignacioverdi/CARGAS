@@ -502,7 +502,7 @@ let state={movs:[],pagos:[],opening:{},ventas:[],saldoSistema:0,prestamo:0,seede
 let seller="verdi333";
 let sortMode="debe";
 let sortG="gan";
-let ganMonth="all";
+let ganMonth="";
 let tab="cc";
 // Guardado: usa el de Claude si existe (preview), si no localStorage (subido a internet)
 let store=(typeof window!=="undefined"&&window.storage&&window.storage.get)
@@ -578,7 +578,17 @@ async function load(){
     for(const mk in GAN_ARCHIVE_SEED){state.paid[mk]=state.paid[mk]||{};for(const kk in GAN_ARCHIVE_SEED[mk]){state.paid[mk][kk]=true;}}
     state.ganArchiveSeededV1=true;
   }
-  autoArchive();
+  if(!state.unarchiveJuneV1){
+    if(state.ganArchive&&state.ganArchive[BASE_MONTH]){
+      const hasRawJune=state.ventas.some(v=>monthOf(v.fecha)===BASE_MONTH);
+      if(!hasRawJune){
+        const jun=state.ganArchive[BASE_MONTH];state.ganOpening=state.ganOpening||{};
+        for(const k in jun){const s=jun[k];state.ganOpening[k]={name:s.name,vV:s.vV,gdV:s.gdV,gjV:s.gjV,vS:s.vS,gdS:s.gdS,gjS:s.gjS};}
+      }
+      delete state.ganArchive[BASE_MONTH];logAction("Junio des-archivado: se archiva recién cuando lo pagues");
+    }
+    state.unarchiveJuneV1=true;
+  }
   {
     const fix={olavarria3038:{old:394300,vV:384300,gdV:17073.32},donald1066:{old:1571300,vV:1561300,gdV:50541.78},ronald1382:{old:667100,vV:542100,gdV:24095.95}};
     let applied=false;
@@ -710,7 +720,7 @@ function render(){
   const ds=[...new Set(state.movs.map(m=>dayOf(m.fecha)).filter(Boolean))].sort((a,b)=>parseTs(b+" 00:00:00")-parseTs(a+" 00:00:00"));
   const cs=clientsAgg();const t=totals(cs);
 
-  $("#acctline").textContent=`${cs.length} clientes · ${ds.length?(ds.length===1?ds[0]:ds[ds.length-1]+"–"+ds[0]):"base al 16/06"} · v21jun-g`;
+  $("#acctline").textContent=`${cs.length} clientes · ${ds.length?(ds.length===1?ds[0]:ds[ds.length-1]+"–"+ds[0]):"base al 16/06"} · v01jul-a`;
 
   let sorted=sortClients(cs.slice());
   if(ccSearch)sorted=sorted.filter(c=>c.name.toLowerCase().includes(ccSearch));
@@ -750,6 +760,8 @@ function render(){
 
 function sortGan(arr){if(sortG==="gan")return arr.sort((a,b)=>b.gd-a.gd);if(sortG==="venta")return arr.sort((a,b)=>b.venta-a.venta);return arr.sort((a,b)=>a.name.localeCompare(b.name,'es'));}
 function renderGAN(){
+  const _gm=availableGanMonths();
+  if(!ganMonth||(ganMonth!=="all"&&!_gm.includes(ganMonth)))ganMonth=_gm[0]||"all";
   const gs=ventasAggMonth(ganMonth);
   const T={vV:0,gdV:0,gjV:0,vS:0,gdS:0,gjS:0};
   gs.forEach(a=>{for(const k in T)T[k]+=a[k];});
@@ -998,11 +1010,8 @@ function clientPagDetailSheet(k,mk){
 }
 const FACT_DATA={razon:"Ignacio Damian Verdi",cuit:"20-35094005-8",dir:"av San Juan 2981 7A"};
 function facturaComis(k,mk){
-  const cf=clientConf(k);const rows=clientPagDetail(k,mk);
-  if(rows.length)return {virtual:rows.reduce((s,r)=>s+r.comV,0),sube:rows.reduce((s,r)=>s+r.comS,0)};
-  const arch=state.ganArchive&&state.ganArchive[mk]&&state.ganArchive[mk][k];
-  if(arch)return {virtual:(cf.virtMode==="pct")?(arch.vV||0)*(cf.virtPct||0):0,sube:(cf.subeMode==="pct")?(arch.vS||0)*(cf.subePct||0):0};
-  return {virtual:0,sube:0};
+  const row=ganAPagarMonth(mk).find(r=>r.key===k);
+  return row?{virtual:row.comV||0,sube:row.comS||0}:{virtual:0,sube:0};
 }
 function facturaMsg(k,mk){
   const c=facturaComis(k,mk);const f=n=>Math.round(n).toLocaleString("es-AR");
