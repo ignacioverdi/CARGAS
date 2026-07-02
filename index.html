@@ -351,6 +351,7 @@
 
   <input type="text" id="ccSearch" class="search" placeholder="Buscar cliente…" autocomplete="off">
   <div class="toolbar">
+    <button class="sortbtn" id="ccMonthBtn">mes: Acumulado ▾</button>
     <button class="sortbtn" id="sortbtn">orden: deuda ▾</button>
     <span class="cnt" id="cliCount"></span>
   </div>
@@ -359,7 +360,7 @@
     <div class="tablecard">
       <div class="tscroll">
         <table>
-          <thead><tr><th>Cliente</th><th class="r">Total</th><th class="r">Pagado</th><th class="r">Debe</th></tr></thead>
+          <thead><tr id="ccHead"><th>Cliente</th><th class="r">Total</th><th class="r">Pagado</th><th class="r">Debe</th></tr></thead>
           <tbody id="rows"></tbody>
           <tfoot id="foot"></tfoot>
         </table>
@@ -502,7 +503,8 @@ let state={movs:[],pagos:[],opening:{},ventas:[],saldoSistema:0,prestamo:0,seede
 let seller="verdi333";
 let sortMode="debe";
 let sortG="gan";
-let ganMonth="all";
+let ganMonth="";
+let ccMonth="all";
 let tab="cc";
 // Guardado: usa el de Claude si existe (preview), si no localStorage (subido a internet)
 let store=(typeof window!=="undefined"&&window.storage&&window.storage.get)
@@ -578,7 +580,17 @@ async function load(){
     for(const mk in GAN_ARCHIVE_SEED){state.paid[mk]=state.paid[mk]||{};for(const kk in GAN_ARCHIVE_SEED[mk]){state.paid[mk][kk]=true;}}
     state.ganArchiveSeededV1=true;
   }
-  autoArchive();
+  if(!state.unarchiveJuneV1){
+    if(state.ganArchive&&state.ganArchive[BASE_MONTH]){
+      const hasRawJune=state.ventas.some(v=>monthOf(v.fecha)===BASE_MONTH);
+      if(!hasRawJune){
+        const jun=state.ganArchive[BASE_MONTH];state.ganOpening=state.ganOpening||{};
+        for(const k in jun){const s=jun[k];state.ganOpening[k]={name:s.name,vV:s.vV,gdV:s.gdV,gjV:s.gjV,vS:s.vS,gdS:s.gdS,gjS:s.gjS};}
+      }
+      delete state.ganArchive[BASE_MONTH];logAction("Junio des-archivado: se archiva recién cuando lo pagues");
+    }
+    state.unarchiveJuneV1=true;
+  }
   {
     const fix={olavarria3038:{old:394300,vV:384300,gdV:17073.32},donald1066:{old:1571300,vV:1561300,gdV:50541.78},ronald1382:{old:667100,vV:542100,gdV:24095.95}};
     let applied=false;
@@ -594,6 +606,7 @@ async function load(){
     state.depAdelantoFixV1=true;
   }
   if(!state.depAutoV1){state.depRecSeen=state.movs.filter(m=>tipoOf(m)==="recarga").map(recDepId);state.depAutoV1=true;}
+  autoArchivePastMonths();
   await save();
 }
 let undoJSON=null,storedJSON=null;
@@ -698,6 +711,25 @@ function clientsAgg(){
   for(const p of state.pagos){const o=get(p.name);o.pagado+=p.importe;o.payItems.push(p);const ts=parseTs(p.fecha);if(ts>o.last)o.last=ts;}
   const arr=[...map.values()];arr.forEach(c=>{c.debe=c.acred-c.pagado;const dn=dispName(c.key);if(dn)c.name=dn;});return arr;
 }
+function ccMonths(){const s=new Set();for(const m of state.movs){const mk=monthOf(m.fecha);if(mk)s.add(mk);}for(const p of state.pagos){const mk=monthOf(p.fecha);if(mk)s.add(mk);}return [...s].sort().reverse();}
+function clientsAggMonth(mk){
+  if(mk==="all"||!mk){const cs=clientsAgg();cs.forEach(c=>{c.cargas=c.acred;c.pagMes=c.pagado;});return cs;}
+  const cur=clientsAgg();const info=new Map(cur.map(c=>[c.key,c]));
+  const map=new Map();
+  const get=(name)=>{const k=key(name);if(!map.has(k))map.set(k,{key:k,name,ant:0,cargas:0,pagRaw:0,accItems:[],payItems:[],last:0});return map.get(k);};
+  for(const k in state.opening){const o=state.opening[k];const c=get(o.name);c.ant+=((o.total||0)-(o.pagado||0));}
+  for(const m of state.movs){const t=tipoOf(m);if(t!=="acreditacion"&&t!=="devolucion")continue;const mmk=monthOf(m.fecha);const amt=-m.importe;const o=get(m.recibe);if(mmk&&mmk<mk)o.ant+=amt;else if(mmk===mk){o.cargas+=amt;o.accItems.push(m);}const ts=parseTs(m.fecha);if(ts>=o.last){o.last=ts;o.name=m.recibe;}}
+  for(const p of state.pagos){const mmk=monthOf(p.fecha);const o=get(p.name);if(mmk&&mmk<mk)o.ant-=p.importe;else if(mmk===mk){o.pagRaw+=p.importe;o.payItems.push(p);}const ts=parseTs(p.fecha);if(ts>o.last)o.last=ts;}
+  const arr=[...map.values()];arr.forEach(c=>{
+    const ci=info.get(c.key);
+    c.pagMes=c.pagRaw-c.ant;            // pagó del mes − deuda que venía (cancela lo viejo primero)
+    c.debe=c.cargas-c.pagMes;           // = saldo anterior + cargó − pagó = deuda al cierre del mes
+    c.acred=c.cargas;c.pagado=c.pagMes;
+    c._acredAll=ci?ci.acred:0;c._pagAll=ci?ci.pagado:0;
+    const dn=dispName(c.key)||(ci&&ci.name);if(dn)c.name=dn;
+  });
+  return arr;
+}
 function totals(cs){return cs.reduce((a,c)=>{a.acred+=c.acred;a.pagado+=c.pagado;a.debe+=c.debe;return a;},{acred:0,pagado:0,debe:0});}
 function sortClients(cs){const m=sortMode;
   if(m==="debe")return cs.sort((a,b)=>b.debe-a.debe||b.acred-a.acred);
@@ -707,9 +739,14 @@ function sortClients(cs){const m=sortMode;
 function render(){
   $("#acct").textContent=seller;
   const ds=[...new Set(state.movs.map(m=>dayOf(m.fecha)).filter(Boolean))].sort((a,b)=>parseTs(b+" 00:00:00")-parseTs(a+" 00:00:00"));
-  const cs=clientsAgg();const t=totals(cs);
+  const isMonth=ccMonth!=="all"&&!!ccMonth;
+  const cs=clientsAggMonth(ccMonth);const t=totals(cs);
+  $("#ccMonthBtn").textContent="mes: "+(isMonth?monthLabel(ccMonth):"Acumulado")+" ▾";
+  $("#ccHead").innerHTML=isMonth
+    ?`<th>Cliente</th><th class="r">Cargó</th><th class="r">Pagó</th><th class="r">Debe</th>`
+    :`<th>Cliente</th><th class="r">Total</th><th class="r">Pagado</th><th class="r">Debe</th>`;
 
-  $("#acctline").textContent=`${cs.length} clientes · ${ds.length?(ds.length===1?ds[0]:ds[ds.length-1]+"–"+ds[0]):"base al 16/06"} · v21jun-e`;
+  $("#acctline").textContent=`${cs.length} clientes · ${ds.length?(ds.length===1?ds[0]:ds[ds.length-1]+"–"+ds[0]):"base al 16/06"} · v01jul-e`;
 
   let sorted=sortClients(cs.slice());
   if(ccSearch)sorted=sorted.filter(c=>c.name.toLowerCase().includes(ccSearch));
@@ -719,9 +756,20 @@ function render(){
 
   $("#rows").innerHTML=sorted.length?sorted.map(c=>{
     const ok=Math.round(c.debe)<=0;
+    const pagCls=c.pagado>0?'pos':c.pagado<0?'neg':'mut';
+    if(isMonth){
+      const aA=c._acredAll||0;const pct=aA>0?Math.max(0,Math.min(100,Math.round((c._pagAll||0)/aA*100))):0;const full=pct>=100;
+      return `<tr data-k="${c.key}" class="${ok?'ok':''}">
+        <td><div class="cli"><div class="av" style="background:${avatarBg(c.name)}">${initials(c.name)}</div>
+          <div class="cliinfo"><div class="nm">${c.name}</div>
+          ${aA>0?`<div class="bar ${full?'full':''}"><span style="width:${pct}%"></span></div>`:``}</div></div></td>
+        <td class="r num tot">${money(c.cargas||0)}</td>
+        <td class="r num ${c.pagMes>0?'pos':c.pagMes<0?'neg':'mut'}">${money(c.pagMes||0)}</td>
+        <td class="r"><span class="pill ${ok?'ok':''} num">${money(c.debe)}</span></td>
+      </tr>`;
+    }
     const pct=c.acred>0?Math.max(0,Math.min(100,Math.round(c.pagado/c.acred*100))):0;
     const full=pct>=100;
-    const pagCls=c.pagado>0?'pos':c.pagado<0?'neg':'mut';
     return `<tr data-k="${c.key}" class="${ok?'ok':''}">
       <td><div class="cli"><div class="av" style="background:${avatarBg(c.name)}">${initials(c.name)}</div>
         <div class="cliinfo"><div class="nm">${c.name}</div>
@@ -749,6 +797,8 @@ function render(){
 
 function sortGan(arr){if(sortG==="gan")return arr.sort((a,b)=>b.gd-a.gd);if(sortG==="venta")return arr.sort((a,b)=>b.venta-a.venta);return arr.sort((a,b)=>a.name.localeCompare(b.name,'es'));}
 function renderGAN(){
+  const _gm=availableGanMonths();
+  if(!ganMonth||(ganMonth!=="all"&&!_gm.includes(ganMonth)))ganMonth=_gm[0]||"all";
   const gs=ventasAggMonth(ganMonth);
   const T={vV:0,gdV:0,gjV:0,vS:0,gdS:0,gjS:0};
   gs.forEach(a=>{for(const k in T)T[k]+=a[k];});
@@ -808,7 +858,7 @@ function openClientGAN(k){
 function monthOf(f){const m=/(\d{1,2})\/(\d{1,2})\/(\d{4})/.exec(f||"");return m?m[3]+"-"+String(m[2]).padStart(2,'0'):"";}
 function monthLabel(mk){const n=["","enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];const[y,m]=mk.split("-");return n[+m]+" "+y;}
 function nextMonth5(mk){let[y,m]=mk.split("-").map(Number);m++;if(m>12){m=1;y++;}return "5/"+String(m).padStart(2,'0')+"/"+y;}
-function availableMonths(){const s=new Set([BASE_MONTH]);for(const v of state.ventas){const mk=monthOf(v.fecha);if(mk)s.add(mk);}return [...s].sort().reverse();}
+function availableMonths(){const s=new Set([BASE_MONTH]);for(const mk in state.ganArchive)s.add(mk);for(const v of state.ventas){const mk=monthOf(v.fecha);if(mk)s.add(mk);}return [...s].sort().reverse();}
 const FUND_SET=new Set(["rivadavia1400","rivadavia2289","rivadavia7376","olavarria3038","montiel1905","sanpedrito27","hyrigoyen1400","lacroze2929"]);
 const ADELANTO_SET=new Set(["rivadavia5406","uruguay198"]);
 function hasEarlyJune(){for(const v of state.ventas){if(monthOf(v.fecha)!==BASE_MONTH)continue;const m=/^(\d{1,2})\//.exec(v.fecha);if(m&&+m[1]<=16)return true;}return false;}
@@ -854,6 +904,31 @@ function ganAPagarMonth(mk){
     const comV=inV?a.vV*(cf.virtPct||0):0, comS=inS?a.vS*(cf.subePct||0):0;
     rows.push({key:a.key,name:a.name,comV,comS,total:comV+comS,inV,inS});}
   return rows.sort((a,b)=>b.total-a.total);
+}
+function monthPending(mk){
+  const rows=ganAPagarMonth(mk).filter(r=>FUND_SET.has(r.key));
+  const paidMap=state.paid[mk]||{};let pend=0;
+  for(const r of rows){if(!paidMap[r.key])pend+=r.total;}
+  return {pend,rows:rows.length};
+}
+function archiveMonth(mk){
+  const agg=ventasAggMonth(mk);const summary={};
+  for(const a of agg){
+    if(!a.vV&&!a.gdV&&!a.gjV&&!a.vS&&!a.gdS&&!a.gjS)continue;
+    summary[a.key]={name:a.name,vV:a.vV,gdV:a.gdV,gjV:a.gjV,vS:a.vS,gdS:a.gdS,gjS:a.gjS};
+  }
+  state.ganArchive=state.ganArchive||{};state.ganArchive[mk]=summary;
+  state.ventas=state.ventas.filter(v=>monthOf(v.fecha)!==mk);
+  if(mk===BASE_MONTH)state.ganOpening={};
+  logAction("Mes archivado automáticamente: "+monthLabel(mk)+" ("+Object.keys(summary).length+" clientes, ya pagado)");
+}
+function autoArchivePastMonths(){
+  const cur=curMonthKey();const cand=new Set();
+  for(const v of state.ventas){const mk=monthOf(v.fecha);if(mk&&mk<cur)cand.add(mk);}
+  if(Object.keys(state.ganOpening||{}).length&&BASE_MONTH<cur)cand.add(BASE_MONTH);
+  let did=false;
+  for(const mk of cand){const p=monthPending(mk);if(p.pend===0){archiveMonth(mk);did=true;}}
+  return did;
 }
 function renderPAG(){
   const months=availableMonths();
@@ -934,7 +1009,7 @@ function clientPagDetail(k,mk){
     else continue;
     const o=days.get(d)||{d,comV:0,comS:0,volV:0,volS:0};o.comV+=cv;o.comS+=cs;o.volV+=vv;o.volS+=vs;days.set(d,o);
   }
-  if(mk===BASE_MONTH&&typeof JUN16_DETAIL!=="undefined"&&JUN16_DETAIL[k]){
+  if(mk===BASE_MONTH&&!state.juneFromRaw&&!(state.ganArchive&&state.ganArchive[BASE_MONTH])&&typeof JUN16_DETAIL!=="undefined"&&JUN16_DETAIL[k]){
     for(const d in JUN16_DETAIL[k]){if(days.has(d))continue;const s=JUN16_DETAIL[k][d];days.set(d,{d,comV:s.cv,comS:s.cs,volV:s.vv,volS:s.vs});}
   }
   return [...days.values()].sort((a,b)=>parseTs(b.d+" 00:00:00")-parseTs(a.d+" 00:00:00"));
@@ -964,9 +1039,45 @@ function clientPagDetailSheet(k,mk){
     <p class="hint">Comisión que le devolvés, día por día · ${monthLabel(mk)}</p>
     ${body}
     ${canExport?`<div class="seg" style="margin-top:14px"><button class="sel" id="pdImg">📷 Imagen</button><button id="pdPdf">🖨️ PDF</button></div>`:""}
+    ${k==="rivadavia7376"?`<button id="pdFact" style="margin-top:8px;width:100%;background:#1e2440;color:#a98bff;font-weight:700;border:1px solid rgba(169,139,255,.3)">📄 Armar mensaje de Factura A</button>`:""}
     <button id="pdClose" style="margin-top:8px;width:100%">Cerrar</button>`);
   $("#pdClose").onclick=closeSheet;
   if(canExport){$("#pdImg").onclick=()=>exportDetailPNG(k,mk);$("#pdPdf").onclick=()=>exportDetailPDF(k,mk);}
+  const pf=$("#pdFact");if(pf)pf.onclick=()=>facturaSheet(k,mk);
+}
+const FACT_DATA={razon:"Ignacio Damian Verdi",cuit:"20-35094005-8",dir:"av San Juan 2981 7A"};
+function facturaComis(k,mk){
+  const row=ganAPagarMonth(mk).find(r=>r.key===k);
+  return row?{virtual:row.comV||0,sube:row.comS||0}:{virtual:0,sube:0};
+}
+function facturaMsg(k,mk){
+  const c=facturaComis(k,mk);const f=n=>Math.round(n).toLocaleString("es-AR");
+  const vR=Math.round(c.virtual),ivaV=Math.round(c.virtual*0.21),totV=vR+ivaV;
+  const sR=Math.round(c.sube),ivaS=Math.round(c.sube*0.21),totS=sR+ivaS;
+  const fin=totV+totS;
+  return `Te paso los datos con las comisiones para hacer la factura A\nRazón social: ${FACT_DATA.razon}\nCuit: ${FACT_DATA.cuit}\nDirección: ${FACT_DATA.dir}\nPoner comisiones carga virtual y sube ${monthLabel(mk)}\nVirtual: ${f(vR)}\nIva virtual: ${f(ivaV)}\nTotal: ${f(totV)}\nSube: ${f(sR)}\nIva sube: ${f(ivaS)}\nTotal: ${f(totS)}\nTOTAL final: ${f(fin)}`;
+}
+function facturaSheet(k,mk){
+  const name=dispName(k)||k;const cur=curMonthKey();
+  const opts=[prevMonthKey(cur),cur,prevMonthKey(prevMonthKey(cur))];
+  const seen=new Set();const monthOpts=[];
+  for(const o of opts){if(seen.has(o))continue;seen.add(o);const c=facturaComis(k,o);if(c.virtual||c.sube)monthOpts.push(o);}
+  if(!monthOpts.length)monthOpts.push(prevMonthKey(cur));
+  let sel=monthOpts.includes(mk)?mk:monthOpts[0];
+  const render=()=>{
+    const chips=monthOpts.map(o=>`<button class="fmo" data-mo="${o}" style="flex:1;${o===sel?'background:linear-gradient(135deg,#7b6bff,#a98bff);color:#fff':''}">${monthLabel(o)}</button>`).join("");
+    openSheet(`<h3>Factura A · ${name}</h3>
+      <p class="hint">Mensaje para que te haga la factura A de sus comisiones + IVA 21%. Elegí el mes y copialo o mandalo por WhatsApp.</p>
+      ${monthOpts.length>1?`<div class="seg" style="margin-bottom:10px">${chips}</div>`:""}
+      <textarea id="faTxt" style="width:100%;height:240px;font-size:13px;line-height:1.5;font-family:inherit;background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:12px;padding:11px">${facturaMsg(k,sel)}</textarea>
+      <div class="seg" style="margin-top:12px"><button class="sel" id="faWa">Enviar por WhatsApp</button><button id="faCopy">Copiar</button></div>
+      <button id="faBack" style="margin-top:8px;width:100%">Volver</button>`);
+    [...document.querySelectorAll(".fmo")].forEach(b=>b.onclick=()=>{sel=b.dataset.mo;render();});
+    $("#faCopy").onclick=async()=>{try{await navigator.clipboard.writeText($("#faTxt").value);toast("Copiado ✓");}catch(e){toast("No se pudo copiar");}};
+    $("#faWa").onclick=()=>{const ct=state.contacts[k]||{};const ph=(ct.phone||"").replace(/\D/g,"");const url=(ph?`https://wa.me/${ph}`:"https://wa.me/")+`?text=${encodeURIComponent($("#faTxt").value)}`;window.open(url,"_blank");};
+    $("#faBack").onclick=()=>clientPagDetailSheet(k,mk);
+  };
+  render();
 }
 function exportDetailPNG(k,mk){
   const name=dispName(k)||k;const data=exportDetailData(k,mk);if(!data.length){toast("Nada para exportar");return;}
@@ -1555,6 +1666,9 @@ function importVentasSheet(){
   $("#pSaveG").onclick=async()=>{const txt=$("#pasteG").value;if(!txt.trim()){toast("Pegá el CSV primero");return;}await ingestAuto(txt);};
 }
 async function ingestVentas(text){const rows=parseVentas(text);if(!rows.length){toast("No encontré ventas en ese CSV");return;}
+  const months=new Set(rows.map(r=>monthOf(r.fecha)).filter(Boolean));
+  for(const mk of months){if(state.ganArchive&&state.ganArchive[mk]){delete state.ganArchive[mk];logAction("Mes des-archivado por re-importación: "+monthLabel(mk));}}
+  if(months.has(BASE_MONTH)){if(Object.keys(state.ganOpening||{}).length){state.ganOpening={};logAction("Junio: ahora se calcula con las ventas reales del CSV completo");}state.juneFromRaw=true;}
   const added=mergeVentas(rows);await save();closeSheet();renderGAN();renderPAG();
   toast(added?`Importadas ${added} ventas nuevas`:"Ya las tenías todas");}
 $("#fileG").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>ingestAuto(r.result);r.readAsText(f,"utf-8");e.target.value="";};
@@ -1669,6 +1783,7 @@ $("#ccSearch").oninput=e=>{ccSearch=e.target.value.trim().toLowerCase();render()
 $("#cobSearch").oninput=e=>{cobSearch=e.target.value.trim().toLowerCase();renderCobrar();};
 
 $("#sortbtn").onclick=()=>{sortMode=sortMode==="debe"?"nombre":sortMode==="nombre"?"reciente":"debe";render();};
+$("#ccMonthBtn").onclick=()=>{const ms=["all",...ccMonths()];const i=ms.indexOf(ccMonth);ccMonth=ms[(i+1)%ms.length];render();};
 $("#sortbtnG").onclick=()=>{sortG=sortG==="gan"?"venta":sortG==="venta"?"nombre":"gan";renderGAN();};
 $("#ganMonthBtn").onclick=()=>{const ms=["all",...availableGanMonths()];const i=ms.indexOf(ganMonth);ganMonth=ms[(i+1)%ms.length];renderGAN();};
 $("#importBtn").onclick=()=>tab==="cc"?importSheet():importVentasSheet();
