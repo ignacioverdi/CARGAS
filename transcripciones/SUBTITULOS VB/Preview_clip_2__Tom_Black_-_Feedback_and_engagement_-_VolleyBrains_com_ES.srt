@@ -1,0 +1,40 @@
+1
+00:00:00,000 --> 00:00:05,360
+Para mí, las dos medidas para una jugadora son: ¿esa repetición fue mejor que la anterior?
+
+2
+00:00:06,419 --> 00:00:13,279
+¿O ese error fue un error distinto? Si veo dos o tres repeticiones donde cometieron
+
+3
+00:00:13,279 --> 00:00:18,440
+exactamente el mismo error, ahí se me prende la alarma: ¿estamos realmente metidos
+
+4
+00:00:18,440 --> 00:00:25,120
+en esto? Y si veo tres errores parecidos incluso chequeando el replay, ahí empiezo
+
+5
+00:00:25,120 --> 00:00:30,579
+a plantear: acá no estamos solo jugando con juguetes vistosos... ¿qué es lo que
+
+6
+00:00:30,579 --> 00:00:35,119
+estás tratando de hacer en este momento? A veces lo digo de una forma más contenedora
+
+7
+00:00:35,119 --> 00:00:40,700
+y a veces de una forma más directa, según el nivel de compromiso. Pero como entrenador,
+
+8
+00:00:40,700 --> 00:00:45,100
+eso es realmente lo que miro: ¿el error fue distinto o la repetición fue mejor? Y
+
+9
+00:00:45,100 --> 00:00:49,359
+puedo dejar pasar dos errores parecidos, pero este ejercicio es tan controlado que, si la jugadora
+
+10
+00:00:49,359 --> 00:00:53,539
+hace exactamente lo mismo tres veces seguidas, me cuesta creer que esté metida en la tarea.
+

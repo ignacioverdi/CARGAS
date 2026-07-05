@@ -1,0 +1,88 @@
+1
+00:00:00,000 --> 00:00:08,820
+Hace dos años hice un estudio grande sobre el bloqueo. Básicamente armé un montón de códigos
+
+2
+00:00:08,820 --> 00:00:14,640
+personalizados: si el bloqueo queda abierto, si hay bloqueo individual, si la central llega
+
+3
+00:00:14,640 --> 00:00:19,359
+y cierra, si la central bloquea vertical dejando un hueco, si la central invade
+
+4
+00:00:19,359 --> 00:00:25,320
+hacia adentro y deja un hueco, si la bloqueadora de punta se abre hacia afuera, si la de punta bloquea
+
+5
+00:00:25,320 --> 00:00:30,519
+vertical, y si estamos presionando con las manos por encima de la red en el momento del contacto. Y después
+
+6
+00:00:30,519 --> 00:00:35,079
+hice un montón de cálculos a partir de eso, un montón de combinaciones distintas:
+
+7
+00:00:35,079 --> 00:00:41,000
+bloqueo individual, todo ese tipo de cosas. Por lejos, lo más importante para nosotras esa temporada fue
+
+8
+00:00:41,000 --> 00:00:45,200
+que estuviéramos presionando. No importaba si la central invadía, si iba vertical, si dejaba
+
+9
+00:00:45,200 --> 00:00:51,500
+un hueco, o incluso si nuestra punta se abría hacia afuera. Nada de eso pesaba tanto como que estuviéramos
+
+10
+00:00:51,500 --> 00:00:54,920
+haciendo press por encima de la red. Así que, claro...
+
+11
+00:00:55,840 --> 00:01:01,460
+Tenemos tan incorporadas las cosas que creemos que son correctas —no te abras hacia afuera en el
+
+12
+00:01:01,460 --> 00:01:07,659
+bloqueo que te van a exponer, y cosas así— que tengo que hacer estudios para chequear: ¿lo que digo
+
+13
+00:01:07,659 --> 00:01:12,500
+es real, o lo digo solo porque lo traigo de mi pasado y de entrenadores que
+
+14
+00:01:12,500 --> 00:01:19,260
+me lo dijeron antes? Eso me obligó a replantearme todo. Por supuesto, el estudio sí mostró que
+
+15
+00:01:19,260 --> 00:01:22,959
+para la punta bloquear vertical era mejor que abrirse hacia afuera, pero solo por
+
+16
+00:01:22,959 --> 00:01:25,219
+unos pocos puntos porcentuales. Lo que era
+
+17
+00:01:25,319 --> 00:01:29,659
+más importante era el press: press, press, press, press, press. Así que la mayor parte de nuestro feedback
+
+18
+00:01:29,659 --> 00:01:33,799
+va a eso: obviamente tenemos que estar bien alineadas en la posición correcta, y hacer press a tiempo,
+
+19
+00:01:33,799 --> 00:01:37,420
+porque si no presionamos a tiempo no vamos a lograr frenar
+
+20
+00:01:37,420 --> 00:01:40,859
+a la atacante. La medida que uso es la eficiencia de ataque del rival. Seguro
+
+21
+00:01:40,859 --> 00:01:44,260
+hay medidas mejores o distintas formas de hacerlo, pero yo uso la eficiencia de ataque rival,
+
+22
+00:01:44,260 --> 00:01:49,439
+y la eficiencia de ataque del rival cuando teníamos un press block era realmente baja.
+

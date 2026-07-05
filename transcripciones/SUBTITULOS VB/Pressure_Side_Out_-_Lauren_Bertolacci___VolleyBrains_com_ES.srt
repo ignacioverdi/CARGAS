@@ -1,0 +1,604 @@
+1
+00:00:00,000 --> 00:00:04,080
+Este fue un ejercicio nuevo, un juego nuevo que hicimos.
+
+2
+00:00:04,200 --> 00:00:06,320
+Como dije, yo tengo, como...
+
+3
+00:00:06,839 --> 00:00:09,140
+tengo una planilla con todos los seis contra seis que hago,
+
+4
+00:00:09,220 --> 00:00:11,759
+pero le agrego cosas casi todos los días, porque casi todos los días estoy pensando: che,
+
+5
+00:00:11,800 --> 00:00:13,019
+¿en qué estamos flaqueando?
+
+6
+00:00:13,919 --> 00:00:18,940
+¿Y cómo materializo o creo un ejercicio que trabaje eso?
+
+7
+00:00:19,000 --> 00:00:21,280
+En este caso, creo que nosotras
+
+8
+00:00:21,339 --> 00:00:24,739
+necesitábamos estar bajo presión y hacer side-out.
+
+9
+00:00:24,800 --> 00:00:27,440
+Así que el gran foco era el side-out bajo presión.
+
+10
+00:00:27,440 --> 00:00:30,539
+Entonces recibís tres pelotas, o tres...
+
+11
+00:00:30,579 --> 00:00:32,299
+te vienen tres saques.
+
+12
+00:00:32,600 --> 00:00:35,280
+Y si hiciste side-out en dos de tres,
+
+13
+00:00:35,380 --> 00:00:39,700
+podías rotar a la posición siguiente. Pero, ojo, es una carrera.
+
+14
+00:00:39,840 --> 00:00:44,399
+El equipo A saca tres pelotas, el equipo B saca tres pelotas,
+
+15
+00:00:44,439 --> 00:00:46,719
+el equipo A saca tres, el equipo B saca tres.
+
+16
+00:00:46,799 --> 00:00:50,159
+Es una carrera por completar todas las rotaciones, y vamos rotando
+
+17
+00:00:50,159 --> 00:00:50,520
+de corrido,
+
+18
+00:00:50,619 --> 00:00:55,899
+lo que significa que lo negativo de esto es que a veces podés quedarte trabada en
+
+19
+00:00:55,899 --> 00:00:56,520
+la misma rotación.
+
+20
+00:00:56,619 --> 00:00:57,259
+Entonces alguna jugadora
+
+21
+00:00:57,439 --> 00:01:01,359
+queda adelante bastante tiempo, y eso lo tenés que tener en cuenta cuando
+
+22
+00:01:01,359 --> 00:01:02,179
+pasás al juego siguiente:
+
+23
+00:01:02,299 --> 00:01:04,159
+quién estuvo adelante un poco de más.
+
+24
+00:01:04,299 --> 00:01:07,200
+No suelo hacer muchas cosas así, porque capaz,
+
+25
+00:01:07,299 --> 00:01:07,739
+viste,
+
+26
+00:01:07,760 --> 00:01:11,540
+mi punta uno, la número nueve, puede quedar adelante 20 minutos;
+
+27
+00:01:11,599 --> 00:01:14,159
+pero entonces me lo acuerdo para el juego siguiente:
+
+28
+00:01:14,260 --> 00:01:16,939
+la pongo atrás, la hago arrancar atrás, cosas así.
+
+29
+00:01:17,000 --> 00:01:18,599
+Pero se llama side-out bajo presión.
+
+30
+00:01:19,900 --> 00:01:21,040
+Si conseguís dos de tres,
+
+31
+00:01:21,079 --> 00:01:21,400
+rotás.
+
+32
+00:01:22,000 --> 00:01:23,599
+Y si conseguís tres de tres,
+
+33
+00:01:23,700 --> 00:01:25,359
+mandás al otro equipo una rotación para atrás.
+
+34
+00:01:25,540 --> 00:01:26,439
+Así que realmente,
+
+35
+00:01:26,939 --> 00:01:27,299
+realmente,
+
+36
+00:01:27,439 --> 00:01:31,019
+daba un incentivo concreto para buscar ese tres de
+
+37
+00:01:31,019 --> 00:01:31,180
+tres;
+
+38
+00:01:31,219 --> 00:01:35,159
+pero dos de tres ya está bien, porque es más del 60 por ciento.
+
+39
+00:01:35,239 --> 00:01:36,079
+Soy muy mala con la matemática,
+
+40
+00:01:36,140 --> 00:01:37,060
+pero 66 por ciento,
+
+41
+00:01:37,060 --> 00:01:38,680
+creo, 66,6 por ciento.
+
+42
+00:01:39,439 --> 00:01:40,840
+Y ese sería un porcentaje de side-out
+
+43
+00:01:40,900 --> 00:01:42,340
+que para nosotras sería buenísimo.
+
+44
+00:01:43,159 --> 00:01:44,780
+Sesenta y poco suele ser el promedio de la liga suiza,
+
+45
+00:01:44,840 --> 00:01:45,760
+así que por encima de eso está bien.
+
+46
+00:01:45,879 --> 00:01:46,420
+Y yo lo
+
+47
+00:01:46,420 --> 00:01:47,540
+iría ajustando:
+
+48
+00:01:47,599 --> 00:01:48,879
+si quisiera hacerlo con cinco,
+
+49
+00:01:49,019 --> 00:01:49,540
+podría hacer,
+
+50
+00:01:49,599 --> 00:01:49,900
+viste,
+
+51
+00:01:50,719 --> 00:01:51,040
+lo que sea.
+
+52
+00:01:51,159 --> 00:01:55,040
+Simplemente me guío por cuál es nuestro porcentaje de side-out y lo hago un poquito
+
+53
+00:01:55,040 --> 00:01:55,400
+más difícil.
+
+54
+00:01:55,540 --> 00:01:56,780
+Y eso es lo que tenemos que alcanzar.
+
+55
+00:01:56,780 --> 00:01:58,579
+Es algo que hago típicamente.
+
+56
+00:01:58,680 --> 00:02:00,840
+O sea, es algo que se me ocurrió a mí,
+
+57
+00:02:00,900 --> 00:02:02,079
+pero no es ciencia espacial.
+
+58
+00:02:02,219 --> 00:02:04,060
+Es solo pensar dónde están nuestras debilidades,
+
+59
+00:02:05,000 --> 00:02:08,039
+cómo podemos poner a las jugadoras bajo un poco más de presión, y relacionar
+
+60
+00:02:08,039 --> 00:02:10,840
+eso con la estadística, para que estés trabajando algo que ellas
+
+61
+00:02:10,840 --> 00:02:11,340
+pueden lograr,
+
+62
+00:02:11,439 --> 00:02:12,539
+pero que es difícil de lograr.
+
+63
+00:02:12,719 --> 00:02:14,659
+Digamos que el equipo A
+
+64
+00:02:14,780 --> 00:02:17,159
+consigue solo dos de tres: rotan.
+
+65
+00:02:17,319 --> 00:02:19,139
+Van de la rotación uno a la rotación seis,
+
+66
+00:02:19,199 --> 00:02:21,080
+porque acá seguimos el orden real de rotación.
+
+67
+00:02:21,139 --> 00:02:24,520
+A veces voy de la uno a la cuatro y después vuelvo, y cosas
+
+68
+00:02:24,520 --> 00:02:24,840
+así.
+
+69
+00:02:24,900 --> 00:02:25,180
+Hoy,
+
+70
+00:02:25,180 --> 00:02:28,219
+hoy fui realmente dando toda la vuelta, y después sacan.
+
+71
+00:02:28,340 --> 00:02:30,620
+Si el otro equipo consigue tres de tres,
+
+72
+00:02:30,740 --> 00:02:32,319
+rotan, y mandan a este equipo,
+
+73
+00:02:32,319 --> 00:02:34,960
+al equipo A, de vuelta a la rotación uno.
+
+74
+00:02:35,039 --> 00:02:36,159
+Así que también es bastante molesto.
+
+75
+00:02:36,280 --> 00:02:38,300
+Y significa, al menos, que podés...
+
+76
+00:02:38,879 --> 00:02:41,180
+tenés una chance cuando estás en defensa:
+
+77
+00:02:41,300 --> 00:02:42,319
+no es que estás sin hacer nada;
+
+78
+00:02:42,319 --> 00:02:44,219
+estás evitando retroceder.
+
+79
+00:02:44,259 --> 00:02:46,539
+Así que también estás en ese estado de amenaza.
+
+80
+00:02:46,599 --> 00:02:50,520
+Busco, tanto como pueda, ponerlas en situaciones donde tienen que lograr algo y
+
+81
+00:02:50,520 --> 00:02:53,479
+sienten esa diferencia entre estado de desafío y estado de amenaza.
+
+82
+00:02:53,580 --> 00:02:54,580
+No sé cuánto hemos...
+
+83
+00:02:54,659 --> 00:02:54,879
+hemos...
+
+84
+00:02:55,180 --> 00:02:55,639
+no sé cuánto profundizamos en eso,
+
+85
+00:02:55,740 --> 00:02:59,780
+pero actuamos muy distinto cuando estamos bajo amenaza que cuando
+
+86
+00:02:59,780 --> 00:03:00,580
+estamos encarando un desafío.
+
+87
+00:03:00,699 --> 00:03:04,259
+Y yo quiero tanto que aprendamos que todo es un desafío y
+
+88
+00:03:04,259 --> 00:03:05,159
+que simplemente vayamos para adelante...
+
+89
+00:03:05,240 --> 00:03:06,300
+Pero para lograr eso,
+
+90
+00:03:06,360 --> 00:03:08,500
+necesito, tanto como sea posible —y fuera de los partidos
+
+91
+00:03:08,520 --> 00:03:10,099
+es difícil—, meternos en ese estado de amenaza.
+
+92
+00:03:10,240 --> 00:03:15,060
+Por eso que te muevan una rotación para atrás es muy molesto, porque es muy
+
+93
+00:03:15,060 --> 00:03:15,379
+duro.
+
+94
+00:03:15,639 --> 00:03:17,580
+Y eso realmente nos fuerza a decir:
+
+95
+00:03:17,699 --> 00:03:17,879
+okey,
+
+96
+00:03:17,919 --> 00:03:18,159
+uf,
+
+97
+00:03:18,180 --> 00:03:18,699
+tengo que...
+
+98
+00:03:18,699 --> 00:03:19,719
+tengo que meter un buen saque.
+
+99
+00:03:20,120 --> 00:03:20,479
+Che,
+
+100
+00:03:20,580 --> 00:03:21,419
+preparémonos en defensa,
+
+101
+00:03:21,639 --> 00:03:22,020
+viste,
+
+102
+00:03:22,020 --> 00:03:22,300
+y...
+
+103
+00:03:22,400 --> 00:03:23,400
+y meternos en ese...
+
+104
+00:03:23,400 --> 00:03:24,740
+en ese estado de amenaza, y trabajar,
+
+105
+00:03:24,740 --> 00:03:26,699
+trabajar para estar un poco más en el estado de desafío.
+
+106
+00:03:27,039 --> 00:03:28,560
+Eso es este juego.
+
+107
+00:03:29,879 --> 00:03:30,740
+Tuvimos un montón de...
+
+108
+00:03:30,740 --> 00:03:33,539
+me hicieron un montón de comentarios, porque hay un montón de detalles que
+
+109
+00:03:33,539 --> 00:03:34,099
+podríamos mejorar.
+
+110
+00:03:34,219 --> 00:03:35,180
+Era la primera vez que lo hacíamos.
+
+111
+00:03:35,240 --> 00:03:36,740
+Y tengo muchas jugadoras inteligentes que te dicen:
+
+112
+00:03:36,800 --> 00:03:38,319
+¿y si hacemos esto, y esto, y esto?
+
+113
+00:03:38,479 --> 00:03:39,500
+Y son muy buenos puntos.
+
+114
+00:03:39,539 --> 00:03:41,939
+Así que más adelante podemos hacer algunos ajustes en el...
+
+115
+00:03:41,939 --> 00:03:42,460
+en el ejercicio.
+
+116
+00:03:42,599 --> 00:03:44,800
+Pero creo que fue muy,
+
+117
+00:03:44,840 --> 00:03:46,460
+muy útil para nosotras, porque...
+
+118
+00:03:46,900 --> 00:03:47,060
+porque...
+
+119
+00:03:47,139 --> 00:03:51,219
+nos pone en situaciones donde terminamos un poco más frustradas al
+
+120
+00:03:51,219 --> 00:03:51,479
+final.
+
+121
+00:03:51,520 --> 00:03:53,159
+Tipo: tenemos que lograr esto o no podemos rotar.
+
+122
+00:03:54,120 --> 00:03:54,620
+Y eso,
+
+123
+00:03:54,740 --> 00:03:55,860
+eso es lo real, porque así es un partido.
+
+124
+00:03:56,580 --> 00:03:57,560
+Así que no...
+
+125
+00:04:00,370 --> 00:04:00,849
+buenísimo.
+
+126
+00:04:01,810 --> 00:04:02,210
+Genial.
+
+127
+00:04:03,550 --> 00:04:04,250
+La mayoría...
+
+128
+00:04:04,289 --> 00:04:05,469
+la mayoría de los ejercicios que tengo,
+
+129
+00:04:05,569 --> 00:04:06,990
+viste,
+
+130
+00:04:07,009 --> 00:04:07,150
+yo...
+
+131
+00:04:07,210 --> 00:04:09,090
+por supuesto que trato de mirar los entrenamientos de otros.
+
+132
+00:04:09,229 --> 00:04:10,969
+Miro todas las masterclasses
+
+133
+00:04:11,009 --> 00:04:13,050
+de VolleyBrains para sacar prácticas nuevas y cosas así,
+
+134
+00:04:13,129 --> 00:04:13,349
+y...
+
+135
+00:04:13,349 --> 00:04:13,530
+y...
+
+136
+00:04:13,530 --> 00:04:13,990
+y ejercicios.
+
+137
+00:04:14,129 --> 00:04:15,310
+Pero al final,
+
+138
+00:04:15,330 --> 00:04:18,029
+igual tengo que adaptarlos para que encajen con lo que necesita mi equipo.
+
+139
+00:04:18,129 --> 00:04:19,629
+Así que siempre adapto el puntaje.
+
+140
+00:04:19,790 --> 00:04:20,389
+Siempre adapto.
+
+141
+00:04:20,569 --> 00:04:20,850
+O sea...
+
+142
+00:04:21,269 --> 00:04:21,629
+pero yo,
+
+143
+00:04:21,670 --> 00:04:21,949
+viste,
+
+144
+00:04:22,470 --> 00:04:23,209
+hay distintas ideas.
+
+145
+00:04:23,310 --> 00:04:24,910
+Capaz quiero trabajar las decisiones
+
+146
+00:04:26,009 --> 00:04:26,750
+de la armadora.
+
+147
+00:04:26,750 --> 00:04:31,329
+Entonces meto un punto de bonificación en algún ejercicio: si consiguen un uno contra uno,
+
+148
+00:04:31,470 --> 00:04:33,970
+se llevan un punto extra de bonificación, o,
+
+149
+00:04:34,029 --> 00:04:34,269
+viste,
+
+150
+00:04:34,290 --> 00:04:37,589
+lo que sea que estemos mirando en ese momento y que necesitemos resaltar:
+
+151
+00:04:37,589 --> 00:04:40,990
+quiero trabajar hacia atrás desde eso y crear un ejercicio para eso.
+
