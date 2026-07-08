@@ -561,7 +561,7 @@ async function load(){
   state.cuentasIni=state.cuentasIni||{mp:0,efectivo:0,banco:0};state.depositos=state.depositos||[];
   state.ganArchive=state.ganArchive||{};state.log=state.log||[];state.depRecSeen=state.depRecSeen||[];state.gastos=state.gastos||[];
   state.capitalTrabajo=state.capitalTrabajo==null?2000000:state.capitalTrabajo;
-  state.mpMap=state.mpMap||{};state.mpInbox=state.mpInbox||[];
+  state.mpMap=state.mpMap||{};state.mpInbox=state.mpInbox||[];state.mpNameMap=state.mpNameMap||{};
   state.clientes=state.clientes||{};
   if(!state.clientesSeededV1){seedClientes();state.clientesSeededV1=true;}
   rebuildAlias();
@@ -611,7 +611,7 @@ async function load(){
 }
 let undoJSON=null,storedJSON=null;
 function logAction(desc){if(!state.log)state.log=[];state.log.unshift({t:nowStr(),d:desc});if(state.log.length>120)state.log.length=120;}
-async function save(){state.seller=seller;const j=JSON.stringify(state);if(storedJSON!==null&&storedJSON!==j)undoJSON=storedJSON;storedJSON=j;try{await store.set(STORE_KEY,j);}catch(e){toast("No se pudo guardar");}}
+async function save(){invalAgg();state.seller=seller;const j=JSON.stringify(state);if(storedJSON!==null&&storedJSON!==j)undoJSON=storedJSON;storedJSON=j;try{await store.set(STORE_KEY,j);}catch(e){toast("No se pudo guardar");}}
 function mergeMovs(arr){const have=new Set(state.movs.map(movId));let n=0;for(const m of arr){const id=movId(m);if(!have.has(id)){state.movs.push(m);have.add(id);n++;}}return n;}
 function mergeVentas(arr){const have=new Set(state.ventas.map(v=>v.id));let n=0;for(const v of arr){if(v.id&&!have.has(v.id)){state.ventas.push(v);have.add(v.id);n++;}}return n;}
 function catVenta(prod){const p=(prod||"").trim().toUpperCase();if(p.startsWith("SUBE"))return "sube";if(p.startsWith("RECARGAS"))return "virtual";return "otro";}
@@ -664,7 +664,10 @@ function autoArchive(){
 }
 function ventasAgg(){return ventasAggMonth("all");}
 function availableGanMonths(){const s=new Set();if(Object.keys(state.ganOpening||{}).length&&!hasEarlyJune())s.add(BASE_MONTH);for(const mk in state.ganArchive)s.add(mk);for(const v of state.ventas){const mk=monthOf(v.fecha);if(mk)s.add(mk);}return [...s].sort().reverse();}
-function ventasAggMonth(mk){
+let _agCache=null,_vamCache={};
+function invalAgg(){_agCache=null;_vamCache={};}
+function ventasAggMonth(mk){return (mk in _vamCache)?_vamCache[mk]:(_vamCache[mk]=_ventasAggMonthRaw(mk));}
+function _ventasAggMonthRaw(mk){
   const ALL=(mk==="all"||!mk);
   const map=new Map();
   const get=(name)=>{const k=key(name);if(!map.has(k))map.set(k,{key:k,name:(state.opening[k]&&state.opening[k].name)||name,vV:0,gdV:0,gjV:0,vS:0,gdS:0,gjS:0,items:[]});return map.get(k);};
@@ -702,7 +705,8 @@ function parseCSV(text){const lines=text.split(/\r?\n/).filter(l=>l.trim().lengt
     out.push({fecha,desc:(r[cD]||"").trim(),obs:cO>=0?(r[cO]||"").trim():"",otorga:(r[cOt]||"").trim(),recibe:(r[cR]||"").trim(),importe:parseMoney(r[cI])});}
   return out;}
 
-function clientsAgg(){
+function clientsAgg(){return _agCache||(_agCache=_clientsAggRaw());}
+function _clientsAggRaw(){
   const map=new Map();
   const get=(name)=>{const k=key(name);if(!map.has(k))map.set(k,{key:k,name,acred:0,pagado:0,opening:0,accItems:[],payItems:[],last:0});return map.get(k);};
   for(const k in state.opening){const o=state.opening[k];const c=get(o.name);c.acred+=(o.total||0);c.pagado+=(o.pagado||0);c.opening=(o.total||0)-(o.pagado||0);}
@@ -746,7 +750,7 @@ function render(){
     ?`<th>Cliente</th><th class="r">Cargó</th><th class="r">Pagó</th><th class="r">Debe</th>`
     :`<th>Cliente</th><th class="r">Total</th><th class="r">Pagado</th><th class="r">Debe</th>`;
 
-  $("#acctline").textContent=`${cs.length} clientes · ${ds.length?(ds.length===1?ds[0]:ds[ds.length-1]+"–"+ds[0]):"base al 16/06"} · v01jul-e`;
+  $("#acctline").textContent=`${cs.length} clientes · ${ds.length?(ds.length===1?ds[0]:ds[ds.length-1]+"–"+ds[0]):"base al 16/06"} · v01jul-f`;
 
   let sorted=sortClients(cs.slice());
   if(ccSearch)sorted=sorted.filter(c=>c.name.toLowerCase().includes(ccSearch));
@@ -1693,10 +1697,12 @@ async function applyMPcobros(arr){
       if(ex&&nf&&nf!==ex.fecha&&!/ 00:00:00$/.test(nf)){ex.fecha=nf;upd++;}
       dup++;continue;}
     if(inboxIds.has(id)){dup++;continue;}
-    const map=cuit?state.mpMap[cuit]:null;
-    if(map==="__IGN__"){ign++;continue;}
-    if(map){const c=clientsAgg().find(x=>x.key===map);const nm=c?c.name:(dispName(map)||map);
-      const np={id:"p"+Date.now()+Math.random().toString(36).slice(2,6),name:nm,importe:monto,fecha:fechaToStr(fecha),metodo:"mp",mpId:id,mpCuit:cuit};
+    const cmap=cuit?state.mpMap[cuit]:null;
+    if(cmap==="__IGN__"){ign++;continue;}
+    let target=cmap;
+    if(!target&&nombre){const nm=state.mpNameMap[norm(nombre)];if(nm==="__IGN__"){ign++;continue;}if(nm)target=nm;}
+    if(target){const c=clientsAgg().find(x=>x.key===target);const nmn=c?c.name:(dispName(target)||target);
+      const np={id:"p"+Date.now()+Math.random().toString(36).slice(2,6),name:nmn,importe:monto,fecha:fechaToStr(fecha),metodo:"mp",mpId:id,mpCuit:cuit};
       state.pagos.push(np);byMp.set(id,np);seen.add(id);aplic++;
     }else{state.mpInbox.push({id,fecha,monto,cuit,nombre});inboxIds.add(id);nuevos++;}
   }
@@ -1726,39 +1732,44 @@ $("#fileMP").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new Fil
 $("#fileBackup").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>importBackupFile(r.result);r.readAsText(f,"utf-8");e.target.value="";};
 function resolveMPSheet(id){
   const it=state.mpInbox.find(x=>String(x.id)===String(id));if(!it)return;
-  const same=it.cuit?state.mpInbox.filter(x=>x.cuit===it.cuit):[it];
+  const same=it.cuit?state.mpInbox.filter(x=>x.cuit===it.cuit):(it.nombre?state.mpInbox.filter(x=>x.nombre&&norm(x.nombre)===norm(it.nombre)):[it]);
+  const rem=it.cuit?"este CUIT":"este remitente";
   openSheet(`<h3>Pago de Mercado Pago</h3>
-    <div class="hint">${it.fecha||""} · <b>${money(it.monto)}</b>${it.nombre?`<br>De: <b>${it.nombre}</b>`:""}<br>CUIT/CUIL: <b>${it.cuit||"(sin dato · transferencia de banco)"}</b>${same.length>1?`<br><span class="pos">Hay ${same.length} pagos de este CUIT (${money(same.reduce((s,x)=>s+x.monto,0))})</span>`:""}</div>
+    <div class="hint">${it.fecha||""} · <b>${money(it.monto)}</b>${it.nombre?`<br>De: <b>${it.nombre}</b>`:""}<br>CUIT/CUIL: <b>${it.cuit||"(sin dato · transferencia de banco)"}</b>${same.length>1?`<br><span class="pos">Hay ${same.length} pagos de ${rem} (${money(same.reduce((s,x)=>s+x.monto,0))})</span>`:""}</div>
     <label class="field">¿De qué cliente es?</label>
     <input type="text" id="mpCli" placeholder="Ej: Rivadavia1400" list="mpClilist">
     <datalist id="mpClilist">${clientsAgg().map(c=>`<option value="${c.name}">`).join("")}</datalist>
-    <p class="hint">Lo recuerdo: los próximos pagos de este CUIT se asignan solos.</p>
+    <p class="hint">Lo recuerdo: los próximos pagos de ${rem} se asignan solos.</p>
     <div class="seg" style="margin-top:14px"><button class="sel" id="mpAsig">Asignar${same.length>1?` los ${same.length}`:""}</button><button id="mpIgn">Ignorar</button></div>
     <button id="mpClose" style="margin-top:10px;width:100%">Cancelar</button>`);
   $("#mpClose").onclick=closeSheet;
   $("#mpAsig").onclick=async()=>{
     const nm=$("#mpCli").value.trim();if(!nm){toast("Elegí el cliente");return;}
-    const k=key(nm);if(it.cuit)state.mpMap[it.cuit]=k;
+    const k=key(nm);if(it.cuit)state.mpMap[it.cuit]=k;if(it.nombre)state.mpNameMap[norm(it.nombre)]=k;
     const c=clientsAgg().find(x=>x.key===k);const finalNm=c?c.name:nm;
-    const targets=it.cuit?same:[it];const ids=new Set(targets.map(t=>String(t.id)));
+    const targets=same;const ids=new Set(targets.map(t=>String(t.id)));
     for(const t of targets)state.pagos.push({id:"p"+Date.now()+Math.random().toString(36).slice(2,6),name:finalNm,importe:t.monto,fecha:fechaToStr(t.fecha),metodo:"mp",mpId:String(t.id),mpCuit:t.cuit});
     state.mpInbox=state.mpInbox.filter(x=>!ids.has(String(x.id)));
     await save();closeSheet();renderAll();toast(`Asignado a ${finalNm}`);
   };
   $("#mpIgn").onclick=async()=>{
-    if(it.cuit)state.mpMap[it.cuit]="__IGN__";
-    const targets=it.cuit?same:[it];const ids=new Set(targets.map(t=>String(t.id)));
+    if(it.cuit)state.mpMap[it.cuit]="__IGN__";if(it.nombre)state.mpNameMap[norm(it.nombre)]="__IGN__";
+    const targets=same;const ids=new Set(targets.map(t=>String(t.id)));
     state.mpInbox=state.mpInbox.filter(x=>!ids.has(String(x.id)));
     await save();closeSheet();renderAll();toast("Ignorado");
   };
 }
 function mpMapSheet(){
   const ents=Object.entries(state.mpMap||{});
-  openSheet(`<h3>CUIT conocidos</h3>
-    ${ents.length?ents.map(([c,k])=>`<div class="arow"><div class="l">CUIT ${c}<small>${k==="__IGN__"?"ignorar":(dispName(k)||k)}</small></div><button data-forget="${c}" style="padding:6px 12px;border-radius:8px">olvidar</button></div>`).join(""):'<p class="hint">Todavía no aprendí ningún CUIT.</p>'}
+  const nents=Object.entries(state.mpNameMap||{});
+  openSheet(`<h3>Remitentes conocidos</h3>
+    ${ents.length?`<p class="hint" style="margin:0 0 4px">Por CUIT</p>`+ents.map(([c,k])=>`<div class="arow"><div class="l">CUIT ${c}<small>${k==="__IGN__"?"ignorar":(dispName(k)||k)}</small></div><button data-forget="${c}" style="padding:6px 12px;border-radius:8px">olvidar</button></div>`).join(""):""}
+    ${nents.length?`<p class="hint" style="margin:10px 0 4px">Por nombre (transferencias de banco)</p>`+nents.map(([n,k])=>`<div class="arow"><div class="l">${n}<small>${k==="__IGN__"?"ignorar":(dispName(k)||k)}</small></div><button data-forgetn="${n}" style="padding:6px 12px;border-radius:8px">olvidar</button></div>`).join(""):""}
+    ${(!ents.length&&!nents.length)?'<p class="hint">Todavía no aprendí ningún remitente.</p>':""}
     <div class="seg" style="margin-top:14px"><button id="mmClose">Cerrar</button></div>`);
   $("#mmClose").onclick=closeSheet;
   [...document.querySelectorAll('#sheet [data-forget]')].forEach(b=>b.onclick=async()=>{delete state.mpMap[b.dataset.forget];await save();mpMapSheet();renderCaja();toast("Olvidado");});
+  [...document.querySelectorAll('#sheet [data-forgetn]')].forEach(b=>b.onclick=async()=>{delete state.mpNameMap[b.dataset.forgetn];await save();mpMapSheet();renderCaja();toast("Olvidado");});
 }
 
 function switchTab(t){
