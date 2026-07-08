@@ -562,6 +562,15 @@ async function load(){
   state.ganArchive=state.ganArchive||{};state.log=state.log||[];state.depRecSeen=state.depRecSeen||[];state.gastos=state.gastos||[];
   state.capitalTrabajo=state.capitalTrabajo==null?2000000:state.capitalTrabajo;
   state.mpMap=state.mpMap||{};state.mpInbox=state.mpInbox||[];state.mpNameMap=state.mpNameMap||{};
+  if(!state.bankTransferFixV1){
+    delete state.mpMap["20350940058"];
+    for(const g of ["banktransfer","pagodebin"])delete state.mpNameMap[g];
+    const back=state.pagos.filter(p=>p.mpId&&String(p.mpCuit)==="20350940058");
+    for(const p of back){if(!state.mpInbox.some(x=>String(x.id)===String(p.mpId)))state.mpInbox.push({id:String(p.mpId),fecha:p.fecha,monto:p.importe,cuit:"",nombre:"",banco:true});}
+    state.pagos=state.pagos.filter(p=>!(p.mpId&&String(p.mpCuit)==="20350940058"));
+    if(back.length)logAction("Transferencias de banco devueltas a 'por confirmar' para reasignar: "+back.length);
+    state.bankTransferFixV1=true;
+  }
   state.clientes=state.clientes||{};
   if(!state.clientesSeededV1){seedClientes();state.clientesSeededV1=true;}
   rebuildAlias();
@@ -750,7 +759,7 @@ function render(){
     ?`<th>Cliente</th><th class="r">Cargó</th><th class="r">Pagó</th><th class="r">Debe</th>`
     :`<th>Cliente</th><th class="r">Total</th><th class="r">Pagado</th><th class="r">Debe</th>`;
 
-  $("#acctline").textContent=`${cs.length} clientes · ${ds.length?(ds.length===1?ds[0]:ds[ds.length-1]+"–"+ds[0]):"base al 16/06"} · v01jul-f`;
+  $("#acctline").textContent=`${cs.length} clientes · ${ds.length?(ds.length===1?ds[0]:ds[ds.length-1]+"–"+ds[0]):"base al 16/06"} · v01jul-g`;
 
   let sorted=sortClients(cs.slice());
   if(ccSearch)sorted=sorted.filter(c=>c.name.toLowerCase().includes(ccSearch));
@@ -1684,6 +1693,7 @@ function fechaToStr(d){d=(d||"").toString();const p=n=>String(n).padStart(2,'0')
   m=/(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{1,2}):(\d{2})(?::(\d{2}))?)?/.exec(d);
   if(m)return `${m[3]}/${m[2]}/${m[1]} ${p(m[4]||0)}:${p(m[5]||0)}:${p(m[6]||0)}`;
   return d||nowStr();}
+const OWN_CUIT="20350940058";
 async function applyMPcobros(arr){
   if(!Array.isArray(arr))return {aplic:0,nuevos:0,ign:0,dup:0,upd:0};
   const byMp=new Map();state.pagos.forEach(p=>{if(p.mpId)byMp.set(String(p.mpId),p);});
@@ -1691,8 +1701,9 @@ async function applyMPcobros(arr){
   const inboxIds=new Set(state.mpInbox.map(x=>String(x.id)));
   let aplic=0,nuevos=0,ign=0,dup=0,upd=0;
   for(const p of arr){
-    const id=String(p.id||"");const cuit=String(p.cuit||"");const monto=+p.monto||0;const fecha=p.fecha||"";const nombre=String(p.nombre||"");
+    const id=String(p.id||"");let cuit=String(p.cuit||"");const monto=+p.monto||0;const fecha=p.fecha||"";const nombre=String(p.nombre||"");
     if(!id||!monto)continue;
+    const banco=(cuit===OWN_CUIT);if(banco)cuit="";
     if(seen.has(id)){const ex=byMp.get(id),nf=fechaToStr(fecha);
       if(ex&&nf&&nf!==ex.fecha&&!/ 00:00:00$/.test(nf)){ex.fecha=nf;upd++;}
       dup++;continue;}
@@ -1700,11 +1711,11 @@ async function applyMPcobros(arr){
     const cmap=cuit?state.mpMap[cuit]:null;
     if(cmap==="__IGN__"){ign++;continue;}
     let target=cmap;
-    if(!target&&nombre){const nm=state.mpNameMap[norm(nombre)];if(nm==="__IGN__"){ign++;continue;}if(nm)target=nm;}
+    if(!target&&nombre&&!banco){const nm=state.mpNameMap[norm(nombre)];if(nm==="__IGN__"){ign++;continue;}if(nm)target=nm;}
     if(target){const c=clientsAgg().find(x=>x.key===target);const nmn=c?c.name:(dispName(target)||target);
       const np={id:"p"+Date.now()+Math.random().toString(36).slice(2,6),name:nmn,importe:monto,fecha:fechaToStr(fecha),metodo:"mp",mpId:id,mpCuit:cuit};
       state.pagos.push(np);byMp.set(id,np);seen.add(id);aplic++;
-    }else{state.mpInbox.push({id,fecha,monto,cuit,nombre});inboxIds.add(id);nuevos++;}
+    }else{state.mpInbox.push({id,fecha,monto,cuit,nombre,banco});inboxIds.add(id);nuevos++;}
   }
   if(aplic||nuevos||upd){logAction("Mercado Pago: "+aplic+" cobros aplicados"+(nuevos?", "+nuevos+" a confirmar":"")+(upd?", "+upd+" con hora corregida":""));await save();}
   return {aplic,nuevos,ign,dup,upd};
@@ -1732,20 +1743,20 @@ $("#fileMP").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new Fil
 $("#fileBackup").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>importBackupFile(r.result);r.readAsText(f,"utf-8");e.target.value="";};
 function resolveMPSheet(id){
   const it=state.mpInbox.find(x=>String(x.id)===String(id));if(!it)return;
-  const same=it.cuit?state.mpInbox.filter(x=>x.cuit===it.cuit):(it.nombre?state.mpInbox.filter(x=>x.nombre&&norm(x.nombre)===norm(it.nombre)):[it]);
+  const same=it.banco?[it]:(it.cuit?state.mpInbox.filter(x=>x.cuit===it.cuit):(it.nombre?state.mpInbox.filter(x=>x.nombre&&norm(x.nombre)===norm(it.nombre)):[it]));
   const rem=it.cuit?"este CUIT":"este remitente";
   openSheet(`<h3>Pago de Mercado Pago</h3>
     <div class="hint">${it.fecha||""} · <b>${money(it.monto)}</b>${it.nombre?`<br>De: <b>${it.nombre}</b>`:""}<br>CUIT/CUIL: <b>${it.cuit||"(sin dato · transferencia de banco)"}</b>${same.length>1?`<br><span class="pos">Hay ${same.length} pagos de ${rem} (${money(same.reduce((s,x)=>s+x.monto,0))})</span>`:""}</div>
     <label class="field">¿De qué cliente es?</label>
     <input type="text" id="mpCli" placeholder="Ej: Rivadavia1400" list="mpClilist">
     <datalist id="mpClilist">${clientsAgg().map(c=>`<option value="${c.name}">`).join("")}</datalist>
-    <p class="hint">Lo recuerdo: los próximos pagos de ${rem} se asignan solos.</p>
+    <p class="hint">${it.banco?"Transferencia de banco: MP no informa quién la envió, así que asignala a mano cada vez (guiate por el monto y la fecha).":`Lo recuerdo: los próximos pagos de ${rem} se asignan solos.`}</p>
     <div class="seg" style="margin-top:14px"><button class="sel" id="mpAsig">Asignar${same.length>1?` los ${same.length}`:""}</button><button id="mpIgn">Ignorar</button></div>
     <button id="mpClose" style="margin-top:10px;width:100%">Cancelar</button>`);
   $("#mpClose").onclick=closeSheet;
   $("#mpAsig").onclick=async()=>{
     const nm=$("#mpCli").value.trim();if(!nm){toast("Elegí el cliente");return;}
-    const k=key(nm);if(it.cuit)state.mpMap[it.cuit]=k;if(it.nombre)state.mpNameMap[norm(it.nombre)]=k;
+    const k=key(nm);if(it.cuit)state.mpMap[it.cuit]=k;if(it.nombre&&!it.banco)state.mpNameMap[norm(it.nombre)]=k;
     const c=clientsAgg().find(x=>x.key===k);const finalNm=c?c.name:nm;
     const targets=same;const ids=new Set(targets.map(t=>String(t.id)));
     for(const t of targets)state.pagos.push({id:"p"+Date.now()+Math.random().toString(36).slice(2,6),name:finalNm,importe:t.monto,fecha:fechaToStr(t.fecha),metodo:"mp",mpId:String(t.id),mpCuit:t.cuit});
@@ -1753,7 +1764,7 @@ function resolveMPSheet(id){
     await save();closeSheet();renderAll();toast(`Asignado a ${finalNm}`);
   };
   $("#mpIgn").onclick=async()=>{
-    if(it.cuit)state.mpMap[it.cuit]="__IGN__";if(it.nombre)state.mpNameMap[norm(it.nombre)]="__IGN__";
+    if(it.cuit)state.mpMap[it.cuit]="__IGN__";if(it.nombre&&!it.banco)state.mpNameMap[norm(it.nombre)]="__IGN__";
     const targets=same;const ids=new Set(targets.map(t=>String(t.id)));
     state.mpInbox=state.mpInbox.filter(x=>!ids.has(String(x.id)));
     await save();closeSheet();renderAll();toast("Ignorado");
