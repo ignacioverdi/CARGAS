@@ -759,7 +759,7 @@ function render(){
     ?`<th>Cliente</th><th class="r">Cargó</th><th class="r">Pagó</th><th class="r">Debe</th>`
     :`<th>Cliente</th><th class="r">Total</th><th class="r">Pagado</th><th class="r">Debe</th>`;
 
-  $("#acctline").textContent=`${cs.length} clientes · ${ds.length?(ds.length===1?ds[0]:ds[ds.length-1]+"–"+ds[0]):"base al 16/06"} · v01jul-i`;
+  $("#acctline").textContent=`${cs.length} clientes · ${ds.length?(ds.length===1?ds[0]:ds[ds.length-1]+"–"+ds[0]):"base al 16/06"} · v01jul-j`;
 
   let sorted=sortClients(cs.slice());
   if(ccSearch)sorted=sorted.filter(c=>c.name.toLowerCase().includes(ccSearch));
@@ -1518,16 +1518,17 @@ function openClient(key){
 }
 
 function diaNombre(d){const m=/(\d{1,2})\/(\d{1,2})\/(\d{4})/.exec(d||"");if(!m)return"";const dt=new Date(+m[3],+m[2]-1,+m[1]);return ["domingo","lunes","martes","miércoles","jueves","viernes","sábado"][dt.getDay()]||"";}
-function cierreInfo(k){
+function cierreDays(k){const s=new Set();for(const v of state.ventas){if(key(v.cli)!==k)continue;const d=dayOf(v.fecha);if(d)s.add(d);}return [...s].sort((a,b)=>parseTs(b+" 00:00:00")-parseTs(a+" 00:00:00"));}
+function cierreInfo(k,day){
   const c=clientsAgg().find(x=>x.key===k);if(!c)return null;
-  let lastDay=null,lastTs=-1;
-  for(const v of state.ventas){if(key(v.cli)!==k)continue;const d=dayOf(v.fecha);if(!d)continue;const ts=parseTs(d+" 00:00:00");if(ts>lastTs){lastTs=ts;lastDay=d;}}
+  let lastDay=day||null;
+  if(!lastDay){let lastTs=-1;for(const v of state.ventas){if(key(v.cli)!==k)continue;const d=dayOf(v.fecha);if(!d)continue;const ts=parseTs(d+" 00:00:00");if(ts>lastTs){lastTs=ts;lastDay=d;}}}
   let V=0,S=0;
   if(lastDay)for(const v of state.ventas){if(key(v.cli)!==k)continue;if(dayOf(v.fecha)!==lastDay)continue;const cat=catVenta(v.prod);if(cat==="virtual")V+=v.pvp;else if(cat==="sube")S+=v.pvp;}
   return {c,lastDay,V,S,D:c.debe,deuda:c.debe-V-S};
 }
-function cierreMsg(k){
-  const i=cierreInfo(k);if(!i)return"";
+function cierreMsg(k,day){
+  const i=cierreInfo(k,day);if(!i)return"";
   const dia=diaNombre(i.lastDay);const f=n=>Math.round(n||0).toLocaleString("es-AR");
   const total=i.V+i.S;
   return `venta virtual ${dia}: ${f(i.V)}\nventa sube ${dia}: ${f(i.S)}\n\nTOTAL A PAGAR: ${f(total)}\n\nMe lo mandás por favor? Gracias! 🙏`;
@@ -1535,16 +1536,23 @@ function cierreMsg(k){
 function cierreLink(k){const ct=state.contacts[k]||{};const ph=(ct.phone||"").replace(/\D/g,"");return (ph?`https://wa.me/${ph}`:"https://wa.me/")+`?text=${encodeURIComponent(cierreMsg(k))}`;}
 function cierreSheet(k){
   const c=clientsAgg().find(x=>x.key===k);if(!c)return;
-  const i=cierreInfo(k);const msg=cierreMsg(k);const ct=state.contacts[k]||{};
-  openSheet(`<h3>Cierre del día · ${c.name}</h3>
-    ${i&&i.lastDay?`<p class="hint">Ventas del <b>${diaNombre(i.lastDay)} ${i.lastDay}</b> · podés editar el texto antes de enviar</p>`:'<p class="hint" style="color:var(--neg)">No encontré ventas recientes de este cliente.</p>'}
+  const days=cierreDays(k);let sel=days[0]||null;
+  const render=()=>{
+    const i=cierreInfo(k,sel);const msg=cierreMsg(k,sel);const ct=state.contacts[k]||{};
+    const chips=days.slice(0,8).map(d=>`<button class="ciday" data-d="${d}" style="padding:6px 10px;border-radius:9px;border:none;font:inherit;cursor:pointer;${d===sel?'background:linear-gradient(135deg,#7b6bff,#a98bff);color:#fff':'background:#1b2138;color:var(--ink)'}">${d.slice(0,5)}</button>`).join("");
+    openSheet(`<h3>Cierre del día · ${c.name}</h3>
+    ${days.length?`<p class="hint">Elegí el día (si no ves el que esperás, falta importar ese CSV):</p><div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">${chips}</div>`:'<p class="hint" style="color:var(--neg)">No encontré ventas de este cliente. Importá el CSV de ventas.</p>'}
+    ${i&&i.lastDay?`<p class="hint">Ventas del <b>${diaNombre(i.lastDay)} ${i.lastDay}</b> · podés editar el texto antes de enviar</p>`:""}
     <textarea id="ciTxt" class="pasta" style="min-height:160px;font:inherit;line-height:1.5">${msg.replace(/</g,"&lt;")}</textarea>
     ${!ct.phone?'<p class="hint" style="color:var(--neg)">⚠️ Este cliente no tiene teléfono cargado (cargalo en ✎ Contacto para que abra el chat directo).</p>':""}
     <div class="seg" style="margin-top:14px"><button class="sel" id="ciWa">Enviar por WhatsApp</button><button id="ciCopy">Copiar</button></div>
     <button id="ciClose" style="margin-top:10px;width:100%">Cerrar</button>`);
-  $("#ciClose").onclick=()=>openClient(k);
-  $("#ciWa").onclick=()=>{const t=$("#ciTxt").value;const ph=((state.contacts[k]||{}).phone||"").replace(/\D/g,"");window.open((ph?`https://wa.me/${ph}`:"https://wa.me/")+`?text=${encodeURIComponent(t)}`,"_blank");};
-  $("#ciCopy").onclick=async()=>{try{await navigator.clipboard.writeText($("#ciTxt").value);toast("Copiado");}catch(e){toast("No se pudo copiar");}};
+    [...document.querySelectorAll('#sheet .ciday')].forEach(b=>b.onclick=()=>{sel=b.dataset.d;render();});
+    $("#ciClose").onclick=()=>openClient(k);
+    $("#ciWa").onclick=()=>{const t=$("#ciTxt").value;const ph=((state.contacts[k]||{}).phone||"").replace(/\D/g,"");window.open((ph?`https://wa.me/${ph}`:"https://wa.me/")+`?text=${encodeURIComponent(t)}`,"_blank");};
+    $("#ciCopy").onclick=async()=>{try{await navigator.clipboard.writeText($("#ciTxt").value);toast("Copiado");}catch(e){toast("No se pudo copiar");}};
+  };
+  render();
 }
 
 function editOpening(key,name){
