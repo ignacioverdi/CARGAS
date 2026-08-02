@@ -205,6 +205,13 @@
   .tdd .k{font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:700}
   .tdd .v{font-size:16px;font-weight:800;margin-top:4px}
   .mrow{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid var(--line);gap:10px}
+  .mgrp{border-bottom:1px solid var(--line)}
+  .mgrp>summary{cursor:pointer;padding:10px 2px;font-weight:700;font-size:13px;color:var(--muted);list-style:none;display:flex;justify-content:space-between;align-items:center;gap:10px}
+  .mgrp>summary::-webkit-details-marker{display:none}
+  .mgrp>summary>span:first-child::before{content:"▸ ";display:inline-block;transition:transform .15s}
+  .mgrp[open]>summary>span:first-child::before{content:"▾ "}
+  .mgrp>.mrow:last-child{border-bottom:none}
+  .mgrp .mrow{padding-left:6px}
   .mrow .d{font-size:13px;color:var(--ink-2);font-weight:600} .mrow .d small{display:block;color:var(--muted);font-size:11.5px;font-weight:500}
   .xbtn{background:none;border:none;color:var(--muted);font-size:17px;cursor:pointer;padding:2px 6px;line-height:1}
   .field{display:block;margin:13px 0 5px;font-size:12px;font-weight:700;color:var(--ink-2)}
@@ -775,7 +782,7 @@ function render(){
     ?`<th>Cliente</th><th class="r">Cargó</th><th class="r">Pagó</th><th class="r">Debe</th>`
     :`<th>Cliente</th><th class="r">Total</th><th class="r">Pagado</th><th class="r">Debe</th>`;
 
-  $("#acctline").textContent=`${cs.length} clientes · ${ds.length?(ds.length===1?ds[0]:ds[ds.length-1]+"–"+ds[0]):"base al 16/06"} · v01jul-k`;
+  $("#acctline").textContent=`${cs.length} clientes · ${ds.length?(ds.length===1?ds[0]:ds[ds.length-1]+"–"+ds[0]):"base al 16/06"} · v01jul-l`;
 
   let sorted=sortClients(cs.slice());
   if(ccSearch)sorted=sorted.filter(c=>c.name.toLowerCase().includes(ccSearch));
@@ -1485,6 +1492,7 @@ function editField(which){
   $("#fSave").onclick=async()=>{state[which]=parseMoney($("#fv").value);logAction(m[0]+": "+money(state[which]));await save();closeSheet();renderAll();toast("Guardado");};
 }
 
+function groupMonths(items){const g={};for(const it of items){const mk=monthOf(it.fecha)||"0000-00";(g[mk]=g[mk]||[]).push(it);}return Object.keys(g).sort().reverse().map(mk=>({mk,items:g[mk]}));}
 function openClient(key){
   const c=clientsAgg().find(x=>x.key===key);if(!c)return;
   const op=state.opening[key];
@@ -1505,14 +1513,14 @@ function openClient(key){
     <button class="addbtn" id="oCierre">📋 Cierre del día (WhatsApp)</button>
     ${op?`<div class="hint" style="margin-top:14px">Saldo de arranque (de tu Excel): <b>${money(op.total)}</b> · <button class="pencil" id="editOpen" style="background:none;border:none;color:var(--brand);font-weight:700;cursor:pointer;text-decoration:underline">ajustar</button></div>`:`<div class="hint" style="margin-top:14px"><button class="pencil" id="editOpen" style="background:none;border:none;color:var(--brand);font-weight:700;cursor:pointer;text-decoration:underline">+ Cargar saldo de arranque</button></div>`}
     <label class="field" style="margin-top:14px">Pagos</label>
-    ${pays.length?pays.map(p=>`<div class="mrow"><div class="d">Pago${p.mpId?' · MP':''}<small>${p.fecha}</small></div>
+    ${pays.length?groupMonths(pays).map((grp,gi)=>{const tot=grp.items.reduce((s,p)=>s+p.importe,0);return `<details ${gi===0?'open':''} class="mgrp"><summary><span>${grp.mk==="0000-00"?"Sin fecha":monthLabel(grp.mk)} · ${grp.items.length} ${grp.items.length===1?'pago':'pagos'}</span><span class="num pos">${money(tot)}</span></summary>${grp.items.map(p=>`<div class="mrow"><div class="d">Pago${p.mpId?' · MP':''}<small>${p.fecha}</small></div>
       <div style="display:flex;align-items:center;gap:6px"><span class="num pos" style="font-weight:700">${money(p.importe)}</span>
       ${p.mpId?`<button class="xbtn" data-mpback="${p.id}" title="Devolver a por confirmar" style="color:var(--amber)">↩</button>`:""}
-      <button class="xbtn" data-pid="${p.id}">✕</button></div></div>`).join(""):`<div class="hint" style="padding:6px 0">Sin pagos registrados.</div>`}
+      <button class="xbtn" data-pid="${p.id}">✕</button></div></div>`).join("")}</details>`;}).join(""):`<div class="hint" style="padding:6px 0">Sin pagos registrados.</div>`}
     <label class="field" style="margin-top:14px">Acreditaciones</label>
-    ${op?`<div class="mrow"><div class="d">Saldo anterior<small>de tu Excel</small></div><div class="num neg" style="font-weight:700">${money(op.total)}</div></div>`:""}
-    ${acc.map(m=>{const dv=m.importe>0;return `<div class="mrow"><div class="d">${dv?"Devolución":"Acreditación"}<small>${m.fecha}</small></div>
-      <div class="num ${dv?'pos':'neg'}" style="font-weight:700">${money(Math.abs(m.importe))}</div></div>`}).join("")}`);
+    ${acc.length?groupMonths(acc).map((grp,gi)=>{const tot=grp.items.reduce((s,m)=>s+(-m.importe),0);return `<details ${gi===0?'open':''} class="mgrp"><summary><span>${grp.mk==="0000-00"?"Sin fecha":monthLabel(grp.mk)} · ${grp.items.length}</span><span class="num ${tot>=0?'neg':'pos'}">${money(Math.abs(tot))}</span></summary>${grp.items.map(m=>{const dv=m.importe>0;return `<div class="mrow"><div class="d">${dv?"Devolución":"Acreditación"}<small>${m.fecha}</small></div>
+      <div class="num ${dv?'pos':'neg'}" style="font-weight:700">${money(Math.abs(m.importe))}</div></div>`}).join("")}</details>`;}).join(""):(op?"":`<div class="hint" style="padding:6px 0">Sin acreditaciones.</div>`)}
+    ${op?`<div class="mrow" style="border-top:1px solid var(--line)"><div class="d">Saldo anterior<small>de tu Excel</small></div><div class="num neg" style="font-weight:700">${money(op.total)}</div></div>`:""}`);
   let cMet="mp";wirePicker("cMet",v=>cMet=v);
   $("#cPayBtn").onclick=async()=>{const v=parseMoney($("#cPay").value);if(!v){toast("Poné el importe");return;}
     await addPago(c.name,v,null,cMet);openClient(key);render();renderCobrar();renderCaja();toast(`Sumado ${money(v)} a ${c.name}`);};
